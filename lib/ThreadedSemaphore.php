@@ -41,7 +41,7 @@ class ThreadedSemaphore implements Semaphore {
         }
 
         $this->maxLocks = $locks;
-        $this->semaphore = new class extends \Threaded {
+        $this->semaphore = new class($this->maxLocks) extends \Threaded {
             const LATENCY_TIMEOUT = 10;
 
             /** @var int The number of available locks. */
@@ -96,26 +96,6 @@ class ThreadedSemaphore implements Semaphore {
                     return new Lock(function () {
                         $this->release();
                     });
-                });
-            }
-
-            private function doAcquire(): \Generator {
-                $tsl = function () {
-                    // If there are no locks available or the wait queue is not empty,
-                    // we need to wait our turn to acquire a lock.
-                    if ($this->locks > 0) {
-                        --$this->locks;
-                        return false;
-                    }
-                    return true;
-                };
-
-                while ($this->locks < 1 || $this->synchronized($tsl)) {
-                    yield new Delayed(self::LATENCY_TIMEOUT);
-                }
-
-                return new Lock(function () {
-                    $this->release();
                 });
             }
 
