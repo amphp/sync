@@ -77,20 +77,6 @@ abstract class AbstractSemaphoreTest extends TestCase {
         });
     }
 
-    public function testSerializedIsSameSemaphore() {
-        Loop::run(function () {
-            $this->semaphore = $this->createSemaphore(1);
-            $unserialized = unserialize(serialize($this->semaphore));
-
-            $lock = yield $unserialized->acquire();
-
-            $this->assertSame(0, $this->semaphore->getAvailable());
-            $this->assertSame(0, $unserialized->getAvailable());
-
-            $lock->release();
-        });
-    }
-
     public function testSimultaneousAcquire() {
         $this->semaphore = $this->createSemaphore(1);
 

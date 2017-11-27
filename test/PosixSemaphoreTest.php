@@ -51,4 +51,18 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
 
         $this->assertTrue($this->semaphore->isFreed());
     }
+
+    public function testSerializedIsSameSemaphore() {
+        Loop::run(function () {
+            $this->semaphore = $this->createSemaphore(1);
+            $unserialized = unserialize(serialize($this->semaphore));
+
+            $lock = yield $unserialized->acquire();
+
+            $this->assertSame(0, $this->semaphore->getAvailable());
+            $this->assertSame(0, $unserialized->getAvailable());
+
+            $lock->release();
+        });
+    }
 }
