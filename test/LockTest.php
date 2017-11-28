@@ -18,12 +18,11 @@ class LockTest extends TestCase {
         unset($lock);
     }
 
-    /**
-     * @expectedException \Amp\Sync\LockAlreadyReleasedError
-     */
     public function testThrowsOnMultiRelease() {
         $lock = new Lock($this->createCallback(1));
         $lock->release();
+        $this->assertTrue($lock->isReleased());
         $lock->release();
+        $this->assertTrue($lock->isReleased());
     }
 }

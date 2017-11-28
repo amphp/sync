@@ -2,7 +2,6 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Delayed;
 use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\Sync\Semaphore;
@@ -20,10 +19,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
      */
     abstract public function createSemaphore(int $locks): Semaphore;
 
-    public function testCount() {
-        $this->semaphore = $this->createSemaphore(4);
-
-        $this->assertSame(4, $this->semaphore->getAvailable());
+    public function tearDown() {
+        unset($this->semaphore); // Force Semaphore::__destruct() to be invoked.
     }
 
     public function testAcquire() {
@@ -63,36 +60,20 @@ abstract class AbstractSemaphoreTest extends TestCase {
         }, 1500);
     }
 
-    public function testCloneIsNewSemaphore() {
-        Loop::run(function () {
-            $this->semaphore = $this->createSemaphore(1);
-            $clone = clone $this->semaphore;
-
-            $lock = yield $clone->acquire();
-
-            $this->assertSame(1, $this->semaphore->getAvailable());
-            $this->assertSame(0, $clone->getAvailable());
-
-            $lock->release();
-        });
-    }
-
     public function testSimultaneousAcquire() {
-        $this->semaphore = $this->createSemaphore(1);
+        $this->assertRunTimeGreaterThan(function () {
+            $this->semaphore = $this->createSemaphore(1);
 
-        $callback = function () {
-            $awaitable1 = $this->semaphore->acquire();
-            $awaitable2 = $this->semaphore->acquire();
+            Loop::run(function () {
+                $promise1 = $this->semaphore->acquire();
+                $promise2 = $this->semaphore->acquire();
 
-            yield new Delayed(500);
+                Loop::delay(500, function () use ($promise1) {
+                    (yield $promise1)->release();
+                });
 
-            (yield $awaitable1)->release();
-
-            yield new Delayed(500);
-
-            (yield $awaitable2)->release();
-        };
-
-        $this->assertRunTimeGreaterThan('Amp\Loop::run', 1000, [$callback]);
+                (yield $promise2)->release();
+            });
+        }, 500);
     }
 }

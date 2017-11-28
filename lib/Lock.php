@@ -32,13 +32,11 @@ class Lock {
     }
 
     /**
-     * Releases the lock.
-     *
-     * @throws LockAlreadyReleasedError If the lock was already released.
+     * Releases the lock. No-op if the lock has already been released.
      */
     public function release() {
         if (!$this->releaser) {
-            throw new LockAlreadyReleasedError('The lock has already been released!');
+            return;
         }
 
         // Invoke the releaser function given to us by the synchronization source

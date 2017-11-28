@@ -13,8 +13,6 @@ use Amp\Promise;
  */
 interface Mutex {
     /**
-     * @coroutine
-     *
      * Acquires a lock on the mutex.
      *
      * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with a lock object when the acquire is

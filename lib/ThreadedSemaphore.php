@@ -18,30 +18,17 @@ class ThreadedSemaphore implements Semaphore {
     /** @var \Threaded */
     private $semaphore;
 
-    /** @var int */
-    private $maxLocks;
-
     /**
      * Creates a new semaphore with a given number of locks.
      *
      * @param int $locks The maximum number of locks that can be acquired from the semaphore.
      */
     public function __construct(int $locks) {
-        $this->init($locks);
-    }
-
-    /**
-     * Initializes the semaphore with a given number of locks.
-     *
-     * @param int $locks
-     */
-    private function init(int $locks) {
         if ($locks < 1) {
             throw new \Error("The number of locks should be a positive integer");
         }
 
-        $this->maxLocks = $locks;
-        $this->semaphore = new class($this->maxLocks) extends \Threaded {
+        $this->semaphore = new class($locks) extends \Threaded {
             const LATENCY_TIMEOUT = 10;
 
             /** @var int The number of available locks. */
@@ -113,28 +100,7 @@ class ThreadedSemaphore implements Semaphore {
     /**
      * {@inheritdoc}
      */
-    public function getAvailable(): int {
-        return $this->semaphore->getAvailable();
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function getSize(): int {
-        return $this->maxLocks;
-    }
-
-    /**
-     * {@inheritdoc}
-     */
     public function acquire(): Promise {
         return $this->semaphore->acquire();
-    }
-
-    /**
-     * Clones the semaphore, creating a new instance with the same number of locks, all available.
-     */
-    public function __clone() {
-        $this->init($this->getSize());
     }
 }

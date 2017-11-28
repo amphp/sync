@@ -19,13 +19,6 @@ class ThreadedMutex implements Mutex {
      * Creates a new threaded mutex.
      */
     public function __construct() {
-        $this->init();
-    }
-
-    /**
-     * Initializes the mutex.
-     */
-    private function init() {
         $this->mutex = new class extends \Threaded {
             const LATENCY_TIMEOUT =  10;
 
@@ -65,12 +58,5 @@ class ThreadedMutex implements Mutex {
      */
     public function acquire(): Promise {
         return $this->mutex->acquire();
-    }
-
-    /**
-     * Makes a copy of the mutex in the unlocked state.
-     */
-    public function __clone() {
-        $this->init();
     }
 }
