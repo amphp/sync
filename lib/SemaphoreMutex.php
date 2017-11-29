@@ -22,6 +22,7 @@ class SemaphoreMutex implements Mutex {
             /** @var \Amp\Sync\KeyedLock $lock */
             $lock = yield $this->semaphore->acquire();
             if ($lock->getKey() !== 0) {
+                $lock->release();
                 throw new \Error("Cannot use a semaphore with more than a single lock");
             }
             return $lock;
