@@ -20,6 +20,6 @@ class SemaphoreMutexTest extends AbstractMutexTest {
      */
     public function testSemaphoreWithMultipleLocks() {
         $mutex = new SemaphoreMutex(new LocalSemaphore(2));
-        Promise\wait($mutex->acquire());
+        while (Promise\wait($mutex->acquire()));
     }
 }
