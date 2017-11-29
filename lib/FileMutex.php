@@ -29,9 +29,16 @@ class FileMutex implements Mutex {
 
     /**
      * Creates a new mutex.
+     *
+     * @param string|null Optional file name. If one is not provided a temporary file is created in the system temporary
+     *    file directory.
      */
-    public function __construct() {
-        $this->fileName = \tempnam(\sys_get_temp_dir(), 'mutex-') . '.lock';
+    public function __construct(string $fileName = null) {
+        if ($fileName === null) {
+            $fileName = \tempnam(\sys_get_temp_dir(), 'mutex-') . '.lock';
+        }
+
+        $this->fileName = $fileName;
     }
 
     /**
