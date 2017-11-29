@@ -11,7 +11,7 @@ class LocalMutex implements Mutex {
     use CallableMaker;
 
     /** @var bool */
-    private $lock = true;
+    private $locked = false;
 
     /** @var \Amp\Deferred[] */
     private $queue = [];
@@ -25,8 +25,8 @@ class LocalMutex implements Mutex {
 
     /** {@inheritdoc} */
     public function acquire(): Promise {
-        if ($this->lock) {
-            $this->lock = false;
+        if (!$this->locked) {
+            $this->locked = true;
             return new Success(new Lock($this->release));
         }
 
@@ -41,6 +41,6 @@ class LocalMutex implements Mutex {
             return;
         }
 
-        $this->lock = true;
+        $this->locked = false;
     }
 }

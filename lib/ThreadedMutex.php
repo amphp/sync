@@ -23,7 +23,7 @@ class ThreadedMutex implements Mutex {
             const LATENCY_TIMEOUT =  10;
 
             /** @var bool */
-            private $lock = true;
+            private $locked = false;
 
             /**
              * @return \Amp\Promise
@@ -31,15 +31,15 @@ class ThreadedMutex implements Mutex {
             public function acquire(): Promise {
                 return call(function () {
                     $tsl = function () {
-                        return ($this->lock ? $this->lock = false : true);
+                        return (!$this->locked ? $this->locked = true : false);
                     };
 
-                    while (!$this->lock || $this->synchronized($tsl)) {
+                    while ($this->locked || $this->synchronized($tsl)) {
                         yield new Delayed(self::LATENCY_TIMEOUT);
                     }
 
                     return new Lock(function () {
-                        $this->lock = true;
+                        $this->locked = false;
                     });
                 });
             }
