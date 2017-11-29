@@ -31,16 +31,15 @@ class ThreadedSemaphore implements Semaphore {
         $this->semaphore = new class($locks) extends \Threaded {
             const LATENCY_TIMEOUT = 10;
 
-            /** @var int[] Available locks. */
-            private $locks;
-
             /**
              * Creates a new semaphore with a given number of locks.
              *
              * @param int $locks The maximum number of locks that can be acquired from the semaphore.
              */
             public function __construct(int $locks) {
-                $this->locks = \range(0, $locks - 1);
+                foreach (\range(0, $locks - 1) as $lock) {
+                    $this[] = $lock;
+                }
             }
 
             /**
@@ -60,21 +59,21 @@ class ThreadedSemaphore implements Semaphore {
                     $tsl = function () {
                         // If there are no locks available or the wait queue is not empty,
                         // we need to wait our turn to acquire a lock.
-                        if (empty($this->locks)) {
+                        if (!$this->count()) {
                             return null;
                         }
 
-                        return \array_shift($this->locks);
+                        return $this->shift();
                     };
 
-                    while (empty($this->locks) || $key = $this->synchronized($tsl) === null) {
+                    while (!$this->count() || ($key = $this->synchronized($tsl)) === null) {
                         yield new Delayed(self::LATENCY_TIMEOUT);
                     }
 
                     return new KeyedLock($key, function (KeyedLock $lock) {
                         $key = $lock->getKey();
                         $this->synchronized(function () use ($key) {
-                            $this->locks[] = $key;
+                            $this[] = $key;
                         });
                     });
                 });
