@@ -2,9 +2,7 @@
 
 namespace Amp\Sync;
 
-use Amp\Delayed;
 use Amp\Promise;
-use function Amp\call;
 
 /**
  * A thread-safe, asynchronous mutex using the pthreads locking mechanism.
@@ -12,43 +10,14 @@ use function Amp\call;
  * Compatible with POSIX systems and Microsoft Windows.
  */
 class ThreadedMutex implements Mutex {
-    /** @var \Threaded */
+    /** @var Internal\MutexStorage */
     private $mutex;
 
     /**
      * Creates a new threaded mutex.
      */
     public function __construct() {
-        $this->mutex = new class extends \Threaded {
-            const LATENCY_TIMEOUT =  10;
-
-            /** @var bool */
-            private $locked = false;
-
-            /**
-             * @return \Amp\Promise
-             */
-            public function acquire(): Promise {
-                return call(function () {
-                    $tsl = function () {
-                        if ($this->locked) {
-                            return true;
-                        }
-
-                        $this->locked = true;
-                        return false;
-                    };
-
-                    while ($this->locked || $this->synchronized($tsl)) {
-                        yield new Delayed(self::LATENCY_TIMEOUT);
-                    }
-
-                    return new Lock(0, function () {
-                        $this->locked = false;
-                    });
-                });
-            }
-        };
+        $this->mutex = new Internal\MutexStorage;
     }
 
     /**
