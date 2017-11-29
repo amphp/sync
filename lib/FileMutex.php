@@ -54,7 +54,7 @@ class FileMutex implements Mutex {
         }
 
         // Return a lock object that can be used to release the lock on the mutex.
-        $lock = new Lock(function () {
+        $lock = new Lock(0, function () {
             $this->release();
         });
 

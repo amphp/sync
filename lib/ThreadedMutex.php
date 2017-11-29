@@ -38,7 +38,7 @@ class ThreadedMutex implements Mutex {
                         yield new Delayed(self::LATENCY_TIMEOUT);
                     }
 
-                    return new Lock(function () {
+                    return new Lock(0, function () {
                         $this->locked = false;
                     });
                 });

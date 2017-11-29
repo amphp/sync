@@ -43,19 +43,19 @@ abstract class AbstractSemaphoreTest extends TestCase {
 
             Loop::run(function () {
                 $lock1 = yield $this->semaphore->acquire();
-                $this->assertSame(0, $lock1->getKey());
+                $this->assertSame(0, $lock1->getId());
                 Loop::delay(100, function () use ($lock1) {
                     $lock1->release();
                 });
 
                 $lock2 = yield $this->semaphore->acquire();
-                $this->assertSame(0, $lock2->getKey());
+                $this->assertSame(0, $lock2->getId());
                 Loop::delay(100, function () use ($lock2) {
                     $lock2->release();
                 });
 
                 $lock3 = yield $this->semaphore->acquire();
-                $this->assertSame(0, $lock3->getKey());
+                $this->assertSame(0, $lock3->getId());
                 Loop::delay(100, function () use ($lock3) {
                     $lock3->release();
                 });
@@ -74,20 +74,20 @@ abstract class AbstractSemaphoreTest extends TestCase {
                 });
 
                 $lock2 = yield $this->semaphore->acquire();
-                $this->assertNotSame($lock1->getKey(), $lock2->getKey());
+                $this->assertNotSame($lock1->getId(), $lock2->getId());
                 Loop::delay(200, function () use ($lock2) {
                     $lock2->release();
                 });
 
                 $lock3 = yield $this->semaphore->acquire();
-                $this->assertNotSame($lock1->getKey(), $lock3->getKey());
-                $this->assertNotSame($lock2->getKey(), $lock3->getKey());
+                $this->assertNotSame($lock1->getId(), $lock3->getId());
+                $this->assertNotSame($lock2->getId(), $lock3->getId());
                 Loop::delay(200, function () use ($lock3) {
                     $lock3->release();
                 });
 
                 $lock4 = yield $this->semaphore->acquire();
-                $this->assertSame($lock1->getKey(), $lock4->getKey());
+                $this->assertSame($lock1->getId(), $lock4->getId());
                 Loop::delay(200, function () use ($lock4) {
                     $lock4->release();
                 });

@@ -156,11 +156,11 @@ class PosixSemaphore implements Semaphore, \Serializable {
     private function doAcquire(): \Generator {
         do {
             // Attempt to acquire a lock from the semaphore.
-            if (@\msg_receive($this->queue, 0, $type, 1, $key, false, \MSG_IPC_NOWAIT, $errno)) {
+            if (@\msg_receive($this->queue, 0, $type, 1, $id, false, \MSG_IPC_NOWAIT, $errno)) {
                 // A free lock was found, so resolve with a lock object that can
                 // be used to release the lock.
-                return new KeyedLock(\unpack("C", $key)[1], function (KeyedLock $lock) {
-                    $this->release($lock->getKey());
+                return new Lock(\unpack("C", $id)[1], function (Lock $lock) {
+                    $this->release($lock->getId());
                 });
             }
 
@@ -211,18 +211,18 @@ class PosixSemaphore implements Semaphore, \Serializable {
     /**
      * Releases a lock from the semaphore.
      *
-     * @param int $key Lock identifier.
+     * @param int $id Lock identifier.
      *
      * @throws SyncException If the operation failed.
      */
-    protected function release(int $key) {
+    protected function release(int $id) {
         if (!$this->queue) {
             return; // Queue already destroyed.
         }
 
         // Call send in non-blocking mode. If the call fails because the queue
         // is full, then the number of locks configured is too large.
-        if (!@\msg_send($this->queue, 1, \pack("C", $key), false, false, $errno)) {
+        if (!@\msg_send($this->queue, 1, \pack("C", $id), false, false, $errno)) {
             if ($errno === \MSG_EAGAIN) {
                 throw new SyncException('The semaphore size is larger than the system allows.');
             }

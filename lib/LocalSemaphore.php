@@ -31,22 +31,22 @@ class LocalSemaphore implements Semaphore {
     /** {@inheritdoc} */
     public function acquire(): Promise {
         if (!empty($this->locks)) {
-            return new Success(new KeyedLock(\array_shift($this->locks), $this->release));
+            return new Success(new Lock(\array_shift($this->locks), $this->release));
         }
 
         $this->queue[] = $deferred = new Deferred;
         return $deferred->promise();
     }
 
-    private function release(KeyedLock $lock) {
-        $key = $lock->getKey();
+    private function release(Lock $lock) {
+        $id = $lock->getId();
 
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);
-            $deferred->resolve(new KeyedLock($key, $this->release));
+            $deferred->resolve(new Lock($id, $this->release));
             return;
         }
 
-        $this->locks[] = $key;
+        $this->locks[] = $id;
     }
 }

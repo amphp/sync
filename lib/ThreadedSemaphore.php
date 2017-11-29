@@ -66,14 +66,14 @@ class ThreadedSemaphore implements Semaphore {
                         return $this->shift();
                     };
 
-                    while (!$this->count() || ($key = $this->synchronized($tsl)) === null) {
+                    while (!$this->count() || ($id = $this->synchronized($tsl)) === null) {
                         yield new Delayed(self::LATENCY_TIMEOUT);
                     }
 
-                    return new KeyedLock($key, function (KeyedLock $lock) {
-                        $key = $lock->getKey();
-                        $this->synchronized(function () use ($key) {
-                            $this[] = $key;
+                    return new Lock($id, function (Lock $lock) {
+                        $id = $lock->getId();
+                        $this->synchronized(function () use ($id) {
+                            $this[] = $id;
                         });
                     });
                 });

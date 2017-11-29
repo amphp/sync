@@ -13,13 +13,18 @@ class Lock {
     /** @var callable|null The function to be called on release or null if the lock has been released. */
     private $releaser;
 
+    /** @var int */
+    private $id;
+
     /**
      * Creates a new lock permit object.
      *
+     * @param int $id The lock identifier.
      * @param callable $releaser A function to be called upon release. The function will be passed this object as the
      *     first parameter.
      */
-    public function __construct(callable $releaser) {
+    public function __construct(int $id, callable $releaser) {
+        $this->id = $id;
         $this->releaser = $releaser;
     }
 
@@ -30,6 +35,13 @@ class Lock {
      */
     public function isReleased(): bool {
         return !$this->releaser;
+    }
+
+    /**
+     * @return int Lock identifier.
+     */
+    public function getId(): int {
+        return $this->id;
     }
 
     /**

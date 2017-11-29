@@ -15,7 +15,7 @@ interface Mutex {
     /**
      * Acquires a lock on the mutex.
      *
-     * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with a lock object when the acquire is successful.
+     * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with a lock object with an ID of 0 when the acquire is successful.
      */
     public function acquire(): Promise;
 }

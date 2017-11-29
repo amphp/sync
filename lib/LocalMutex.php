@@ -27,7 +27,7 @@ class LocalMutex implements Mutex {
     public function acquire(): Promise {
         if (!$this->locked) {
             $this->locked = true;
-            return new Success(new Lock($this->release));
+            return new Success(new Lock(0, $this->release));
         }
 
         $this->queue[] = $deferred = new Deferred;
@@ -37,7 +37,7 @@ class LocalMutex implements Mutex {
     private function release() {
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);
-            $deferred->resolve(new Lock($this->release));
+            $deferred->resolve(new Lock(0, $this->release));
             return;
         }
 

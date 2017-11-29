@@ -15,8 +15,9 @@ interface Semaphore {
     /**
      * Acquires a lock on the semaphore.
      *
-     * @return \Amp\Promise<\Amp\Sync\KeyedLock> Resolves with an integer keyed lock object when the acquire is
-     *    successful. Keys returned by the locks should be 0-indexed. Releasing a key MUST make that same key available.
+     * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with an integer keyed lock object when the acquire is
+     *    successful. Identifiers returned by the locks should be 0-indexed. Releasing an idenifier MUST make that same
+     *    identifier available.
      */
     public function acquire(): Promise;
 }
