@@ -28,7 +28,8 @@ interface Mutex {
     /**
      * Acquires a lock on the mutex.
      *
-     * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with a lock object when the acquire is successful.
+     * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with a lock object with an ID of 0. May fail with a SyncException
+     *     if an error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
     public function acquire(): Promise;
 }
@@ -46,8 +47,9 @@ interface Semaphore {
     /**
      * Acquires a lock on the semaphore.
      *
-     * @return \Amp\Promise<\Amp\Sync\KeyedLock> Resolves with an integer keyed lock object when the acquire is
-     *    successful. Keys returned by the locks should be 0-indexed. Releasing a key MUST make that same key available.
+     * @return \Amp\Promise<\Amp\Sync\Lock> Resolves with an integer keyed lock object. Identifiers returned by the
+     *    locks should be 0-indexed. Releasing an identifier MUST make that same identifier available. May fail with
+     *    a SyncException if an error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
     public function acquire(): Promise;
 }
