@@ -46,25 +46,6 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         }, 500);
     }
 
-    public function testSerializedIsSameSemaphore() {
-        $this->assertRunTimeGreaterThan(function () {
-            $this->semaphore = $this->createSemaphore(1);
-
-            Loop::run(function () {
-                $unserialized = \unserialize(\serialize($this->semaphore));
-
-                $promise1 = $unserialized->acquire();
-                $promise2 = $this->semaphore->acquire();
-
-                Loop::delay(500, function () use ($promise1) {
-                    (yield $promise1)->release();
-                });
-
-                (yield $promise2)->release();
-            });
-        }, 500);
-    }
-
     /**
      * @depends testUse
      */

@@ -14,7 +14,7 @@ use Amp\Promise;
  *
  * Not compatible with Windows.
  */
-class PosixSemaphore implements Semaphore, \Serializable {
+class PosixSemaphore implements Semaphore {
     const LATENCY_TIMEOUT = 10;
 
     /** @var string */
@@ -77,6 +77,12 @@ class PosixSemaphore implements Semaphore, \Serializable {
      * Private method to prevent cloning.
      */
     private function __clone() {
+    }
+
+    /**
+     * Private to prevent serialization.
+     */
+    private function __sleep() {
     }
 
     public function getId(): string {
@@ -186,26 +192,6 @@ class PosixSemaphore implements Semaphore, \Serializable {
         }
 
         \msg_remove_queue($this->queue);
-    }
-
-    /**
-     * Serializes the semaphore.
-     *
-     * @return string The serialized semaphore.
-     */
-    public function serialize(): string {
-        return \serialize($this->id);
-    }
-
-    /**
-     * Unserializes a serialized semaphore.
-     *
-     * @param string $serialized The serialized semaphore.
-     */
-    public function unserialize($serialized) {
-        $this->id = \unserialize($serialized);
-        $this->key = self::makeKey($this->id);
-        $this->open();
     }
 
     /**
