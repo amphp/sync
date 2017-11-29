@@ -1,13 +1,11 @@
-# Synchronization Tools for Amp
+# sync
 
 [![Build Status](https://img.shields.io/travis/amphp/sync/master.svg?style=flat-square)](https://travis-ci.org/amphp/process)
 [![Coverage Status](https://img.shields.io/coveralls/amphp/sync/master.svg?style=flat-square)](https://coveralls.io/github/amphp/process?branch=master)
 [![Semantic Version](https://img.shields.io/github/release/amphp/sync.svg?style=flat-square)](http://semver.org)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 
-##### Requirements
-
-- PHP 7
+This package defines synchronization primitives for PHP applications and libraries using Amp.
 
 ## Installation
 
@@ -17,10 +15,9 @@ This package can be installed as a [Composer](https://getcomposer.org/) dependen
 composer require amphp/sync
 ```
 
-## Requirements
+## Documentation
 
-* PHP 7.0+
-* [Amp framework](https://github.com/amphp/amp) (installed via composer)
+Documentation can be found on [amphp.org/sync](https://amphp.org/sync/) as well as in the [`./docs`](./docs) directory.
 
 ## Versioning
 
