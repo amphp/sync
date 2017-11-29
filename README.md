@@ -1,7 +1,7 @@
 # Synchronization Tools for Amp
 
-[![Build Status](https://img.shields.io/travis/amphp/process/master.svg?style=flat-square)](https://travis-ci.org/amphp/process)
-[![Coverage Status](https://img.shields.io/coveralls/amphp/process/master.svg?style=flat-square)](https://coveralls.io/github/amphp/process?branch=master)
+[![Build Status](https://img.shields.io/travis/amphp/sync/master.svg?style=flat-square)](https://travis-ci.org/amphp/process)
+[![Coverage Status](https://img.shields.io/coveralls/amphp/sync/master.svg?style=flat-square)](https://coveralls.io/github/amphp/process?branch=master)
 [![Semantic Version](https://img.shields.io/github/release/amphp/sync.svg?style=flat-square)](http://semver.org)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)
 

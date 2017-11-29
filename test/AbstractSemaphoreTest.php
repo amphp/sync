@@ -20,7 +20,7 @@ abstract class AbstractSemaphoreTest extends TestCase {
     abstract public function createSemaphore(int $locks): Semaphore;
 
     public function tearDown() {
-        unset($this->semaphore); // Force Semaphore::__destruct() to be invoked.
+        $this->semaphore = null; // Force Semaphore::__destruct() to be invoked.
     }
 
     public function testAcquire() {
@@ -37,27 +37,60 @@ abstract class AbstractSemaphoreTest extends TestCase {
         });
     }
 
-    public function testAcquireMultiple() {
+    public function testAcquireMultipleFromSingleLockSemaphore() {
         $this->assertRunTimeGreaterThan(function () {
             $this->semaphore = $this->createSemaphore(1);
 
             Loop::run(function () {
                 $lock1 = yield $this->semaphore->acquire();
-                Loop::delay(500, function () use ($lock1) {
+                $this->assertSame(0, $lock1->getKey());
+                Loop::delay(100, function () use ($lock1) {
                     $lock1->release();
                 });
 
                 $lock2 = yield $this->semaphore->acquire();
-                Loop::delay(500, function () use ($lock2) {
+                $this->assertSame(0, $lock2->getKey());
+                Loop::delay(100, function () use ($lock2) {
                     $lock2->release();
                 });
 
                 $lock3 = yield $this->semaphore->acquire();
-                Loop::delay(500, function () use ($lock3) {
+                $this->assertSame(0, $lock3->getKey());
+                Loop::delay(100, function () use ($lock3) {
                     $lock3->release();
                 });
             });
-        }, 1500);
+        }, 300);
+    }
+
+    public function testAcquireMultipleFromMultipleLockSemaphore() {
+        $this->assertRunTimeGreaterThan(function () {
+            $this->semaphore = $this->createSemaphore(3);
+
+            Loop::run(function () {
+                $lock1 = yield $this->semaphore->acquire();
+                Loop::delay(100, function () use ($lock1) {
+                    $lock1->release();
+                });
+
+                $lock2 = yield $this->semaphore->acquire();
+                $this->assertNotSame($lock1->getKey(), $lock2->getKey());
+                Loop::delay(200, function () use ($lock2) {
+                    $lock2->release();
+                });
+
+                $lock3 = yield $this->semaphore->acquire();
+                $this->assertNotSame($lock1->getKey(), $lock3->getKey());
+                $this->assertNotSame($lock2->getKey(), $lock3->getKey());
+                Loop::delay(200, function () use ($lock3) {
+                    $lock3->release();
+                });
+
+                $lock4 = yield $this->semaphore->acquire();
+                $this->assertSame($lock1->getKey(), $lock4->getKey());
+                $lock4->release();
+            });
+        }, 200);
     }
 
     public function testSimultaneousAcquire() {
@@ -68,12 +101,12 @@ abstract class AbstractSemaphoreTest extends TestCase {
                 $promise1 = $this->semaphore->acquire();
                 $promise2 = $this->semaphore->acquire();
 
-                Loop::delay(500, function () use ($promise1) {
+                Loop::delay(100, function () use ($promise1) {
                     (yield $promise1)->release();
                 });
 
                 (yield $promise2)->release();
             });
-        }, 500);
+        }, 100);
     }
 }

@@ -34,7 +34,7 @@ class PosixSemaphore implements Semaphore, \Serializable {
      *
      * @param string $id       The unique name for the new semaphore.
      * @param int $maxLocks    The maximum number of locks that can be acquired from the semaphore.
-     * @param int $permissions Permissions to access the semaphore.
+     * @param int $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
      *
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
@@ -73,8 +73,10 @@ class PosixSemaphore implements Semaphore, \Serializable {
         $this->key = self::makeKey($this->id);
     }
 
-    public function __clone() {
-        $this->initializer = 0;
+    /**
+     * Private method to prevent cloning.
+     */
+    private function __clone() {
     }
 
     public function getId(): string {
@@ -113,7 +115,7 @@ class PosixSemaphore implements Semaphore, \Serializable {
 
         // Fill the semaphore with locks.
         while (--$maxLocks >= 0) {
-            $this->release();
+            $this->release($maxLocks);
         }
     }
 
@@ -154,11 +156,11 @@ class PosixSemaphore implements Semaphore, \Serializable {
     private function doAcquire(): \Generator {
         do {
             // Attempt to acquire a lock from the semaphore.
-            if (@\msg_receive($this->queue, 0, $type, 1, $chr, false, \MSG_IPC_NOWAIT, $errno)) {
+            if (@\msg_receive($this->queue, 0, $type, 1, $key, false, \MSG_IPC_NOWAIT, $errno)) {
                 // A free lock was found, so resolve with a lock object that can
                 // be used to release the lock.
-                return new Lock(function () {
-                    $this->release();
+                return new KeyedLock((int) $key, function (KeyedLock $lock) {
+                    $this->release($lock->getKey());
                 });
             }
 
@@ -209,16 +211,18 @@ class PosixSemaphore implements Semaphore, \Serializable {
     /**
      * Releases a lock from the semaphore.
      *
+     * @param int $key Lock identifier.
+     *
      * @throws SyncException If the operation failed.
      */
-    protected function release() {
+    protected function release(int $key) {
         if (!$this->queue) {
             return; // Queue already destroyed.
         }
 
         // Call send in non-blocking mode. If the call fails because the queue
         // is full, then the number of locks configured is too large.
-        if (!@\msg_send($this->queue, 1, "\0", false, false, $errno)) {
+        if (!@\msg_send($this->queue, 1, $key, false, false, $errno)) {
             if ($errno === \MSG_EAGAIN) {
                 throw new SyncException('The semaphore size is larger than the system allows.');
             }
@@ -228,6 +232,6 @@ class PosixSemaphore implements Semaphore, \Serializable {
     }
 
     private static function makeKey(string $id): int {
-        return \abs(\crc32(\sha1($id)));
+        return \abs(\unpack("l", \md5($id, true))[1]);
     }
 }

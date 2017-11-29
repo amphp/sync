@@ -30,20 +30,20 @@ abstract class AbstractMutexTest extends TestCase {
                 $mutex = $this->createMutex();
 
                 $lock1 = yield $mutex->acquire();
-                Loop::delay(500, function () use ($lock1) {
+                Loop::delay(100, function () use ($lock1) {
                     $lock1->release();
                 });
 
                 $lock2 = yield $mutex->acquire();
-                Loop::delay(500, function () use ($lock2) {
+                Loop::delay(100, function () use ($lock2) {
                     $lock2->release();
                 });
 
                 $lock3 = yield $mutex->acquire();
-                Loop::delay(500, function () use ($lock3) {
+                Loop::delay(100, function () use ($lock3) {
                     $lock3->release();
                 });
             });
-        }, 1500);
+        }, 300);
     }
 }

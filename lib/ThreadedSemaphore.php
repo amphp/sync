@@ -31,7 +31,7 @@ class ThreadedSemaphore implements Semaphore {
         $this->semaphore = new class($locks) extends \Threaded {
             const LATENCY_TIMEOUT = 10;
 
-            /** @var int The number of available locks. */
+            /** @var int[] Available locks. */
             private $locks;
 
             /**
@@ -40,16 +40,7 @@ class ThreadedSemaphore implements Semaphore {
              * @param int $locks The maximum number of locks that can be acquired from the semaphore.
              */
             public function __construct(int $locks) {
-                $this->locks = $locks;
-            }
-
-            /**
-             * Gets the number of currently available locks.
-             *
-             * @return int The number of available locks.
-             */
-            public function getAvailable(): int {
-                return $this->locks;
+                $this->locks = \range(0, $locks - 1);
             }
 
             /**
@@ -69,29 +60,23 @@ class ThreadedSemaphore implements Semaphore {
                     $tsl = function () {
                         // If there are no locks available or the wait queue is not empty,
                         // we need to wait our turn to acquire a lock.
-                        if ($this->locks > 0) {
-                            --$this->locks;
-                            return false;
+                        if (empty($this->locks)) {
+                            return null;
                         }
-                        return true;
+
+                        return \array_shift($this->locks);
                     };
 
-                    while ($this->locks < 1 || $this->synchronized($tsl)) {
+                    while (empty($this->locks) || $key = $this->synchronized($tsl) === null) {
                         yield new Delayed(self::LATENCY_TIMEOUT);
                     }
 
-                    return new Lock(function () {
-                        $this->release();
+                    return new KeyedLock($key, function (KeyedLock $lock) {
+                        $key = $lock->getKey();
+                        $this->synchronized(function () use ($key) {
+                            $this->locks[] = $key;
+                        });
                     });
-                });
-            }
-
-            /**
-             * Releases a lock from the semaphore.
-             */
-            protected function release() {
-                $this->synchronized(function () {
-                    ++$this->locks;
                 });
             }
         };

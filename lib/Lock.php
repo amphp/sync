@@ -16,7 +16,8 @@ class Lock {
     /**
      * Creates a new lock permit object.
      *
-     * @param callable<Lock> $releaser A function to be called upon release.
+     * @param callable $releaser A function to be called upon release. The function will be passed this object as the
+     *     first parameter.
      */
     public function __construct(callable $releaser) {
         $this->releaser = $releaser;

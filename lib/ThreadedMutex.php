@@ -39,16 +39,9 @@ class ThreadedMutex implements Mutex {
                     }
 
                     return new Lock(function () {
-                        $this->release();
+                        $this->lock = true;
                     });
                 });
-            }
-
-            /**
-             * Releases the lock.
-             */
-            protected function release() {
-                $this->lock = true;
             }
         };
     }
