@@ -159,7 +159,7 @@ class PosixSemaphore implements Semaphore, \Serializable {
             if (@\msg_receive($this->queue, 0, $type, 1, $key, false, \MSG_IPC_NOWAIT, $errno)) {
                 // A free lock was found, so resolve with a lock object that can
                 // be used to release the lock.
-                return new KeyedLock((int) $key, function (KeyedLock $lock) {
+                return new KeyedLock(\unpack("C", $key)[1], function (KeyedLock $lock) {
                     $this->release($lock->getKey());
                 });
             }
@@ -222,7 +222,7 @@ class PosixSemaphore implements Semaphore, \Serializable {
 
         // Call send in non-blocking mode. If the call fails because the queue
         // is full, then the number of locks configured is too large.
-        if (!@\msg_send($this->queue, 1, $key, false, false, $errno)) {
+        if (!@\msg_send($this->queue, 1, \pack("C", $key), false, false, $errno)) {
             if ($errno === \MSG_EAGAIN) {
                 throw new SyncException('The semaphore size is larger than the system allows.');
             }

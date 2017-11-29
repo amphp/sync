@@ -88,7 +88,44 @@ abstract class AbstractSemaphoreTest extends TestCase {
 
                 $lock4 = yield $this->semaphore->acquire();
                 $this->assertSame($lock1->getKey(), $lock4->getKey());
-                $lock4->release();
+                Loop::delay(200, function () use ($lock4) {
+                    $lock4->release();
+                });
+            });
+        }, 300);
+    }
+
+    public function getSemaphoreSizes(): array {
+        return [
+            [5],
+            [10],
+            [20],
+            [30],
+        ];
+    }
+
+    /**
+     * @dataProvider getSemaphoreSizes
+     *
+     * @param int $count Number of locks to test.
+     */
+    public function testAcquireFromMultipleSizeSemaphores(int $count) {
+        $this->assertRunTimeGreaterThan(function () use ($count) {
+            $this->semaphore = $this->createSemaphore($count);
+
+            Loop::run(function () use ($count) {
+                foreach (\range(0, $count - 1) as $value) {
+                    $this->semaphore->acquire()->onResolve(function ($exception, $lock) {
+                        if ($exception) {
+                            throw $exception;
+                        }
+
+                        Loop::delay(100, [$lock, "release"]);
+                    });
+                }
+
+                $lock = yield $this->semaphore->acquire();
+                Loop::delay(100, [$lock, "release"]);
             });
         }, 200);
     }
