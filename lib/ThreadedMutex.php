@@ -31,7 +31,12 @@ class ThreadedMutex implements Mutex {
             public function acquire(): Promise {
                 return call(function () {
                     $tsl = function () {
-                        return (!$this->locked ? $this->locked = true : false);
+                        if ($this->locked) {
+                            return true;
+                        }
+
+                        $this->locked = true;
+                        return false;
                     };
 
                     while ($this->locked || $this->synchronized($tsl)) {
