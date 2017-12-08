@@ -2,7 +2,7 @@
 
 git clone https://github.com/krakjoe/pthreads;
 pushd pthreads;
-git checkout $(git describe --tags);
+git checkout master;
 phpize;
 ./configure;
 make;
