@@ -23,6 +23,15 @@ abstract class AbstractSemaphoreTest extends TestCase {
         $this->semaphore = null; // Force Semaphore::__destruct() to be invoked.
     }
 
+    public function testConstructorOnInvalidMaxLocks() {
+        Loop::run(function () {
+            $this->expectException(\Error::class);
+            $this->expectExceptionMessage("The number of locks must be greater than 0");
+
+            $this->semaphore = $this->createSemaphore(-1);
+        });
+    }
+
     public function testAcquire() {
         Loop::run(function () {
             $this->semaphore = $this->createSemaphore(1);

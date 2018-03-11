@@ -6,6 +6,7 @@ use Amp\Delayed;
 use Amp\Loop;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\Semaphore;
+use Amp\Sync\SyncException;
 
 /**
  * @group posix
@@ -25,6 +26,59 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
      */
     public function createSemaphore(int $locks): Semaphore {
         return PosixSemaphore::create(self::ID, $locks);
+    }
+
+    public function testConstructorOnInvalidMaxLocks() {
+        Loop::run(function () {
+            $this->expectException(\Error::class);
+            $this->expectExceptionMessage("Number of locks must be greater than 0");
+
+            $this->semaphore = $this->createSemaphore(-1);
+        });        
+    }
+
+    public function testCreateOnInvalidMaxLocks() {
+        Loop::run(function () {
+            $this->expectException(\Error::class);
+            $this->expectExceptionMessage("Number of locks must be greater than 0");
+
+            PosixSemaphore::create(self::ID, -1);
+        });
+    }
+
+    public function testGetPermissions() {
+        $this->semaphore = PosixSemaphore::create(self::ID, 1);
+        Loop::run(function () {
+            $used = PosixSemaphore::use(self::ID);
+            $used->setPermissions(0644);
+
+            $this->assertSame(420, $this->semaphore->getPermissions());
+        });
+    }
+
+    public function testGetId() {
+        Loop::run(function () {
+            $this->semaphore = $this->createSemaphore(1);
+
+            $this->assertSame("Amp\Sync\Test\PosixSemaphoreTest", $this->semaphore->getId());
+        });
+    }
+
+    public function testUseOnInvalidSemaphoreId() {
+        Loop::run(function () {
+            $this->expectException(SyncException::class);
+            $this->expectExceptionMessage("No semaphore with that ID found");
+
+            PosixSemaphore::use(1);
+        });
+    }
+
+    public function testCreateOnDuplicatedSemaphoreId() {
+        $this->expectException(SyncException::class);
+        $this->expectExceptionMessage("A semaphore with that ID already exists");
+
+        $semaphore = PosixSemaphore::create(self::ID, 1);
+        $semaphore::create(self::ID, 1);
     }
 
     public function testUse() {
