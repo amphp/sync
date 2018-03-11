@@ -34,7 +34,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
             $this->expectExceptionMessage("Number of locks must be greater than 0");
 
             $this->semaphore = $this->createSemaphore(-1);
-        });        
+        });
     }
 
     public function testCreateOnInvalidMaxLocks() {
