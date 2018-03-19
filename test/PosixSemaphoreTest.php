@@ -51,7 +51,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
             $used = PosixSemaphore::use(self::ID);
             $used->setPermissions(0644);
 
-            $this->assertSame(420, $this->semaphore->getPermissions());
+            $this->assertSame(0420, $this->semaphore->getPermissions());
         });
     }
 
@@ -59,7 +59,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         Loop::run(function () {
             $this->semaphore = $this->createSemaphore(1);
 
-            $this->assertSame("Amp\Sync\Test\PosixSemaphoreTest", $this->semaphore->getId());
+            $this->assertSame(Amp\Sync\Test\PosixSemaphoreTest::class, $this->semaphore->getId());
         });
     }
 
