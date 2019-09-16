@@ -96,7 +96,7 @@ final class PosixSemaphore implements Semaphore
         return $this->id;
     }
 
-    private function open()
+    private function open(): void
     {
         if (!\msg_queue_exists($this->key)) {
             throw new SyncException('No semaphore with that ID found');
@@ -115,7 +115,7 @@ final class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
-    private function init(int $maxLocks, int $permissions)
+    private function init(int $maxLocks, int $permissions): void
     {
         if (\msg_queue_exists($this->key)) {
             throw new SyncException('A semaphore with that ID already exists');
@@ -154,7 +154,7 @@ final class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the operation failed.
      */
-    public function setPermissions(int $mode)
+    public function setPermissions(int $mode): void
     {
         if (!\msg_set_queue($this->queue, [
             'msg_perm.mode' => $mode
@@ -215,7 +215,7 @@ final class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the operation failed.
      */
-    protected function release(int $id)
+    protected function release(int $id): void
     {
         if (!$this->queue) {
             return; // Queue already destroyed.

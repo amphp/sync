@@ -19,8 +19,8 @@ final class MutexStorage extends \Threaded
      */
     public function acquire(): Promise
     {
-        return call(function () {
-            $tsl = function () {
+        return call(function (): \Generator {
+            $tsl = function (): bool {
                 if ($this->locked) {
                     return true;
                 }
@@ -33,7 +33,7 @@ final class MutexStorage extends \Threaded
                 yield new Delayed(self::LATENCY_TIMEOUT);
             }
 
-            return new Lock(0, function () {
+            return new Lock(0, function (): void {
                 $this->locked = false;
             });
         });

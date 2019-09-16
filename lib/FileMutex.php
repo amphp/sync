@@ -58,7 +58,7 @@ final class FileMutex implements Mutex
         }
 
         // Return a lock object that can be used to release the lock on the mutex.
-        $lock = new Lock(0, function () {
+        $lock = new Lock(0, function (): void {
             $this->release();
         });
 
@@ -72,7 +72,7 @@ final class FileMutex implements Mutex
      *
      * @throws SyncException If the unlock operation failed.
      */
-    protected function release()
+    protected function release(): void
     {
         $success = @\unlink($this->fileName);
 

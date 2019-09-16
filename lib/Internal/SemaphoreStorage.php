@@ -37,8 +37,8 @@ final class SemaphoreStorage extends \Threaded
          * If a lock is not available, we add the request to a queue and set a timer
          * to check again in the future.
          */
-        return call(function () {
-            $tsl = function () {
+        return call(function (): \Generator {
+            $tsl = function (): ?int {
                 // If there are no locks available or the wait queue is not empty,
                 // we need to wait our turn to acquire a lock.
                 if (!$this->count()) {
@@ -52,7 +52,7 @@ final class SemaphoreStorage extends \Threaded
                 yield new Delayed(self::LATENCY_TIMEOUT);
             }
 
-            return new Lock($id, function (Lock $lock) {
+            return new Lock($id, function (Lock $lock): void {
                 $id = $lock->getId();
                 $this->synchronized(function () use ($id) {
                     $this[] = $id;

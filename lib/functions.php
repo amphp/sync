@@ -18,7 +18,7 @@ use function Amp\call;
  */
 function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
 {
-    return call(function () use ($mutex, $callback, $args) {
+    return call(function () use ($mutex, $callback, $args): \Generator {
         /** @var \Amp\Sync\Lock $lock */
         $lock = yield $mutex->acquire();
 

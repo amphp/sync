@@ -21,7 +21,7 @@ final class SemaphoreMutex implements Mutex
     /** {@inheritdoc} */
     public function acquire(): Promise
     {
-        return call(function () {
+        return call(function (): \Generator {
             /** @var \Amp\Sync\Lock $lock */
             $lock = yield $this->semaphore->acquire();
             if ($lock->getId() !== 0) {
