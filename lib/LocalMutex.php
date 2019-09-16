@@ -7,7 +7,7 @@ use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
-class LocalMutex implements Mutex {
+final class LocalMutex implements Mutex {
     use CallableMaker;
 
     /** @var bool */

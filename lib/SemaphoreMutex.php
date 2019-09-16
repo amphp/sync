@@ -5,7 +5,7 @@ namespace Amp\Sync;
 use Amp\Promise;
 use function Amp\call;
 
-class SemaphoreMutex implements Mutex {
+final class SemaphoreMutex implements Mutex {
     /** @var \Amp\Sync\Semaphore */
     private $semaphore;
 

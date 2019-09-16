@@ -7,7 +7,7 @@ use Amp\Promise;
 use Amp\Sync\Lock;
 use function Amp\call;
 
-class SemaphoreStorage extends \Threaded {
+final class SemaphoreStorage extends \Threaded {
     const LATENCY_TIMEOUT = 10;
 
     /**

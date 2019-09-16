@@ -21,16 +21,14 @@ use Amp\Promise;
  *
  * @see http://php.net/fopen
  */
-class FileMutex implements Mutex {
+final class FileMutex implements Mutex {
     const LATENCY_TIMEOUT = 10;
 
     /** @var string The full path to the lock file. */
     private $fileName;
 
     /**
-     * Creates a new mutex.
-     *
-     * @param string|null
+     * @param string|null $fileName Name of temporary file to use as a mutex.
      */
     public function __construct(string $fileName) {
         $this->fileName = $fileName;

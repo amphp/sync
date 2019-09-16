@@ -14,7 +14,7 @@ use Amp\Promise;
  *
  * Not compatible with Windows.
  */
-class PosixSemaphore implements Semaphore {
+final class PosixSemaphore implements Semaphore {
     const LATENCY_TIMEOUT = 10;
 
     /** @var string */

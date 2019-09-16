@@ -12,7 +12,7 @@ use Amp\Promise;
  * may not acquire a lock immediately when one is available and there may be a
  * small delay. However, the small delay will not block the thread.
  */
-class ThreadedSemaphore implements Semaphore {
+final class ThreadedSemaphore implements Semaphore {
     /** @var \Threaded */
     private $semaphore;
 

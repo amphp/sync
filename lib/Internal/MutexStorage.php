@@ -7,7 +7,7 @@ use Amp\Promise;
 use Amp\Sync\Lock;
 use function Amp\call;
 
-class MutexStorage extends \Threaded {
+final class MutexStorage extends \Threaded {
     const LATENCY_TIMEOUT =  10;
 
     /** @var bool */

@@ -9,7 +9,7 @@ use Amp\Promise;
  *
  * Compatible with POSIX systems and Microsoft Windows.
  */
-class ThreadedMutex implements Mutex {
+final class ThreadedMutex implements Mutex {
     /** @var Internal\MutexStorage */
     private $mutex;
 
