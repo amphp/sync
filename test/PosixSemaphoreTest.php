@@ -2,7 +2,6 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Delayed;
 use Amp\Loop;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\Semaphore;
@@ -14,7 +13,7 @@ use Amp\Sync\SyncException;
  */
 class PosixSemaphoreTest extends AbstractSemaphoreTest
 {
-    const ID = __CLASS__;
+    const ID = __CLASS__ . '/4';
 
     public function makeId(): string
     {
@@ -31,56 +30,46 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         return PosixSemaphore::create(self::ID, $locks);
     }
 
-    public function testConstructorOnInvalidMaxLocks()
+    public function testConstructorOnInvalidMaxLocks(): void
     {
-        Loop::run(function () {
-            $this->expectException(\Error::class);
-            $this->expectExceptionMessage("Number of locks must be greater than 0");
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage("Number of locks must be greater than 0");
 
-            $this->semaphore = $this->createSemaphore(-1);
-        });
+        $this->semaphore = $this->createSemaphore(-1);
     }
 
-    public function testCreateOnInvalidMaxLocks()
+    public function testCreateOnInvalidMaxLocks(): void
     {
-        Loop::run(function () {
-            $this->expectException(\Error::class);
+        $this->expectException(\Error::class);
 
-            PosixSemaphore::create(self::ID, -1);
-        });
+        PosixSemaphore::create(self::ID, -1);
     }
 
-    public function testGetPermissions()
+    public function testGetPermissions(): void
     {
         $this->semaphore = PosixSemaphore::create(self::ID, 1);
-        Loop::run(function () {
-            $used = PosixSemaphore::use(self::ID);
-            $used->setPermissions(0644);
+        $used = PosixSemaphore::use(self::ID);
+        $used->setPermissions(0644);
 
-            $this->assertSame(0644, $this->semaphore->getPermissions());
-        });
+        $this->assertSame(0644, $this->semaphore->getPermissions());
     }
 
-    public function testGetId()
+    public function testGetId(): void
     {
-        Loop::run(function () {
-            $this->semaphore = $this->createSemaphore(1);
+        $this->semaphore = $this->createSemaphore(1);
 
-            $this->assertSame(PosixSemaphoreTest::class, $this->semaphore->getId());
-        });
+        $this->assertSame(self::ID, $this->semaphore->getId());
     }
 
-    public function testUseOnInvalidSemaphoreId()
+    public function testUseOnInvalidSemaphoreId(): void
     {
-        Loop::run(function () {
-            $this->expectException(SyncException::class);
-            $this->expectExceptionMessage("No semaphore with that ID found");
+        $this->expectException(SyncException::class);
+        $this->expectExceptionMessage("No semaphore with that ID found");
 
-            PosixSemaphore::use(1);
-        });
+        PosixSemaphore::use(1);
     }
 
-    public function testCreateOnDuplicatedSemaphoreId()
+    public function testCreateOnDuplicatedSemaphoreId(): void
     {
         $this->expectException(SyncException::class);
         $this->expectExceptionMessage("A semaphore with that ID already exists");
@@ -91,45 +80,19 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
     public function testUse()
     {
-        $this->assertRunTimeGreaterThan(function () {
-            $this->semaphore = $this->createSemaphore(1);
+        $this->setMinimumRuntime(500);
 
-            Loop::run(function () {
-                $used = PosixSemaphore::use(self::ID);
+        $this->semaphore = $this->createSemaphore(1);
 
-                $promise1 = $used->acquire();
-                $promise2 = $this->semaphore->acquire();
+        $used = PosixSemaphore::use(self::ID);
 
-                Loop::delay(500, function () use ($promise1) {
-                    (yield $promise1)->release();
-                });
+        $promise1 = $used->acquire();
+        $promise2 = $this->semaphore->acquire();
 
-                (yield $promise2)->release();
-            });
-        }, 500);
-    }
+        Loop::delay(500, function () use ($promise1) {
+            (yield $promise1)->release();
+        });
 
-    /**
-     * @depends testUse
-     */
-    public function testInFork()
-    {
-        $this->assertRunTimeGreaterThan(function () {
-            $this->semaphore = $this->createSemaphore(1);
-
-            $this->doInFork(function () {
-                Loop::run(function () {
-                    $semaphore = PosixSemaphore::use(self::ID);
-                    $lock = yield $semaphore->acquire();
-                    yield new Delayed(500);
-                    $lock->release();
-                });
-            });
-
-            Loop::run(function () {
-                $lock = yield $this->semaphore->acquire();
-                $lock->release();
-            });
-        }, 500);
+        (yield $promise2)->release();
     }
 }

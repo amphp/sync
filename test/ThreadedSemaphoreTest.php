@@ -17,7 +17,7 @@ class ThreadedSemaphoreTest extends AbstractSemaphoreTest
         return new ThreadedSemaphore($locks);
     }
 
-    public function testWithinThread()
+    public function testWithinThread(): \Generator
     {
         $semaphore = $this->createSemaphore(1);
 
@@ -59,14 +59,12 @@ class ThreadedSemaphoreTest extends AbstractSemaphoreTest
             }
         };
 
-        $this->assertRunTimeGreaterThan(function () use ($semaphore, $thread) {
-            $thread->start(\PTHREADS_INHERIT_INI);
+        $this->setMinimumRuntime(1100);
 
-            Loop::run(function () use ($semaphore) {
-                yield new Delayed(500); // Wait for thread to start and obtain lock.
-                $lock = yield $semaphore->acquire();
-                Loop::delay(100, [$lock, "release"]);
-            });
-        }, 1100);
+        $thread->start(\PTHREADS_INHERIT_INI);
+
+        yield new Delayed(500); // Wait for thread to start and obtain lock.
+        $lock = yield $semaphore->acquire();
+        Loop::delay(100, [$lock, "release"]);
     }
 }

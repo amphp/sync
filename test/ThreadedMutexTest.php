@@ -17,7 +17,7 @@ class ThreadedMutexTest extends AbstractMutexTest
         return new ThreadedMutex;
     }
 
-    public function testWithinThread()
+    public function testWithinThread(): \Generator
     {
         $mutex = $this->createMutex();
 
@@ -59,14 +59,12 @@ class ThreadedMutexTest extends AbstractMutexTest
             }
         };
 
-        $this->assertRunTimeGreaterThan(function () use ($mutex, $thread) {
-            $thread->start(\PTHREADS_INHERIT_INI);
+        $this->setMinimumRuntime(1100);
 
-            Loop::run(function () use ($mutex) {
-                yield new Delayed(500); // Wait for thread to start and obtain lock.
-                $lock = yield $mutex->acquire();
-                Loop::delay(100, [$lock, "release"]);
-            });
-        }, 1100);
+        $thread->start(\PTHREADS_INHERIT_INI);
+
+        yield new Delayed(500); // Wait for thread to start and obtain lock.
+        $lock = yield $mutex->acquire();
+        Loop::delay(100, [$lock, "release"]);
     }
 }

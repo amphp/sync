@@ -2,10 +2,10 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Lock;
 
-class LockTest extends TestCase
+class LockTest extends AsyncTestCase
 {
     public function testIsReleased()
     {

@@ -3,50 +3,46 @@
 namespace Amp\Sync\Test;
 
 use Amp\Loop;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Mutex;
 
 /**
  * @requires extension pthreads
  */
-abstract class AbstractMutexTest extends TestCase
+abstract class AbstractMutexTest extends AsyncTestCase
 {
     /**
      * @return \Amp\Sync\Mutex
      */
     abstract public function createMutex(): Mutex;
 
-    public function testAcquire()
+    public function testAcquire(): \Generator
     {
-        Loop::run(function () {
-            $mutex = $this->createMutex();
-            $lock = yield $mutex->acquire();
-            $lock->release();
-            $this->assertTrue($lock->isReleased());
-        });
+        $mutex = $this->createMutex();
+        $lock = yield $mutex->acquire();
+        $lock->release();
+        $this->assertTrue($lock->isReleased());
     }
 
-    public function testAcquireMultiple()
+    public function testAcquireMultiple(): \Generator
     {
-        $this->assertRunTimeGreaterThan(function () {
-            Loop::run(function () {
-                $mutex = $this->createMutex();
+        $this->setMinimumRuntime(300);
 
-                $lock1 = yield $mutex->acquire();
-                Loop::delay(100, function () use ($lock1) {
-                    $lock1->release();
-                });
+        $mutex = $this->createMutex();
 
-                $lock2 = yield $mutex->acquire();
-                Loop::delay(100, function () use ($lock2) {
-                    $lock2->release();
-                });
+        $lock1 = yield $mutex->acquire();
+        Loop::delay(100, function () use ($lock1) {
+            $lock1->release();
+        });
 
-                $lock3 = yield $mutex->acquire();
-                Loop::delay(100, function () use ($lock3) {
-                    $lock3->release();
-                });
-            });
-        }, 300);
+        $lock2 = yield $mutex->acquire();
+        Loop::delay(100, function () use ($lock2) {
+            $lock2->release();
+        });
+
+        $lock3 = yield $mutex->acquire();
+        Loop::delay(100, function () use ($lock3) {
+            $lock3->release();
+        });
     }
 }

@@ -3,10 +3,10 @@
 namespace Amp\Sync\Test;
 
 use Amp\Loop;
-use Amp\PHPUnit\TestCase;
+use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Semaphore;
 
-abstract class AbstractSemaphoreTest extends TestCase
+abstract class AbstractSemaphoreTest extends AsyncTestCase
 {
     /**
      * @var \Amp\Sync\Semaphore
@@ -20,93 +20,86 @@ abstract class AbstractSemaphoreTest extends TestCase
      */
     abstract public function createSemaphore(int $locks): Semaphore;
 
-    public function tearDown()
+    public function tearDown(): void
     {
+        parent::tearDown();
         $this->semaphore = null; // Force Semaphore::__destruct() to be invoked.
     }
 
-    public function testConstructorOnInvalidMaxLocks()
+    public function testConstructorOnInvalidMaxLocks(): void
     {
-        Loop::run(function () {
-            $this->expectException(\Error::class);
+        $this->expectException(\Error::class);
 
-            $this->semaphore = $this->createSemaphore(-1);
+        $this->semaphore = $this->createSemaphore(-1);
+    }
+
+    public function testAcquire(): \Generator
+    {
+        $this->semaphore = $this->createSemaphore(1);
+
+        $lock = yield $this->semaphore->acquire();
+
+        $this->assertFalse($lock->isReleased());
+
+        $lock->release();
+
+        $this->assertTrue($lock->isReleased());
+    }
+
+    public function testAcquireMultipleFromSingleLockSemaphore(): \Generator
+    {
+        $this->setMinimumRuntime(300);
+
+        $this->semaphore = $this->createSemaphore(1);
+
+        $lock1 = yield $this->semaphore->acquire();
+        $this->assertSame(0, $lock1->getId());
+        Loop::delay(100, function () use ($lock1) {
+            $lock1->release();
+        });
+
+        $lock2 = yield $this->semaphore->acquire();
+        $this->assertSame(0, $lock2->getId());
+        Loop::delay(100, function () use ($lock2) {
+            $lock2->release();
+        });
+
+        $lock3 = yield $this->semaphore->acquire();
+        $this->assertSame(0, $lock3->getId());
+        Loop::delay(100, function () use ($lock3) {
+            $lock3->release();
         });
     }
 
-    public function testAcquire()
+    public function testAcquireMultipleFromMultipleLockSemaphore(): \Generator
     {
-        Loop::run(function () {
-            $this->semaphore = $this->createSemaphore(1);
+        $this->setMinimumRuntime(300);
 
-            $lock = yield $this->semaphore->acquire();
+        $this->semaphore = $this->createSemaphore(3);
 
-            $this->assertFalse($lock->isReleased());
-
-            $lock->release();
-
-            $this->assertTrue($lock->isReleased());
+        $lock1 = yield $this->semaphore->acquire();
+        Loop::delay(100, function () use ($lock1) {
+            $lock1->release();
         });
-    }
 
-    public function testAcquireMultipleFromSingleLockSemaphore()
-    {
-        $this->assertRunTimeGreaterThan(function () {
-            $this->semaphore = $this->createSemaphore(1);
+        $lock2 = yield $this->semaphore->acquire();
+        $this->assertNotSame($lock1->getId(), $lock2->getId());
+        Loop::delay(200, function () use ($lock2) {
+            $lock2->release();
+        });
 
-            Loop::run(function () {
-                $lock1 = yield $this->semaphore->acquire();
-                $this->assertSame(0, $lock1->getId());
-                Loop::delay(100, function () use ($lock1) {
-                    $lock1->release();
-                });
+        $lock3 = yield $this->semaphore->acquire();
+        $this->assertNotSame($lock1->getId(), $lock3->getId());
+        $this->assertNotSame($lock2->getId(), $lock3->getId());
+        Loop::delay(200, function () use ($lock3) {
+            $lock3->release();
+        });
 
-                $lock2 = yield $this->semaphore->acquire();
-                $this->assertSame(0, $lock2->getId());
-                Loop::delay(100, function () use ($lock2) {
-                    $lock2->release();
-                });
-
-                $lock3 = yield $this->semaphore->acquire();
-                $this->assertSame(0, $lock3->getId());
-                Loop::delay(100, function () use ($lock3) {
-                    $lock3->release();
-                });
-            });
-        }, 300);
-    }
-
-    public function testAcquireMultipleFromMultipleLockSemaphore()
-    {
-        $this->assertRunTimeGreaterThan(function () {
-            $this->semaphore = $this->createSemaphore(3);
-
-            Loop::run(function () {
-                $lock1 = yield $this->semaphore->acquire();
-                Loop::delay(100, function () use ($lock1) {
-                    $lock1->release();
-                });
-
-                $lock2 = yield $this->semaphore->acquire();
-                $this->assertNotSame($lock1->getId(), $lock2->getId());
-                Loop::delay(200, function () use ($lock2) {
-                    $lock2->release();
-                });
-
-                $lock3 = yield $this->semaphore->acquire();
-                $this->assertNotSame($lock1->getId(), $lock3->getId());
-                $this->assertNotSame($lock2->getId(), $lock3->getId());
-                Loop::delay(200, function () use ($lock3) {
-                    $lock3->release();
-                });
-
-                $lock4 = yield $this->semaphore->acquire();
-                $this->assertSame($lock1->getId(), $lock4->getId());
-                Loop::delay(200, function () use ($lock4) {
-                    $lock4->release();
-                });
-            });
-        }, 300);
+        $lock4 = yield $this->semaphore->acquire();
+        $this->assertSame($lock1->getId(), $lock4->getId());
+        Loop::delay(200, function () use ($lock4) {
+            $lock4->release();
+        });
     }
 
     public function getSemaphoreSizes(): array
@@ -124,43 +117,39 @@ abstract class AbstractSemaphoreTest extends TestCase
      *
      * @param int $count Number of locks to test.
      */
-    public function testAcquireFromMultipleSizeSemaphores(int $count)
+    public function testAcquireFromMultipleSizeSemaphores(int $count): \Generator
     {
-        $this->assertRunTimeGreaterThan(function () use ($count) {
-            $this->semaphore = $this->createSemaphore($count);
+        $this->setMinimumRuntime(200);
 
-            Loop::run(function () use ($count) {
-                foreach (\range(0, $count - 1) as $value) {
-                    $this->semaphore->acquire()->onResolve(function ($exception, $lock) {
-                        if ($exception) {
-                            throw $exception;
-                        }
+        $this->semaphore = $this->createSemaphore($count);
 
-                        Loop::delay(100, [$lock, "release"]);
-                    });
+        foreach (\range(0, $count - 1) as $value) {
+            $this->semaphore->acquire()->onResolve(function ($exception, $lock) {
+                if ($exception) {
+                    throw $exception;
                 }
 
-                $lock = yield $this->semaphore->acquire();
                 Loop::delay(100, [$lock, "release"]);
             });
-        }, 200);
+        }
+
+        $lock = yield $this->semaphore->acquire();
+        Loop::delay(100, [$lock, "release"]);
     }
 
-    public function testSimultaneousAcquire()
+    public function testSimultaneousAcquire(): \Generator
     {
-        $this->assertRunTimeGreaterThan(function () {
-            $this->semaphore = $this->createSemaphore(1);
+        $this->setMinimumRuntime(100);
 
-            Loop::run(function () {
-                $promise1 = $this->semaphore->acquire();
-                $promise2 = $this->semaphore->acquire();
+        $this->semaphore = $this->createSemaphore(1);
 
-                Loop::delay(100, function () use ($promise1) {
-                    (yield $promise1)->release();
-                });
+        $promise1 = $this->semaphore->acquire();
+        $promise2 = $this->semaphore->acquire();
 
-                (yield $promise2)->release();
-            });
-        }, 100);
+        Loop::delay(100, function () use ($promise1) {
+            (yield $promise1)->release();
+        });
+
+        (yield $promise2)->release();
     }
 }
