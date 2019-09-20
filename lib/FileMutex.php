@@ -21,7 +21,8 @@ use Amp\Promise;
  *
  * @see http://php.net/fopen
  */
-final class FileMutex implements Mutex {
+final class FileMutex implements Mutex
+{
     const LATENCY_TIMEOUT = 10;
 
     /** @var string The full path to the lock file. */
@@ -30,14 +31,16 @@ final class FileMutex implements Mutex {
     /**
      * @param string|null $fileName Name of temporary file to use as a mutex.
      */
-    public function __construct(string $fileName) {
+    public function __construct(string $fileName)
+    {
         $this->fileName = $fileName;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         return new Coroutine($this->doAcquire());
     }
 
@@ -46,7 +49,8 @@ final class FileMutex implements Mutex {
      *
      * @return \Generator
      */
-    private function doAcquire(): \Generator {
+    private function doAcquire(): \Generator
+    {
         // Try to create the lock file. If the file already exists, someone else
         // has the lock, so set an asynchronous timer and try again.
         while (($handle = @\fopen($this->fileName, 'x')) === false) {
@@ -68,7 +72,8 @@ final class FileMutex implements Mutex {
      *
      * @throws SyncException If the unlock operation failed.
      */
-    protected function release() {
+    protected function release()
+    {
         $success = @\unlink($this->fileName);
 
         if (!$success) {

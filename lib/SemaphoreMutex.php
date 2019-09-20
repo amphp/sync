@@ -5,19 +5,22 @@ namespace Amp\Sync;
 use Amp\Promise;
 use function Amp\call;
 
-final class SemaphoreMutex implements Mutex {
+final class SemaphoreMutex implements Mutex
+{
     /** @var \Amp\Sync\Semaphore */
     private $semaphore;
 
     /**
      * @param \Amp\Sync\Semaphore $semaphore A semaphore with a single lock.
      */
-    public function __construct(Semaphore $semaphore) {
+    public function __construct(Semaphore $semaphore)
+    {
         $this->semaphore = $semaphore;
     }
 
     /** {@inheritdoc} */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         return call(function () {
             /** @var \Amp\Sync\Lock $lock */
             $lock = yield $this->semaphore->acquire();

@@ -9,13 +9,15 @@ use Amp\Sync\Mutex;
 /**
  * @requires extension pthreads
  */
-abstract class AbstractMutexTest extends TestCase {
+abstract class AbstractMutexTest extends TestCase
+{
     /**
      * @return \Amp\Sync\Mutex
      */
     abstract public function createMutex(): Mutex;
 
-    public function testAcquire() {
+    public function testAcquire()
+    {
         Loop::run(function () {
             $mutex = $this->createMutex();
             $lock = yield $mutex->acquire();
@@ -24,7 +26,8 @@ abstract class AbstractMutexTest extends TestCase {
         });
     }
 
-    public function testAcquireMultiple() {
+    public function testAcquireMultiple()
+    {
         $this->assertRunTimeGreaterThan(function () {
             Loop::run(function () {
                 $mutex = $this->createMutex();

@@ -8,8 +8,10 @@ use Amp\PHPUnit\TestCase;
 use Amp\Sync\LocalMutex;
 use function Amp\Sync\synchronized;
 
-class SynchronizedTest extends TestCase {
-    public function testSynchronized() {
+class SynchronizedTest extends TestCase
+{
+    public function testSynchronized()
+    {
         $this->assertRunTimeGreaterThan(function () {
             Loop::run(function () {
                 $mutex = new LocalMutex;

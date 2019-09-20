@@ -11,7 +11,8 @@ use function Amp\call;
  * semaphore, the lock should reside in the same thread or process until it is
  * released.
  */
-final class Lock {
+final class Lock
+{
     /** @var callable|null The function to be called on release or null if the lock has been released. */
     private $releaser;
 
@@ -28,7 +29,8 @@ final class Lock {
      * @param callable $releaser A function to be called upon release. The function will be passed this object as the
      *     first parameter.
      */
-    public function __construct(int $id, callable $releaser) {
+    public function __construct(int $id, callable $releaser)
+    {
         $this->id = $id;
         $this->releaser = $releaser;
     }
@@ -38,21 +40,24 @@ final class Lock {
      *
      * @return bool True if the lock has already been released, otherwise false.
      */
-    public function isReleased(): bool {
+    public function isReleased(): bool
+    {
         return !$this->releaser;
     }
 
     /**
      * @return int Lock identifier.
      */
-    public function getId(): int {
+    public function getId(): int
+    {
         return $this->id;
     }
 
     /**
      * Releases the lock. No-op if the lock has already been released.
      */
-    public function release(): Promise {
+    public function release(): Promise
+    {
         if (!$this->releaser) {
             return $this->released;
         }
@@ -67,7 +72,8 @@ final class Lock {
     /**
      * Releases the lock when there are no more references to it.
      */
-    public function __destruct() {
+    public function __destruct()
+    {
         if ($this->releaser) {
             Promise\rethrow($this->release());
         }

@@ -12,10 +12,12 @@ use Amp\Sync\SyncException;
  * @group posix
  * @requires extension sysvmsg
  */
-class PosixSemaphoreTest extends AbstractSemaphoreTest {
+class PosixSemaphoreTest extends AbstractSemaphoreTest
+{
     const ID = __CLASS__;
 
-    public function makeId(): string {
+    public function makeId(): string
+    {
         return \spl_object_hash($this);
     }
 
@@ -24,11 +26,13 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
      *
      * @return \Amp\Sync\PosixSemaphore
      */
-    public function createSemaphore(int $locks): Semaphore {
+    public function createSemaphore(int $locks): Semaphore
+    {
         return PosixSemaphore::create(self::ID, $locks);
     }
 
-    public function testConstructorOnInvalidMaxLocks() {
+    public function testConstructorOnInvalidMaxLocks()
+    {
         Loop::run(function () {
             $this->expectException(\Error::class);
             $this->expectExceptionMessage("Number of locks must be greater than 0");
@@ -37,7 +41,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         });
     }
 
-    public function testCreateOnInvalidMaxLocks() {
+    public function testCreateOnInvalidMaxLocks()
+    {
         Loop::run(function () {
             $this->expectException(\Error::class);
 
@@ -45,7 +50,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         });
     }
 
-    public function testGetPermissions() {
+    public function testGetPermissions()
+    {
         $this->semaphore = PosixSemaphore::create(self::ID, 1);
         Loop::run(function () {
             $used = PosixSemaphore::use(self::ID);
@@ -55,7 +61,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         });
     }
 
-    public function testGetId() {
+    public function testGetId()
+    {
         Loop::run(function () {
             $this->semaphore = $this->createSemaphore(1);
 
@@ -63,7 +70,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         });
     }
 
-    public function testUseOnInvalidSemaphoreId() {
+    public function testUseOnInvalidSemaphoreId()
+    {
         Loop::run(function () {
             $this->expectException(SyncException::class);
             $this->expectExceptionMessage("No semaphore with that ID found");
@@ -72,7 +80,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         });
     }
 
-    public function testCreateOnDuplicatedSemaphoreId() {
+    public function testCreateOnDuplicatedSemaphoreId()
+    {
         $this->expectException(SyncException::class);
         $this->expectExceptionMessage("A semaphore with that ID already exists");
 
@@ -80,7 +89,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
         $semaphore::create(self::ID, 1);
     }
 
-    public function testUse() {
+    public function testUse()
+    {
         $this->assertRunTimeGreaterThan(function () {
             $this->semaphore = $this->createSemaphore(1);
 
@@ -102,7 +112,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest {
     /**
      * @depends testUse
      */
-    public function testInFork() {
+    public function testInFork()
+    {
         $this->assertRunTimeGreaterThan(function () {
             $this->semaphore = $this->createSemaphore(1);
 

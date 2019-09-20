@@ -7,7 +7,8 @@ use Amp\Promise;
 use Amp\Sync\Lock;
 use function Amp\call;
 
-final class SemaphoreStorage extends \Threaded {
+final class SemaphoreStorage extends \Threaded
+{
     const LATENCY_TIMEOUT = 10;
 
     /**
@@ -15,7 +16,8 @@ final class SemaphoreStorage extends \Threaded {
      *
      * @param int $locks The maximum number of locks that can be acquired from the semaphore.
      */
-    public function __construct(int $locks) {
+    public function __construct(int $locks)
+    {
         foreach (\range(0, $locks - 1) as $lock) {
             $this[] = $lock;
         }
@@ -24,7 +26,8 @@ final class SemaphoreStorage extends \Threaded {
     /**
      * @return \Amp\Promise
      */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         /**
          * Uses a double locking mechanism to acquire a lock without blocking. A
          * synchronous mutex is used to make sure that the semaphore is queried one

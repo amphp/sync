@@ -10,22 +10,27 @@ use Amp\Sync\ThreadedSemaphore;
 /**
  * @requires extension pthreads
  */
-class ThreadedSemaphoreTest extends AbstractSemaphoreTest {
-    public function createSemaphore(int $locks): Semaphore {
+class ThreadedSemaphoreTest extends AbstractSemaphoreTest
+{
+    public function createSemaphore(int $locks): Semaphore
+    {
         return new ThreadedSemaphore($locks);
     }
 
-    public function testWithinThread() {
+    public function testWithinThread()
+    {
         $semaphore = $this->createSemaphore(1);
 
         $thread = new class($semaphore) extends \Thread {
             private $semaphore;
 
-            public function __construct(Semaphore $semaphore) {
+            public function __construct(Semaphore $semaphore)
+            {
                 $this->semaphore = $semaphore;
             }
 
-            public function run() {
+            public function run()
+            {
                 // Protect scope by using an unbound closure (protects static access as well).
                 (static function () {
                     $paths = [

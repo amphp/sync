@@ -14,7 +14,8 @@ use Amp\Promise;
  *
  * Not compatible with Windows.
  */
-final class PosixSemaphore implements Semaphore {
+final class PosixSemaphore implements Semaphore
+{
     const LATENCY_TIMEOUT = 10;
 
     /** @var string */
@@ -38,7 +39,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
-    public static function create(string $id, int $maxLocks, int $permissions = 0600): self {
+    public static function create(string $id, int $maxLocks, int $permissions = 0600): self
+    {
         if ($maxLocks < 1) {
             throw new \Error("Number of locks must be greater than 0");
         }
@@ -53,7 +55,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @return \Amp\Sync\PosixSemaphore
      */
-    public static function use(string $id): self {
+    public static function use(string $id): self
+    {
         $semaphore = new self($id);
         $semaphore->open();
         return $semaphore;
@@ -64,7 +67,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @throws \Error If the sysvmsg extension is not loaded.
      */
-    private function __construct(string $id) {
+    private function __construct(string $id)
+    {
         if (!\extension_loaded("sysvmsg")) {
             throw new \Error(__CLASS__ . " requires the sysvmsg extension.");
         }
@@ -76,20 +80,24 @@ final class PosixSemaphore implements Semaphore {
     /**
      * Private method to prevent cloning.
      */
-    private function __clone() {
+    private function __clone()
+    {
     }
 
     /**
      * Private to prevent serialization.
      */
-    private function __sleep() {
+    private function __sleep()
+    {
     }
 
-    public function getId(): string {
+    public function getId(): string
+    {
         return $this->id;
     }
 
-    private function open() {
+    private function open()
+    {
         if (!\msg_queue_exists($this->key)) {
             throw new SyncException('No semaphore with that ID found');
         }
@@ -107,7 +115,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
-    private function init(int $maxLocks, int $permissions) {
+    private function init(int $maxLocks, int $permissions)
+    {
         if (\msg_queue_exists($this->key)) {
             throw new SyncException('A semaphore with that ID already exists');
         }
@@ -130,7 +139,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @return int A permissions mode.
      */
-    public function getPermissions(): int {
+    public function getPermissions(): int
+    {
         $stat = \msg_stat_queue($this->queue);
         return $stat['msg_perm.mode'];
     }
@@ -144,7 +154,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @throws SyncException If the operation failed.
      */
-    public function setPermissions(int $mode) {
+    public function setPermissions(int $mode)
+    {
         if (!\msg_set_queue($this->queue, [
             'msg_perm.mode' => $mode
         ])) {
@@ -152,14 +163,16 @@ final class PosixSemaphore implements Semaphore {
         }
     }
 
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         return new Coroutine($this->doAcquire());
     }
 
     /**
      * {@inheritdoc}
      */
-    private function doAcquire(): \Generator {
+    private function doAcquire(): \Generator
+    {
         do {
             // Attempt to acquire a lock from the semaphore.
             if (@\msg_receive($this->queue, 0, $type, 1, $id, false, \MSG_IPC_NOWAIT, $errno)) {
@@ -182,7 +195,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @throws SyncException If the operation failed.
      */
-    public function __destruct() {
+    public function __destruct()
+    {
         if ($this->initializer === 0 || $this->initializer !== \getmypid()) {
             return;
         }
@@ -201,7 +215,8 @@ final class PosixSemaphore implements Semaphore {
      *
      * @throws SyncException If the operation failed.
      */
-    protected function release(int $id) {
+    protected function release(int $id)
+    {
         if (!$this->queue) {
             return; // Queue already destroyed.
         }
@@ -217,7 +232,8 @@ final class PosixSemaphore implements Semaphore {
         }
     }
 
-    private static function makeKey(string $id): int {
+    private static function makeKey(string $id): int
+    {
         return \abs(\unpack("l", \md5($id, true))[1]);
     }
 }

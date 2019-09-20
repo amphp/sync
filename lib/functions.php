@@ -16,7 +16,8 @@ use function Amp\call;
  *
  * @return \Amp\Promise Resolves with the return value of the callback.
  */
-function synchronized(Mutex $mutex, callable $callback, ...$args): Promise {
+function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
+{
     return call(function () use ($mutex, $callback, $args) {
         /** @var \Amp\Sync\Lock $lock */
         $lock = yield $mutex->acquire();

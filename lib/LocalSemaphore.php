@@ -7,7 +7,8 @@ use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
-final class LocalSemaphore implements Semaphore {
+final class LocalSemaphore implements Semaphore
+{
     use CallableMaker;
 
     /** @var int[] */
@@ -19,7 +20,8 @@ final class LocalSemaphore implements Semaphore {
     /** @var callable */
     private $release;
 
-    public function __construct(int $maxLocks) {
+    public function __construct(int $maxLocks)
+    {
         if ($maxLocks < 1) {
             throw new \Error("The number of locks must be greater than 0");
         }
@@ -29,7 +31,8 @@ final class LocalSemaphore implements Semaphore {
     }
 
     /** {@inheritdoc} */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         if (!empty($this->locks)) {
             return new Success(new Lock(\array_shift($this->locks), $this->release));
         }
@@ -38,7 +41,8 @@ final class LocalSemaphore implements Semaphore {
         return $deferred->promise();
     }
 
-    private function release(Lock $lock) {
+    private function release(Lock $lock)
+    {
         $id = $lock->getId();
 
         if (!empty($this->queue)) {

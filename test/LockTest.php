@@ -5,20 +5,24 @@ namespace Amp\Sync\Test;
 use Amp\PHPUnit\TestCase;
 use Amp\Sync\Lock;
 
-class LockTest extends TestCase {
-    public function testIsReleased() {
+class LockTest extends TestCase
+{
+    public function testIsReleased()
+    {
         $lock = new Lock(0, $this->createCallback(1));
         $this->assertFalse($lock->isReleased());
         $lock->release();
         $this->assertTrue($lock->isReleased());
     }
 
-    public function testIsReleasedOnDestruct() {
+    public function testIsReleasedOnDestruct()
+    {
         $lock = new Lock(0, $this->createCallback(1));
         unset($lock);
     }
 
-    public function testThrowsOnMultiRelease() {
+    public function testThrowsOnMultiRelease()
+    {
         $lock = new Lock(0, $this->createCallback(1));
         $lock->release();
         $this->assertTrue($lock->isReleased());
@@ -26,7 +30,8 @@ class LockTest extends TestCase {
         $this->assertTrue($lock->isReleased());
     }
 
-    public function testGetId() {
+    public function testGetId()
+    {
         $id = 42;
         $lock = new Lock($id, $this->createCallback(1));
         $this->assertSame($id, $lock->getId());

@@ -2,5 +2,6 @@
 
 namespace Amp\Sync;
 
-class SyncException extends \Exception {
+class SyncException extends \Exception
+{
 }

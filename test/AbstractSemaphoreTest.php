@@ -6,7 +6,8 @@ use Amp\Loop;
 use Amp\PHPUnit\TestCase;
 use Amp\Sync\Semaphore;
 
-abstract class AbstractSemaphoreTest extends TestCase {
+abstract class AbstractSemaphoreTest extends TestCase
+{
     /**
      * @var \Amp\Sync\Semaphore
      */
@@ -19,11 +20,13 @@ abstract class AbstractSemaphoreTest extends TestCase {
      */
     abstract public function createSemaphore(int $locks): Semaphore;
 
-    public function tearDown() {
+    public function tearDown()
+    {
         $this->semaphore = null; // Force Semaphore::__destruct() to be invoked.
     }
 
-    public function testConstructorOnInvalidMaxLocks() {
+    public function testConstructorOnInvalidMaxLocks()
+    {
         Loop::run(function () {
             $this->expectException(\Error::class);
 
@@ -31,7 +34,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
         });
     }
 
-    public function testAcquire() {
+    public function testAcquire()
+    {
         Loop::run(function () {
             $this->semaphore = $this->createSemaphore(1);
 
@@ -45,7 +49,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
         });
     }
 
-    public function testAcquireMultipleFromSingleLockSemaphore() {
+    public function testAcquireMultipleFromSingleLockSemaphore()
+    {
         $this->assertRunTimeGreaterThan(function () {
             $this->semaphore = $this->createSemaphore(1);
 
@@ -71,7 +76,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
         }, 300);
     }
 
-    public function testAcquireMultipleFromMultipleLockSemaphore() {
+    public function testAcquireMultipleFromMultipleLockSemaphore()
+    {
         $this->assertRunTimeGreaterThan(function () {
             $this->semaphore = $this->createSemaphore(3);
 
@@ -103,7 +109,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
         }, 300);
     }
 
-    public function getSemaphoreSizes(): array {
+    public function getSemaphoreSizes(): array
+    {
         return [
             [5],
             [10],
@@ -117,7 +124,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
      *
      * @param int $count Number of locks to test.
      */
-    public function testAcquireFromMultipleSizeSemaphores(int $count) {
+    public function testAcquireFromMultipleSizeSemaphores(int $count)
+    {
         $this->assertRunTimeGreaterThan(function () use ($count) {
             $this->semaphore = $this->createSemaphore($count);
 
@@ -138,7 +146,8 @@ abstract class AbstractSemaphoreTest extends TestCase {
         }, 200);
     }
 
-    public function testSimultaneousAcquire() {
+    public function testSimultaneousAcquire()
+    {
         $this->assertRunTimeGreaterThan(function () {
             $this->semaphore = $this->createSemaphore(1);
 

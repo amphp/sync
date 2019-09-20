@@ -12,7 +12,8 @@ use Amp\Promise;
  * may not acquire a lock immediately when one is available and there may be a
  * small delay. However, the small delay will not block the thread.
  */
-final class ThreadedSemaphore implements Semaphore {
+final class ThreadedSemaphore implements Semaphore
+{
     /** @var \Threaded */
     private $semaphore;
 
@@ -21,7 +22,8 @@ final class ThreadedSemaphore implements Semaphore {
      *
      * @param int $locks The maximum number of locks that can be acquired from the semaphore.
      */
-    public function __construct(int $locks) {
+    public function __construct(int $locks)
+    {
         if ($locks < 1) {
             throw new \Error("The number of locks should be a positive integer");
         }
@@ -32,7 +34,8 @@ final class ThreadedSemaphore implements Semaphore {
     /**
      * {@inheritdoc}
      */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         return $this->semaphore->acquire();
     }
 }

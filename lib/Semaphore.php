@@ -11,7 +11,8 @@ use Amp\Promise;
  * are atomic. Implementations do not have to guarantee that acquiring a lock
  * is first-come, first serve.
  */
-interface Semaphore {
+interface Semaphore
+{
     /**
      * Acquires a lock on the semaphore.
      *

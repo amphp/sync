@@ -10,22 +10,27 @@ use Amp\Sync\ThreadedMutex;
 /**
  * @requires extension pthreads
  */
-class ThreadedMutexTest extends AbstractMutexTest {
-    public function createMutex(): Mutex {
+class ThreadedMutexTest extends AbstractMutexTest
+{
+    public function createMutex(): Mutex
+    {
         return new ThreadedMutex;
     }
 
-    public function testWithinThread() {
+    public function testWithinThread()
+    {
         $mutex = $this->createMutex();
 
         $thread = new class($mutex) extends \Thread {
             private $mutex;
 
-            public function __construct(Mutex $mutex) {
+            public function __construct(Mutex $mutex)
+            {
                 $this->mutex = $mutex;
             }
 
-            public function run() {
+            public function run()
+            {
                 // Protect scope by using an unbound closure (protects static access as well).
                 (static function () {
                     $paths = [

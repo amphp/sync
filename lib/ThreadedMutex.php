@@ -9,21 +9,24 @@ use Amp\Promise;
  *
  * Compatible with POSIX systems and Microsoft Windows.
  */
-final class ThreadedMutex implements Mutex {
+final class ThreadedMutex implements Mutex
+{
     /** @var Internal\MutexStorage */
     private $mutex;
 
     /**
      * Creates a new threaded mutex.
      */
-    public function __construct() {
+    public function __construct()
+    {
         $this->mutex = new Internal\MutexStorage;
     }
 
     /**
      * {@inheritdoc}
      */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         return $this->mutex->acquire();
     }
 }

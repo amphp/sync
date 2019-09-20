@@ -7,7 +7,8 @@ use Amp\Promise;
 use Amp\Sync\Lock;
 use function Amp\call;
 
-final class MutexStorage extends \Threaded {
+final class MutexStorage extends \Threaded
+{
     const LATENCY_TIMEOUT =  10;
 
     /** @var bool */
@@ -16,7 +17,8 @@ final class MutexStorage extends \Threaded {
     /**
      * @return \Amp\Promise
      */
-    public function acquire(): Promise {
+    public function acquire(): Promise
+    {
         return call(function () {
             $tsl = function () {
                 if ($this->locked) {
