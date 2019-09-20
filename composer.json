@@ -31,10 +31,10 @@
     },
     "autoload": {
         "psr-4": {
-            "Amp\\Sync\\": "lib"
+            "Amp\\Sync\\": "src"
         },
         "files": [
-            "lib/functions.php"
+            "src/functions.php"
         ]
     },
     "autoload-dev": {

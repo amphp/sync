@@ -11,8 +11,8 @@ use function Amp\call;
  * it will be run as a coroutine. See Amp\call().
  *
  * @param \Amp\Sync\Mutex $mutex
- * @param callable $callback
- * @param array ...$args
+ * @param callable        $callback
+ * @param array           ...$args
  *
  * @return \Amp\Promise Resolves with the return value of the callback.
  */
