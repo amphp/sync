@@ -6,7 +6,7 @@ use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
-final class LocalSemaphore implements Semaphore
+class LocalSemaphore implements Semaphore
 {
     /** @var int[] */
     private $locks;

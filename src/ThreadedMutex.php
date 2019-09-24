@@ -11,7 +11,7 @@ use Amp\Promise;
  *
  * @deprecated ext-pthreads development has been halted, see https://github.com/krakjoe/pthreads/issues/929
  */
-final class ThreadedMutex implements Mutex
+class ThreadedMutex implements Mutex
 {
     /** @var Internal\MutexStorage */
     private $mutex;

@@ -6,7 +6,7 @@ use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
-final class LocalMutex implements Mutex
+class LocalMutex implements Mutex
 {
     /** @var bool */
     private $locked = false;

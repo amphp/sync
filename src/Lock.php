@@ -2,8 +2,7 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-use function Amp\call;
+use function Amp\asyncCall;
 
 /**
  * A handle on an acquired lock from a synchronization object.
@@ -11,16 +10,13 @@ use function Amp\call;
  * semaphore, the lock should reside in the same thread or process until it is
  * released.
  */
-final class Lock
+class Lock
 {
     /** @var callable|null The function to be called on release or null if the lock has been released. */
     private $releaser;
 
     /** @var int */
     private $id;
-
-    /** @var Promise|null */
-    private $released;
 
     /**
      * Creates a new lock permit object.
@@ -56,17 +52,17 @@ final class Lock
     /**
      * Releases the lock. No-op if the lock has already been released.
      */
-    public function release(): Promise
+    public function release()
     {
         if (!$this->releaser) {
-            return $this->released;
+            return;
         }
 
         // Invoke the releaser function given to us by the synchronization source
         // to release the lock.
         $releaser = $this->releaser;
         $this->releaser = null;
-        return $this->released = call($releaser, $this);
+        asyncCall($releaser, $this);
     }
 
     /**
@@ -74,8 +70,6 @@ final class Lock
      */
     public function __destruct()
     {
-        if ($this->releaser) {
-            Promise\rethrow($this->release());
-        }
+        $this->release();
     }
 }

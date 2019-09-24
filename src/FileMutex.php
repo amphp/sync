@@ -21,7 +21,7 @@ use Amp\Promise;
  *
  * @see http://php.net/fopen
  */
-final class FileMutex implements Mutex
+class FileMutex implements Mutex
 {
     const LATENCY_TIMEOUT = 10;
 
