@@ -2,9 +2,6 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-use function Amp\call;
-
 /**
  * A handle on an acquired lock from a synchronization object.
  *
