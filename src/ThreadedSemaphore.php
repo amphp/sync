@@ -11,6 +11,8 @@ use Amp\Promise;
  * acquire methods. There is a small tradeoff for asynchronous semaphores; you
  * may not acquire a lock immediately when one is available and there may be a
  * small delay. However, the small delay will not block the thread.
+ *
+ * @deprecated ext-pthreads development has been halted, see https://github.com/krakjoe/pthreads/issues/929
  */
 final class ThreadedSemaphore implements Semaphore
 {

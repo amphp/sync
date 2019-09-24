@@ -8,6 +8,8 @@ use Amp\Promise;
  * A thread-safe, asynchronous mutex using the pthreads locking mechanism.
  *
  * Compatible with POSIX systems and Microsoft Windows.
+ *
+ * @deprecated ext-pthreads development has been halted, see https://github.com/krakjoe/pthreads/issues/929
  */
 final class ThreadedMutex implements Mutex
 {
