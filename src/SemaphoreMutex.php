@@ -7,11 +7,11 @@ use function Amp\call;
 
 class SemaphoreMutex implements Mutex
 {
-    /** @var \Amp\Sync\Semaphore */
+    /** @var Semaphore */
     private $semaphore;
 
     /**
-     * @param \Amp\Sync\Semaphore $semaphore A semaphore with a single lock.
+     * @param Semaphore $semaphore A semaphore with a single lock.
      */
     public function __construct(Semaphore $semaphore)
     {

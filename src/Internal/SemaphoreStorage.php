@@ -7,9 +7,10 @@ use Amp\Promise;
 use Amp\Sync\Lock;
 use function Amp\call;
 
+/** @internal */
 final class SemaphoreStorage extends \Threaded
 {
-    const LATENCY_TIMEOUT = 10;
+    public const LATENCY_TIMEOUT = 10;
 
     /**
      * Creates a new semaphore with a given number of locks.
@@ -23,9 +24,6 @@ final class SemaphoreStorage extends \Threaded
         }
     }
 
-    /**
-     * @return \Amp\Promise
-     */
     public function acquire(): Promise
     {
         /**

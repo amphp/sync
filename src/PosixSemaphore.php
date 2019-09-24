@@ -7,7 +7,7 @@ use Amp\Delayed;
 use Amp\Promise;
 
 /**
- * A non-blocking, interprocess POSIX semaphore.
+ * A non-blocking, inter-process POSIX semaphore.
  *
  * Uses a POSIX message queue to store a queue of permits in a lock-free data structure. This semaphore implementation
  * is preferred over other implementations when available, as it provides the best performance.
@@ -16,7 +16,7 @@ use Amp\Promise;
  */
 class PosixSemaphore implements Semaphore
 {
-    const LATENCY_TIMEOUT = 10;
+    public const LATENCY_TIMEOUT = 10;
 
     /** @var string */
     private $id;
@@ -33,16 +33,17 @@ class PosixSemaphore implements Semaphore
     /**
      * Creates a new semaphore with a given ID and number of locks.
      *
-     * @param string $id       The unique name for the new semaphore.
-     * @param int $maxLocks    The maximum number of locks that can be acquired from the semaphore.
-     * @param int $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
+     * @param string $id The unique name for the new semaphore.
+     * @param int    $maxLocks The maximum number of locks that can be acquired from the semaphore.
+     * @param int    $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
      *
+     * @return PosixSemaphore
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
     public static function create(string $id, int $maxLocks, int $permissions = 0600): self
     {
         if ($maxLocks < 1) {
-            throw new \Error("Number of locks must be greater than 0");
+            throw new \Error('Number of locks must be greater than 0');
         }
 
         $semaphore = new self($id);
@@ -156,9 +157,7 @@ class PosixSemaphore implements Semaphore
      */
     public function setPermissions(int $mode)
     {
-        if (!\msg_set_queue($this->queue, [
-            'msg_perm.mode' => $mode
-        ])) {
+        if (!\msg_set_queue($this->queue, ['msg_perm.mode' => $mode])) {
             throw new SyncException('Failed to change the semaphore permissions.');
         }
     }

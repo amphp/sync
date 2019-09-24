@@ -2,7 +2,8 @@
 
 namespace Amp\Sync;
 
-use function Amp\asyncCall;
+use Amp\Promise;
+use function Amp\call;
 
 /**
  * A handle on an acquired lock from a synchronization object.
@@ -62,7 +63,7 @@ class Lock
         // to release the lock.
         $releaser = $this->releaser;
         $this->releaser = null;
-        asyncCall($releaser, $this);
+        $releaser($this);
     }
 
     /**
@@ -70,6 +71,8 @@ class Lock
      */
     public function __destruct()
     {
-        $this->release();
+        if (!$this->isReleased()) {
+            $this->release();
+        }
     }
 }

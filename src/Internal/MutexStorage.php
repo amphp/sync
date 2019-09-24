@@ -7,16 +7,14 @@ use Amp\Promise;
 use Amp\Sync\Lock;
 use function Amp\call;
 
+/** @internal */
 final class MutexStorage extends \Threaded
 {
-    const LATENCY_TIMEOUT =  10;
+    public const LATENCY_TIMEOUT =  10;
 
     /** @var bool */
     private $locked = false;
 
-    /**
-     * @return \Amp\Promise
-     */
     public function acquire(): Promise
     {
         return call(function (): \Generator {

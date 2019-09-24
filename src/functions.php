@@ -10,16 +10,16 @@ use function Amp\call;
  * invoking the callback or once the promise returned by the callback is resolved. If the callback returns a Generator,
  * it will be run as a coroutine. See Amp\call().
  *
- * @param \Amp\Sync\Mutex $mutex
- * @param callable        $callback
- * @param array           ...$args
+ * @param Mutex    $mutex
+ * @param callable $callback
+ * @param array    ...$args
  *
- * @return \Amp\Promise Resolves with the return value of the callback.
+ * @return Promise Resolves with the return value of the callback.
  */
 function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
 {
-    return call(function () use ($mutex, $callback, $args): \Generator {
-        /** @var \Amp\Sync\Lock $lock */
+    return call(static function () use ($mutex, $callback, $args): \Generator {
+        /** @var Lock $lock */
         $lock = yield $mutex->acquire();
 
         try {

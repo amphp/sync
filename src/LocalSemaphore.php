@@ -11,13 +11,13 @@ class LocalSemaphore implements Semaphore
     /** @var int[] */
     private $locks;
 
-    /** @var \Amp\Deferred[] */
+    /** @var Deferred[] */
     private $queue = [];
 
     public function __construct(int $maxLocks)
     {
         if ($maxLocks < 1) {
-            throw new \Error("The number of locks must be greater than 0");
+            throw new \Error('The number of locks must be greater than 0');
         }
 
         $this->locks = \range(0, $maxLocks - 1);
@@ -34,7 +34,7 @@ class LocalSemaphore implements Semaphore
         return $deferred->promise();
     }
 
-    private function release(Lock $lock)
+    private function release(Lock $lock): void
     {
         $id = $lock->getId();
 

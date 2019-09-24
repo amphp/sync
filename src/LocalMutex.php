@@ -11,7 +11,7 @@ class LocalMutex implements Mutex
     /** @var bool */
     private $locked = false;
 
-    /** @var \Amp\Deferred[] */
+    /** @var Deferred[] */
     private $queue = [];
 
     /** {@inheritdoc} */
@@ -26,7 +26,7 @@ class LocalMutex implements Mutex
         return $deferred->promise();
     }
 
-    private function release()
+    private function release(): void
     {
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);

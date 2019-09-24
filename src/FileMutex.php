@@ -13,17 +13,17 @@ use Amp\Promise;
  * system's implementation of file creation operations. Use this implementation
  * only if no other mutex types are available.
  *
- * This implementation avoids using [flock()](http://php.net/flock)
+ * This implementation avoids using [flock()](https://www.php.net/flock)
  * because flock() is known to have some atomicity issues on some systems. In
  * addition, flock() does not work as expected when trying to lock a file
  * multiple times in the same process on Linux. Instead, exclusive file creation
  * is used to create a lock file, which is atomic on most systems.
  *
- * @see http://php.net/fopen
+ * @see https://www.php.net/fopen
  */
 class FileMutex implements Mutex
 {
-    const LATENCY_TIMEOUT = 10;
+    public const LATENCY_TIMEOUT = 10;
 
     /** @var string The full path to the lock file. */
     private $fileName;
