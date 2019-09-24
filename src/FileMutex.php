@@ -72,7 +72,7 @@ class FileMutex implements Mutex
      *
      * @throws SyncException If the unlock operation failed.
      */
-    protected function release(): void
+    protected function release()
     {
         $success = @\unlink($this->fileName);
 

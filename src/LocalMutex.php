@@ -2,12 +2,15 @@
 
 namespace Amp\Sync;
 
+use Amp\CallableMaker;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
 class LocalMutex implements Mutex
 {
+    use CallableMaker; // kept for BC only
+
     /** @var bool */
     private $locked = false;
 

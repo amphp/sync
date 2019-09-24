@@ -2,12 +2,15 @@
 
 namespace Amp\Sync;
 
+use Amp\CallableMaker;
 use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
 class LocalSemaphore implements Semaphore
 {
+    use CallableMaker; // kept for BC only
+
     /** @var int[] */
     private $locks;
 

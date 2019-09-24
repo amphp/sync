@@ -7,6 +7,7 @@ use function Amp\call;
 
 /**
  * A handle on an acquired lock from a synchronization object.
+ *
  * This object is not thread-safe; after acquiring a lock from a mutex or
  * semaphore, the lock should reside in the same thread or process until it is
  * released.
