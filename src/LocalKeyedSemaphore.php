@@ -13,10 +13,18 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
     /** @var int[] */
     private $locks = [];
 
+    /** @var int */
+    private $maxLocks;
+
+    public function __construct(int $maxLocks)
+    {
+        $this->maxLocks = $maxLocks;
+    }
+
     public function acquire(string $key): Promise
     {
         if (!isset($this->semaphore[$key])) {
-            $this->semaphore[$key] = new LocalMutex;
+            $this->semaphore[$key] = new LocalSemaphore($this->maxLocks);
             $this->locks[$key] = 0;
         }
 
