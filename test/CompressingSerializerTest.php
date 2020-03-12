@@ -2,8 +2,8 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Sync\NativeSerializer;
 use Amp\Sync\CompressingSerializer;
+use Amp\Sync\NativeSerializer;
 use Amp\Sync\Serializer;
 
 class CompressingSerializerTest extends AbstractSerializerTest
