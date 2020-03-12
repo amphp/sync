@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-final class BuiltInSerializer implements Serializer
+final class NativeSerializer implements Serializer
 {
     public function serialize($data): string
     {
