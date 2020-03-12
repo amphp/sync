@@ -2,6 +2,6 @@
 
 namespace Amp\Sync;
 
-class SerializationException extends SyncException
+class SerializationException extends \Exception
 {
 }
