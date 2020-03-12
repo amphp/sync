@@ -4,6 +4,16 @@ namespace Amp\Sync;
 
 final class NativeSerializer implements Serializer
 {
+    private $allowedClasses;
+
+    /**
+     * @param array|null $allowedClasses List of allowed classes to be unserialized. Null for any class.
+     */
+    public function __construct(?array $allowedClasses = null)
+    {
+        $this->allowedClasses = $allowedClasses;
+    }
+
     public function serialize($data): string
     {
         try {
@@ -20,7 +30,7 @@ final class NativeSerializer implements Serializer
     public function unserialize(string $data)
     {
         try {
-            $result = \unserialize($data, ['allowed_classes' => true]);
+            $result = \unserialize($data, ['allowed_classes' => $this->allowedClasses ?? true]);
 
             if ($result === false && $data !== \serialize(false)) {
                 throw new SerializationException(
