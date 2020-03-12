@@ -24,7 +24,7 @@ final class CompressingSerializer implements Serializer
         if (\strlen($serializedData) > self::COMPRESSION_THRESHOLD) {
             $serializedData = @\gzdeflate($serializedData, 1);
             if ($serializedData === false) {
-                $error = error_get_last();
+                $error = \error_get_last();
                 throw new SerializationException('Could not compress data: ' . ($error['message'] ?? 'unknown error'));
             }
 
@@ -42,7 +42,7 @@ final class CompressingSerializer implements Serializer
         if ($firstByte & self::FLAG_COMPRESSED) {
             $data = @\gzinflate($data);
             if ($data === false) {
-                $error = error_get_last();
+                $error = \error_get_last();
                 throw new SerializationException('Could not decompress data: ' . ($error['message'] ?? 'unknown error'));
             }
         }
