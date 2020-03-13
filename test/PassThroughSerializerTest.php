@@ -2,15 +2,15 @@
 
 namespace Amp\Sync\Test;
 
+use Amp\Sync\PassThroughSerializer;
 use Amp\Sync\SerializationException;
-use Amp\Sync\StringOnlySerializer;
 use PHPUnit\Framework\TestCase;
 
-class StringOnlySerializerTest extends TestCase
+class PassThroughSerializerTest extends TestCase
 {
     public function testUnserializeSerializedData(): void
     {
-        $serializer = new StringOnlySerializer;
+        $serializer = new PassThroughSerializer;
         $data = 'test';
         $this->assertSame($data, $serializer->unserialize($serializer->serialize($data)));
     }
@@ -19,6 +19,6 @@ class StringOnlySerializerTest extends TestCase
     {
         $this->expectException(SerializationException::class);
 
-        (new StringOnlySerializer)->serialize(1);
+        (new PassThroughSerializer)->serialize(1);
     }
 }

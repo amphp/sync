@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-final class StringOnlySerializer implements Serializer
+final class PassThroughSerializer implements Serializer
 {
     public function serialize($data): string
     {
