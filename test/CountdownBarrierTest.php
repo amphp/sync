@@ -29,14 +29,14 @@ class CountdownBarrierTest extends AsyncTestCase
         $this->assertFalse($resolved);
 
         $this->countdownBarrier->signal();
-        $this->assertSame(1, $this->countdownBarrier->getCurrentCount());
+        $this->assertSame(1, $this->countdownBarrier->getRemainingCount());
 
         $this->assertFalse($resolved);
 
         $this->countdownBarrier->signal();
 
         $this->assertTrue($resolved);
-        $this->assertSame(0, $this->countdownBarrier->getCurrentCount());
+        $this->assertSame(0, $this->countdownBarrier->getRemainingCount());
     }
 
     public function testSignalAfterResolved(): void
@@ -80,7 +80,7 @@ class CountdownBarrierTest extends AsyncTestCase
     public function testGetCurrentCount(): void
     {
         $this->countdownBarrier->signal();
-        $this->assertEquals(1, $this->countdownBarrier->getCurrentCount());
+        $this->assertEquals(1, $this->countdownBarrier->getRemainingCount());
     }
 
     public function testGetInitialCount(): void

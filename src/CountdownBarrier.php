@@ -22,7 +22,7 @@ final class CountdownBarrier
     /** @var int */
     private $initialCount;
     /** @var int */
-    private $currentCount;
+    private $remainingCount;
     /** @var Deferred */
     private $deferred;
 
@@ -33,13 +33,13 @@ final class CountdownBarrier
         }
 
         $this->initialCount = $initialCount;
-        $this->currentCount = $initialCount;
+        $this->remainingCount = $initialCount;
         $this->deferred = new Deferred();
     }
 
-    public function getCurrentCount(): int
+    public function getRemainingCount(): int
     {
-        return $this->currentCount;
+        return $this->remainingCount;
     }
 
     public function getInitialCount(): int
@@ -54,17 +54,17 @@ final class CountdownBarrier
             throw new Error('Signal count must be greater or equals 1');
         }
 
-        if (0 === $this->currentCount) {
+        if (0 === $this->remainingCount) {
             throw new Error('CountdownBarrier already resolved');
         }
 
-        if ($signalCount > $this->currentCount) {
+        if ($signalCount > $this->remainingCount) {
             throw new Error('Signal count cannot be greater than current count');
         }
 
-        $this->currentCount -= $signalCount;
+        $this->remainingCount -= $signalCount;
 
-        if (0 === $this->currentCount) {
+        if (0 === $this->remainingCount) {
             $this->deferred->resolve();
         }
     }
@@ -76,11 +76,11 @@ final class CountdownBarrier
             throw new Error('Signal count must be greater or equals 1');
         }
 
-        if (0 === $this->currentCount) {
+        if (0 === $this->remainingCount) {
             throw new Error('CountdownBarrier already resolved');
         }
 
-        $this->currentCount += $signalCount;
+        $this->remainingCount += $signalCount;
     }
 
     public function promise(): Promise
