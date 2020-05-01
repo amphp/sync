@@ -39,7 +39,7 @@
     },
     "autoload-dev": {
         "psr-4": {
-            "Amp\\Sync\\Test\\": "test"
+            "Amp\\Sync\\Tests\\": "test"
         }
     }
 }

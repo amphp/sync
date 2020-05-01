@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync\Tests;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Lock;

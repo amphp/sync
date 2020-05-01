@@ -1,10 +1,11 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync\Tests;
 
 use Amp\Sync\KeyedSemaphore;
 use Amp\Sync\LocalKeyedSemaphore;
 use Amp\Sync\PrefixedKeyedSemaphore;
+use Amp\Sync\Test\AbstractKeyedSemaphoreTest;
 
 class PrefixedKeyedSemaphoreTest extends AbstractKeyedSemaphoreTest
 {

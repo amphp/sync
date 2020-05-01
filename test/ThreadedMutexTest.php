@@ -1,10 +1,11 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync\Tests;
 
 use Amp\Delayed;
 use Amp\Loop;
 use Amp\Sync\Mutex;
+use Amp\Sync\Test\AbstractMutexTest;
 use Amp\Sync\ThreadedMutex;
 
 /**

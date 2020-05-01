@@ -1,10 +1,11 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync\Tests;
 
 use Amp\Delayed;
 use Amp\Loop;
 use Amp\Sync\Semaphore;
+use Amp\Sync\Test\AbstractSemaphoreTest;
 use Amp\Sync\ThreadedSemaphore;
 
 /**

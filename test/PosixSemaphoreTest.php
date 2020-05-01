@@ -1,11 +1,12 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync\Tests;
 
 use Amp\Loop;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\Semaphore;
 use Amp\Sync\SyncException;
+use Amp\Sync\Test\AbstractSemaphoreTest;
 
 /**
  * @group posix
