@@ -7,7 +7,7 @@ use Amp\Deferred;
 use Amp\Promise;
 use Amp\Success;
 
-class LocalSemaphore implements Semaphore
+final class LocalSemaphore implements Semaphore
 {
     use CallableMaker; // kept for BC only
 

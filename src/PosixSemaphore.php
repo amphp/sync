@@ -14,7 +14,7 @@ use Amp\Promise;
  *
  * Not compatible with Windows.
  */
-class PosixSemaphore implements Semaphore
+final class PosixSemaphore implements Semaphore
 {
     public const LATENCY_TIMEOUT = 10;
 
@@ -214,7 +214,7 @@ class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the operation failed.
      */
-    protected function release(int $id)
+    private function release(int $id)
     {
         if (!$this->queue) {
             return; // Queue already destroyed.

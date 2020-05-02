@@ -21,7 +21,7 @@ use Amp\Promise;
  *
  * @see https://www.php.net/fopen
  */
-class FileMutex implements Mutex
+final class FileMutex implements Mutex
 {
     public const LATENCY_TIMEOUT = 10;
 
@@ -72,7 +72,7 @@ class FileMutex implements Mutex
      *
      * @throws SyncException If the unlock operation failed.
      */
-    protected function release()
+    private function release()
     {
         $success = @\unlink($this->fileName);
 
