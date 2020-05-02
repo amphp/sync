@@ -21,8 +21,7 @@ class Lock
      * Creates a new lock permit object.
      *
      * @param int $id The lock identifier.
-     * @param callable $releaser A function to be called upon release. The function will be passed this object as the
-     *     first parameter.
+     * @param callable(self): void $releaser A function to be called upon release.
      */
     public function __construct(int $id, callable $releaser)
     {
