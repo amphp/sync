@@ -11,7 +11,7 @@ namespace Amp\Sync;
  */
 class Lock
 {
-    /** @var callable|null The function to be called on release or null if the lock has been released. */
+    /** @var callable The function to be called on release or null if the lock has been released. */
     private $releaser;
 
     /** @var int */
@@ -21,8 +21,7 @@ class Lock
      * Creates a new lock permit object.
      *
      * @param int $id The lock identifier.
-     * @param callable $releaser A function to be called upon release. The function will be passed this object as the
-     *     first parameter.
+     * @param callable(self): void $releaser A function to be called upon release.
      */
     public function __construct(int $id, callable $releaser)
     {
