@@ -29,7 +29,7 @@ class FileMutex implements Mutex
     private $fileName;
 
     /**
-     * @param string|null $fileName Name of temporary file to use as a mutex.
+     * @param string $fileName Name of temporary file to use as a mutex.
      */
     public function __construct(string $fileName)
     {
