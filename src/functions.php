@@ -25,7 +25,7 @@ function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
         try {
             return yield call($callback, ...$args);
         } finally {
-            $lock->release();
+            yield $lock->release();
         }
     });
 }

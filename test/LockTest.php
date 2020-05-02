@@ -11,7 +11,7 @@ class LockTest extends AsyncTestCase
     {
         $lock = new Lock(0, $this->createCallback(1));
         $this->assertFalse($lock->isReleased());
-        $lock->release();
+        yield $lock->release();
         $this->assertTrue($lock->isReleased());
     }
 
@@ -24,9 +24,9 @@ class LockTest extends AsyncTestCase
     public function testThrowsOnMultiRelease()
     {
         $lock = new Lock(0, $this->createCallback(1));
-        $lock->release();
+        yield $lock->release();
         $this->assertTrue($lock->isReleased());
-        $lock->release();
+        yield $lock->release();
         $this->assertTrue($lock->isReleased());
     }
 
@@ -35,6 +35,6 @@ class LockTest extends AsyncTestCase
         $id = 42;
         $lock = new Lock($id, $this->createCallback(1));
         $this->assertSame($id, $lock->getId());
-        $lock->release();
+        yield $lock->release();
     }
 }

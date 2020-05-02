@@ -28,7 +28,7 @@ $task = function (string $identifier) use ($mutex) {
         } finally {
             print "[$identifier][$i] Releasing lock" . \PHP_EOL;
 
-            $lock->release();
+            yield $lock->release();
         }
     }
 
