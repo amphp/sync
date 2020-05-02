@@ -11,7 +11,7 @@ namespace Amp\Sync;
  */
 class Lock
 {
-    /** @var callable The function to be called on release or null if the lock has been released. */
+    /** @var callable|null The function to be called on release or null if the lock has been released. */
     private $releaser;
 
     /** @var int */
