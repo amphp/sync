@@ -47,7 +47,7 @@ final class Queue
                     try {
                         yield call($processor, $job);
                     } catch (\Throwable $e) {
-                        asyncCall($errorHandler, $e);
+                        asyncCall($errorHandler, $e, $job);
                     } finally {
                         $lock->release();
                     }
