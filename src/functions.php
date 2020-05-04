@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\CancelledException;
 use Amp\Iterator;
 use Amp\Producer;
 use Amp\Promise;
@@ -53,6 +54,8 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
         /** @var \Throwable|null $error */
         $error = null;
         $pending = [];
+        $locks = [];
+        $gc = false;
 
         while (yield $iterator->advance()) {
             if ($error) {
@@ -62,6 +65,14 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
             /** @var Lock $lock */
             $lock = yield $semaphore->acquire();
 
+            if ($gc || isset($locks[$lock->getId()])) {
+                $lock->release();
+
+                throw new CancelledException; // producer and locks have been GCed
+            }
+
+            $locks[$lock->getId()] = true;
+
             $currentElement = $iterator->getCurrent();
 
             $promise = call(static function () use (
@@ -69,7 +80,9 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
                 $currentElement,
                 $processor,
                 $emit,
-                &$error
+                &$error,
+                &$locks,
+                &$gc
             ) {
                 try {
                     yield $emit(yield $processor($currentElement));
@@ -78,6 +91,12 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
                         $error = $e;
                     }
                 } finally {
+                    if ($lock->isReleased()) {
+                        $gc = true;
+                    }
+
+                    unset($locks[$lock->getId()]);
+
                     $lock->release();
                 }
             });

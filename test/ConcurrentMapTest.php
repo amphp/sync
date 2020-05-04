@@ -4,6 +4,7 @@ namespace Amp\Sync\Test;
 
 use Amp\Iterator;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Success;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Iterator\toArray;
@@ -53,7 +54,20 @@ class ConcurrentMapTest extends AsyncTestCase
         );
     }
 
-    public function testBackpressure(): \Generator
+    public function testBackpressure(): void
+    {
+        $this->expectOutputString('12');
+
+        $processor = static function ($job) {
+            print $job;
+
+            return $job;
+        };
+
+        concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+    }
+
+    public function testBackpressurePartialConsume1(): \Generator
     {
         $this->expectOutputString('123');
 
@@ -65,7 +79,22 @@ class ConcurrentMapTest extends AsyncTestCase
 
         $iterator = concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        // Advancing once will process $concurrency more jobs, jobs 4 and 5 are expected to be not executed
+        yield $iterator->advance();
+    }
+
+    public function testBackpressurePartialConsume2(): \Generator
+    {
+        $this->expectOutputString('1234');
+
+        $processor = static function ($job) {
+            print $job;
+
+            return $job;
+        };
+
+        $iterator = concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+
+        yield $iterator->advance();
         yield $iterator->advance();
     }
 
