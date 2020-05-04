@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\Iterator;
+use Amp\Producer;
 use Amp\Promise;
 use function Amp\call;
 
@@ -26,6 +28,56 @@ function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
             return yield call($callback, ...$args);
         } finally {
             $lock->release();
+        }
+    });
+}
+
+/**
+ * @param Iterator  $iterator
+ * @param Semaphore $semaphore
+ * @param callable  $processor
+ *
+ * @return Iterator
+ */
+function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
+{
+    return new Producer(function () use ($iterator, $semaphore, $processor) {
+        /** @var \Throwable|null $error */
+        $error = null;
+        $pending = [];
+
+        while (yield $iterator->advance()) {
+            if ($error) {
+                throw $error;
+            }
+
+            /** @var Lock $lock */
+            $lock = yield $semaphore->acquire();
+
+            $currentElement = $iterator->getCurrent();
+
+            $promise = call(static function () use ($lock, $currentElement, $processor, &$error) {
+                try {
+                    yield call($processor, $currentElement);
+                } catch (\Throwable $e) {
+                    $error = $e;
+                } finally {
+                    $lock->release();
+                }
+            });
+
+            $promiseId = \spl_object_id($promise);
+
+            $pending[$promiseId] = $promise;
+            $promise->onResolve(static function () use (&$pending, $promiseId) {
+                unset($pending[$promiseId]);
+            });
+        }
+
+        yield Promise\any($pending);
+
+        if ($error) {
+            throw $error;
         }
     });
 }
