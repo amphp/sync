@@ -6,6 +6,7 @@ use Amp\Iterator;
 use Amp\Producer;
 use Amp\Promise;
 use function Amp\call;
+use function Amp\coroutine;
 
 /**
  * Invokes the given callback while maintaining a lock from the provided mutex. The lock is automatically released after
@@ -33,22 +34,29 @@ function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
 }
 
 /**
- * @param Iterator  $iterator
- * @param Semaphore $semaphore
- * @param callable  $processor
+ * Concurrently map all iterator values using {@code $processor}.
  *
- * @return Iterator
+ * The order of the items in the resulting iterator is not guaranteed in any way.
+ *
+ * @param Iterator  $iterator Values to map.
+ * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
+ * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
+ *     otherwise the entire operation is aborted.
+ *
+ * @return Iterator Mapped values.
  */
 function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
 {
-    return new Producer(function () use ($iterator, $semaphore, $processor) {
+    return new Producer(static function (callable $emit) use ($iterator, $semaphore, $processor) {
+        $processor = coroutine($processor);
+
         /** @var \Throwable|null $error */
         $error = null;
         $pending = [];
 
         while (yield $iterator->advance()) {
             if ($error) {
-                throw $error;
+                break;
             }
 
             /** @var Lock $lock */
@@ -56,11 +64,13 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
 
             $currentElement = $iterator->getCurrent();
 
-            $promise = call(static function () use ($lock, $currentElement, $processor, &$error) {
+            $promise = call(static function () use ($lock, $currentElement, $processor, $emit, &$error) {
                 try {
-                    yield call($processor, $currentElement);
+                    yield $emit(yield $processor($currentElement));
                 } catch (\Throwable $e) {
-                    $error = $e;
+                    if ($error === null) {
+                        $error = $e;
+                    }
                 } finally {
                     $lock->release();
                 }
