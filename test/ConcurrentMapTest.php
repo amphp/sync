@@ -68,4 +68,34 @@ class ConcurrentMapTest extends AsyncTestCase
         // Advancing once will process $concurrency more jobs, jobs 4 and 5 are expected to be not executed
         yield $iterator->advance();
     }
+
+    public function testErrorHandling(): \Generator
+    {
+        $processor = static function ($job) {
+            print $job;
+
+            yield delay(0);
+
+            if ($job === 2) {
+                throw new \Exception('Failure');
+            }
+
+            return $job;
+        };
+
+        $iterator = concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+
+        // Job 2 errors, so only job 3 and 4 should be executed
+        $this->expectOutputString('1234');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failure');
+
+        yield Iterator\discard($iterator);
+    }
+
+    protected function tearDownAsync()
+    {
+        // Required to make testBackpressure fail instead of the following test
+        \gc_collect_cycles();
+    }
 }

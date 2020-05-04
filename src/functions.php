@@ -64,7 +64,13 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
 
             $currentElement = $iterator->getCurrent();
 
-            $promise = call(static function () use ($lock, $currentElement, $processor, $emit, &$error) {
+            $promise = call(static function () use (
+                $lock,
+                $currentElement,
+                $processor,
+                $emit,
+                &$error
+            ) {
                 try {
                     yield $emit(yield $processor($currentElement));
                 } catch (\Throwable $e) {
