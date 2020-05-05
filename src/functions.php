@@ -64,10 +64,7 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
 
             /** @var Lock $lock */
             $lock = yield $semaphore->acquire();
-
             if ($gc || isset($locks[$lock->getId()])) {
-                $lock->release();
-
                 throw new CancelledException; // producer and locks have been GCed
             }
 
@@ -80,26 +77,34 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
                 $currentElement,
                 $processor,
                 $emit,
-                &$error,
                 &$locks,
+                &$error,
                 &$gc
             ) {
+                $done = false;
+
                 try {
                     yield $emit(yield $processor($currentElement));
+
+                    $done = true;
                 } catch (\Throwable $e) {
                     if ($error === null) {
                         $error = $e;
                     }
+
+                    $done = true;
                 } finally {
-                    if ($lock->isReleased()) {
+                    unset($locks[$lock->getId()]);
+
+                    if (!$done) {
                         $gc = true;
                     }
-
-                    unset($locks[$lock->getId()]);
 
                     $lock->release();
                 }
             });
+
+            unset($lock);
 
             $promiseId = \spl_object_id($promise);
 

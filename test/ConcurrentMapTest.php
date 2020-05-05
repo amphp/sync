@@ -4,7 +4,6 @@ namespace Amp\Sync\Test;
 
 use Amp\Iterator;
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Success;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Iterator\toArray;
