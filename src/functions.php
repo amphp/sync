@@ -35,18 +35,16 @@ function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
 }
 
 /**
- * Concurrently map all iterator values using {@code $processor}.
+ * Concurrently act on iterator values using {@code $processor}.
  *
- * The order of the items in the resulting iterator is not guaranteed in any way.
- *
- * @param Iterator  $iterator Values to map.
+ * @param Iterator  $iterator Values to process.
  * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
  * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
  *     otherwise the entire operation is aborted.
  *
- * @return Iterator Mapped values.
+ * @return Iterator Result values.
  */
-function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
+function concurrent(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
 {
     return new Producer(static function (callable $emit) use ($iterator, $semaphore, $processor) {
         $processor = coroutine($processor);
@@ -84,7 +82,7 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
                 $done = false;
 
                 try {
-                    yield $emit(yield $processor($currentElement));
+                    yield $processor($currentElement, $emit);
 
                     $done = true;
                 } catch (\Throwable $e) {
@@ -119,5 +117,74 @@ function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $proce
         if ($error) {
             throw $error;
         }
+    });
+}
+
+
+/**
+ * Concurrently map all iterator values using {@code $processor}.
+ *
+ * The order of the items in the resulting iterator is not guaranteed in any way.
+ *
+ * @param Iterator  $iterator Values to map.
+ * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
+ * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
+ *     otherwise the entire operation is aborted.
+ *
+ * @return Iterator Mapped values.
+ */
+function concurrentMap(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
+{
+    $processor = coroutine($processor);
+
+    return concurrent($iterator, $semaphore, coroutine(static function ($value, callable $emit) use ($processor) {
+        $value = yield $processor($value);
+
+        yield $emit($value);
+    }));
+}
+
+/**
+ * Concurrently filter all iterator values using {@code $filter}.
+ *
+ * The order of the items in the resulting iterator is not guaranteed in any way.
+ *
+ * @param Iterator  $iterator Values to map.
+ * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
+ * @param callable  $filter Processing callable, which is run as coroutine. It should not throw any errors,
+ *     otherwise the entire operation is aborted. Must resolve to a boolean, true to keep values in the resulting
+ *     iterator.
+ *
+ * @return Iterator Values, where {@code $filter} resolved to {@code true}.
+ */
+function concurrentFilter(Iterator $iterator, Semaphore $semaphore, callable $filter): Iterator
+{
+    $filter = coroutine($filter);
+
+    return concurrent($iterator, $semaphore, coroutine(static function ($value, callable $emit) use ($filter) {
+        if (yield $filter($value)) {
+            yield $emit($value);
+        }
+    }));
+}
+
+/**
+ * Concurrently invoke a callback on all iterator values using {@code $processor}.
+ *
+ * @param Iterator  $iterator Values to act on.
+ * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
+ * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
+ *     otherwise the entire operation is aborted.
+ *
+ * @return Promise
+ */
+function concurrentForeach(Iterator $iterator, Semaphore $semaphore, callable $processor): Promise
+{
+    $processor = coroutine($processor);
+
+    return call(static function () use ($iterator, $semaphore, $processor) {
+        yield Iterator\toArray(concurrent($iterator, $semaphore, coroutine(static function ($value) use ($processor) {
+            yield $processor($value);
+        })));
     });
 }
