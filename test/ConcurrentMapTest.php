@@ -7,7 +7,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Iterator\toArray;
-use function Amp\Sync\concurrentMap;
+use function Amp\Sync\Concurrent\map;
 
 class ConcurrentMapTest extends AsyncTestCase
 {
@@ -21,7 +21,7 @@ class ConcurrentMapTest extends AsyncTestCase
 
         $this->assertSame(
             [null, null, null],
-            yield toArray(concurrentMap(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor))
+            yield toArray(map(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor))
         );
     }
 
@@ -35,7 +35,7 @@ class ConcurrentMapTest extends AsyncTestCase
 
         $this->assertSame(
             [1, 2, 3],
-            yield toArray(concurrentMap(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor))
+            yield toArray(map(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor))
         );
     }
 
@@ -49,7 +49,7 @@ class ConcurrentMapTest extends AsyncTestCase
 
         $this->assertSame(
             [3, 2, 1],
-            yield toArray(concurrentMap(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor))
+            yield toArray(map(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor))
         );
     }
 
@@ -63,7 +63,7 @@ class ConcurrentMapTest extends AsyncTestCase
             return $job;
         };
 
-        concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
     }
 
     public function testBackpressurePartialConsume1(): \Generator
@@ -76,7 +76,7 @@ class ConcurrentMapTest extends AsyncTestCase
             return $job;
         };
 
-        $iterator = concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         yield $iterator->advance();
     }
@@ -91,7 +91,7 @@ class ConcurrentMapTest extends AsyncTestCase
             return $job;
         };
 
-        $iterator = concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         yield $iterator->advance();
         yield $iterator->advance();
@@ -111,7 +111,7 @@ class ConcurrentMapTest extends AsyncTestCase
             return $job;
         };
 
-        $iterator = concurrentMap(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         // Job 2 errors, so only job 3 and 4 should be executed
         $this->expectOutputString('1234');

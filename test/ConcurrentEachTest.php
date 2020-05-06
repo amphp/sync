@@ -6,9 +6,9 @@ use Amp\Iterator;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
-use function Amp\Sync\concurrentForeach;
+use function Amp\Sync\Concurrent\each;
 
-class ConcurrentForeachTest extends AsyncTestCase
+class ConcurrentEachTest extends AsyncTestCase
 {
     public function test(): \Generator
     {
@@ -18,8 +18,9 @@ class ConcurrentForeachTest extends AsyncTestCase
             print $job;
         };
 
-        $this->assertNull(
-            yield concurrentForeach(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor)
+        $this->assertSame(
+            3,
+            yield each(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor)
         );
     }
 
@@ -29,8 +30,9 @@ class ConcurrentForeachTest extends AsyncTestCase
             yield delay($job * 100);
         };
 
-        $this->assertNull(
-            yield concurrentForeach(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor)
+        $this->assertSame(
+            3,
+            yield each(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor)
         );
     }
 
@@ -40,8 +42,9 @@ class ConcurrentForeachTest extends AsyncTestCase
             yield delay($job * 100);
         };
 
-        $this->assertNull(
-            yield concurrentForeach(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor)
+        $this->assertSame(
+            3,
+            yield each(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor)
         );
     }
 
@@ -64,7 +67,7 @@ class ConcurrentForeachTest extends AsyncTestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
-        yield concurrentForeach(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        yield each(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
     }
 
     protected function tearDownAsync()

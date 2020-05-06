@@ -2,11 +2,9 @@
 
 use Amp\Emitter;
 use Amp\Sync\LocalSemaphore;
-use Amp\Sync\Queue;
 use function Amp\delay;
-use function Amp\Iterator\discard;
 use function Amp\Promise\wait;
-use function Amp\Sync\concurrentMap;
+use function Amp\Sync\Concurrent\each;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -19,10 +17,10 @@ for ($i = 0; $i < 10; $i++) {
     $emitter->emit($jobId++);
 }
 
-wait(discard(concurrentMap(
+wait(each(
     $emitter->iterate(),
     new LocalSemaphore(3),
-    function ($job) use ($emitter, &$jobId) {
+    static function ($job) use ($emitter, &$jobId) {
         print 'starting ' . $job . \PHP_EOL;
 
         yield delay(1000);
@@ -38,4 +36,4 @@ wait(discard(concurrentMap(
 
         print 'finished ' . $job . \PHP_EOL;
     }
-)));
+));

@@ -34,7 +34,8 @@
             "Amp\\Sync\\": "src"
         },
         "files": [
-            "src/functions.php"
+            "src/functions.php",
+            "src/Concurrent/functions.php"
         ]
     },
     "autoload-dev": {

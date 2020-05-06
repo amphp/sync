@@ -7,7 +7,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Iterator\toArray;
-use function Amp\Sync\concurrentFilter;
+use function Amp\Sync\Concurrent\filter;
 
 class ConcurrentFilterTest extends AsyncTestCase
 {
@@ -23,7 +23,7 @@ class ConcurrentFilterTest extends AsyncTestCase
 
         $this->assertSame(
             [2],
-            yield toArray(concurrentFilter(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor))
+            yield toArray(filter(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor))
         );
     }
 
@@ -37,7 +37,7 @@ class ConcurrentFilterTest extends AsyncTestCase
 
         $this->assertSame(
             [1, 2, 3],
-            yield toArray(concurrentFilter(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor))
+            yield toArray(filter(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor))
         );
     }
 
@@ -51,7 +51,7 @@ class ConcurrentFilterTest extends AsyncTestCase
 
         $this->assertSame(
             [3, 2, 1],
-            yield toArray(concurrentFilter(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor))
+            yield toArray(filter(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor))
         );
     }
 
@@ -65,7 +65,7 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        concurrentFilter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
     }
 
     public function testBackpressurePartialConsume1(): \Generator
@@ -78,7 +78,7 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = concurrentFilter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         yield $iterator->advance();
     }
@@ -93,7 +93,7 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = concurrentFilter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         yield $iterator->advance();
         yield $iterator->advance();
@@ -113,7 +113,7 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = concurrentFilter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         // Job 2 errors, so only job 3 and 4 should be executed
         $this->expectOutputString('1234');
