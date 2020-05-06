@@ -6,6 +6,7 @@ use Amp\CancelledException;
 use Amp\Iterator;
 use Amp\Producer;
 use Amp\Promise;
+use function Amp\asyncCall;
 use function Amp\call;
 use function Amp\coroutine;
 
@@ -51,7 +52,10 @@ function concurrent(Iterator $iterator, Semaphore $semaphore, callable $processo
 
         /** @var \Throwable|null $error */
         $error = null;
-        $pending = [];
+
+        // one dummy item, because we can't start the barrier with a count of zero
+        $barrier = new CountingBarrier(1);
+
         $locks = [];
         $gc = false;
 
@@ -69,12 +73,14 @@ function concurrent(Iterator $iterator, Semaphore $semaphore, callable $processo
             $locks[$lock->getId()] = true;
 
             $currentElement = $iterator->getCurrent();
+            $barrier->increase();
 
-            $promise = call(static function () use (
+            asyncCall(static function () use (
                 $lock,
                 $currentElement,
                 $processor,
                 $emit,
+                $barrier,
                 &$locks,
                 &$error,
                 &$gc
@@ -99,20 +105,13 @@ function concurrent(Iterator $iterator, Semaphore $semaphore, callable $processo
                     }
 
                     $lock->release();
+                    $barrier->decrease();
                 }
-            });
-
-            unset($lock);
-
-            $promiseId = \spl_object_id($promise);
-
-            $pending[$promiseId] = $promise;
-            $promise->onResolve(static function () use (&$pending, $promiseId) {
-                unset($pending[$promiseId]);
             });
         }
 
-        yield Promise\any($pending);
+        $barrier->decrease(); // remove dummy item
+        yield $barrier->await();
 
         if ($error) {
             throw $error;
