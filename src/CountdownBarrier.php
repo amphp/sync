@@ -64,7 +64,7 @@ final class CountdownBarrier
 
         $this->remainingCount -= $signalCount;
 
-        if (0 === $this->remainingCount) {
+        if ($this->remainingCount === 0) {
             $this->deferred->resolve();
         }
     }
