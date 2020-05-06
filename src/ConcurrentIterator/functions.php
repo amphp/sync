@@ -72,7 +72,8 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             /** @var Lock $lock */
             $lock = yield $semaphore->acquire();
             if ($gc || isset($locks[$lock->getId()])) {
-                throw new CancelledException; // producer and locks have been GCed
+                // Throwing here causes a segfault on PHP 7.3
+                return; // throw new CancelledException; // producer and locks have been GCed
             }
 
             $locks[$lock->getId()] = true;
