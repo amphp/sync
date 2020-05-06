@@ -22,7 +22,7 @@
     ],
     "require": {
         "php": ">=7.1",
-        "amphp/amp": "dev-discard as 2.5.0"
+        "amphp/amp": "^2.2"
     },
     "require-dev": {
         "phpunit/phpunit": "^8 || ^7",

@@ -10,6 +10,7 @@ use Amp\Sync\CountingBarrier;
 use Amp\Sync\Lock;
 use Amp\Sync\Semaphore;
 use function Amp\asyncCall;
+use function Amp\call;
 use function Amp\coroutine;
 
 /**
@@ -155,12 +156,23 @@ function each(Iterator $iterator, Semaphore $semaphore, callable $processor): Pr
 {
     $processor = coroutine($processor);
 
-    return Iterator\discard(transform(
+    $iterator = transform(
         $iterator,
         $semaphore,
         static function ($value, callable $emit) use ($processor) {
             yield $processor($value);
             yield $emit(null);
         }
-    ));
+    );
+
+    // Use Amp\Iterator\discard in the future
+    return call(static function () use ($iterator) {
+        $count = 0;
+
+        while (yield $iterator->advance()) {
+            $count++;
+        }
+
+        return $count;
+    });
 }
