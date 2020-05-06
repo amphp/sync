@@ -48,16 +48,43 @@ function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
 function concurrent(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
 {
     return new Producer(static function (callable $emit) use ($iterator, $semaphore, $processor) {
-        $processor = coroutine($processor);
-
-        /** @var \Throwable|null $error */
-        $error = null;
-
         // one dummy item, because we can't start the barrier with a count of zero
         $barrier = new CountingBarrier(1);
 
+        /** @var \Throwable|null $error */
+        $error = null;
         $locks = [];
         $gc = false;
+
+        $processor = coroutine($processor);
+        $processor = static function (Lock $lock, $currentElement) use (
+            $processor,
+            $emit,
+            $barrier,
+            &$locks,
+            &$error,
+            &$gc
+        ) {
+            $done = false;
+
+            try {
+                yield $processor($currentElement, $emit);
+
+                $done = true;
+            } catch (\Throwable $e) {
+                $error = $error ?? $e;
+                $done = true;
+            } finally {
+                if (!$done) {
+                    $gc = true;
+                }
+
+                unset($locks[$lock->getId()]);
+
+                $lock->release();
+                $barrier->decrease();
+            }
+        };
 
         while (yield $iterator->advance()) {
             if ($error) {
@@ -71,43 +98,9 @@ function concurrent(Iterator $iterator, Semaphore $semaphore, callable $processo
             }
 
             $locks[$lock->getId()] = true;
-
-            $currentElement = $iterator->getCurrent();
             $barrier->increase();
 
-            asyncCall(static function () use (
-                $lock,
-                $currentElement,
-                $processor,
-                $emit,
-                $barrier,
-                &$locks,
-                &$error,
-                &$gc
-            ) {
-                $done = false;
-
-                try {
-                    yield $processor($currentElement, $emit);
-
-                    $done = true;
-                } catch (\Throwable $e) {
-                    if ($error === null) {
-                        $error = $e;
-                    }
-
-                    $done = true;
-                } finally {
-                    unset($locks[$lock->getId()]);
-
-                    if (!$done) {
-                        $gc = true;
-                    }
-
-                    $lock->release();
-                    $barrier->decrease();
-                }
-            });
+            asyncCall($processor, $lock, $iterator->getCurrent());
         }
 
         $barrier->decrease(); // remove dummy item
