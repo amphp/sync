@@ -7,7 +7,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Iterator\toArray;
-use function Amp\Sync\Concurrent\map;
+use function Amp\Sync\ConcurrentIterator\map;
 
 class ConcurrentMapTest extends AsyncTestCase
 {

@@ -1,6 +1,6 @@
 <?php
 
-namespace Amp\Sync\Concurrent;
+namespace Amp\Sync\ConcurrentIterator;
 
 use Amp\CancelledException;
 use Amp\Iterator;

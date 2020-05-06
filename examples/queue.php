@@ -4,7 +4,7 @@ use Amp\Emitter;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Promise\wait;
-use function Amp\Sync\Concurrent\each;
+use function Amp\Sync\ConcurrentIterator\each;
 
 require __DIR__ . '/../vendor/autoload.php';
 

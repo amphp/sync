@@ -7,7 +7,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Iterator\toArray;
-use function Amp\Sync\Concurrent\filter;
+use function Amp\Sync\ConcurrentIterator\filter;
 
 class ConcurrentFilterTest extends AsyncTestCase
 {

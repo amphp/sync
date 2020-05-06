@@ -6,7 +6,7 @@ use Amp\Iterator;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
-use function Amp\Sync\Concurrent\each;
+use function Amp\Sync\ConcurrentIterator\each;
 
 class ConcurrentEachTest extends AsyncTestCase
 {
