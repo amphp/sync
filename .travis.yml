@@ -4,14 +4,13 @@ php:
   - 7.1
   - 7.2
   - 7.3
-  - 7.4snapshot
+  - 7.4
   - nightly
 
 sudo: false
 
 matrix:
   allow_failures:
-    - php: 7.4snapshot
     - php: nightly
   fast_finish: true
 
@@ -25,15 +24,16 @@ install:
   - composer update -n --prefer-dist
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v1.0.2/coveralls.phar
   - chmod +x coveralls.phar
+  - php -m
   # pthreads is now only supported on PHP 7.2+
-  - if [ "$TRAVIS_PHP_VERSION" != "7.0" ] && [ "$TRAVIS_PHP_VERSION" != "7.1" ]; then
+  - if [ "$TRAVIS_PHP_VERSION" != "7.1" ]; then
       travis/install-pthreads.sh;
     fi
 
 script:
     # pthreads + phpdbg results in out of memory on Travis
-  - if [ "$TRAVIS_PHP_VERSION" = "7.0" ] || [ "$TRAVIS_PHP_VERSION" = "7.1" ]; then
-      phpdbg -qrr vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml;
+  - if [ "$TRAVIS_PHP_VERSION" = "7.1" ]; then
+      vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml;
     else
       vendor/bin/phpunit;
     fi
