@@ -118,7 +118,37 @@ class ConcurrentMapTest extends AsyncTestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
-        yield Iterator\discard($iterator);
+        yield $iterator->advance();
+        yield $iterator->advance();
+        yield $iterator->advance();
+        yield $iterator->advance();
+    }
+
+    public function testErrorHandlingCompletesPending(): \Generator
+    {
+        $processor = static function ($job) {
+            print $job;
+
+            if ($job === 2) {
+                throw new \Exception('Failure');
+            }
+
+            yield delay(0);
+
+            print $job;
+
+            return $job;
+        };
+
+        $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+
+        // Job 2 errors, so only job 3 and 4 should be executed
+        $this->expectOutputString('121');
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('Failure');
+
+        yield $iterator->advance();
+        yield $iterator->advance();
     }
 
     protected function tearDownAsync()

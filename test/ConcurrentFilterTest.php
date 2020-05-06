@@ -120,7 +120,10 @@ class ConcurrentFilterTest extends AsyncTestCase
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
-        yield Iterator\discard($iterator);
+        yield $iterator->advance();
+        yield $iterator->advance();
+        yield $iterator->advance();
+        yield $iterator->advance();
     }
 
     protected function tearDownAsync()
