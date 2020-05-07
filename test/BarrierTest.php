@@ -3,54 +3,54 @@
 namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Sync\Latch;
+use Amp\Sync\Barrier;
 
-class LatchTest extends AsyncTestCase
+class BarrierTest extends AsyncTestCase
 {
-    /** @var Latch */
-    private $latch;
+    /** @var Barrier */
+    private $barrier;
 
     public function testArriveUntilResolved(): void
     {
         $resolved = false;
 
-        $this->latch->await()->onResolve(static function () use (&$resolved) {
+        $this->barrier->await()->onResolve(static function () use (&$resolved) {
             $resolved = true;
         });
 
         $this->assertFalse($resolved);
 
-        $this->latch->arrive();
-        $this->assertSame(1, $this->latch->getCount());
+        $this->barrier->arrive();
+        $this->assertSame(1, $this->barrier->getCount());
 
         $this->assertFalse($resolved);
 
-        $this->latch->arrive();
+        $this->barrier->arrive();
 
         $this->assertTrue($resolved);
-        $this->assertSame(0, $this->latch->getCount());
+        $this->assertSame(0, $this->barrier->getCount());
     }
 
     public function testArriveAfterResolved(): void
     {
-        $this->latch->arrive();
-        $this->latch->arrive();
+        $this->barrier->arrive();
+        $this->barrier->arrive();
 
         $this->expectException(\Error::class);
-        $this->latch->arrive();
+        $this->barrier->arrive();
     }
 
     public function testArriveWithCount(): void
     {
         $resolved = false;
 
-        $this->latch->await()->onResolve(static function () use (&$resolved) {
+        $this->barrier->await()->onResolve(static function () use (&$resolved) {
             $resolved = true;
         });
 
         $this->assertFalse($resolved);
 
-        $this->latch->arrive(2);
+        $this->barrier->arrive(2);
 
         $this->assertTrue($resolved);
     }
@@ -59,43 +59,43 @@ class LatchTest extends AsyncTestCase
     {
         $this->expectException(\Error::class);
 
-        $this->latch->arrive(0);
+        $this->barrier->arrive(0);
     }
 
     public function testArriveTooHighCount(): void
     {
         $this->expectException(\Error::class);
 
-        $this->latch->arrive(3);
+        $this->barrier->arrive(3);
     }
 
     public function testGetCurrentCount(): void
     {
-        $this->latch->arrive();
-        $this->assertEquals(1, $this->latch->getCount());
+        $this->barrier->arrive();
+        $this->assertEquals(1, $this->barrier->getCount());
     }
 
     public function testInvalidSignalCountInConstructor(): void
     {
         $this->expectException(\Error::class);
-        new Latch(0);
+        new Barrier(0);
     }
 
     public function testRegisterCount(): void
     {
         $resolved = false;
 
-        $this->latch->await()->onResolve(static function () use (&$resolved) {
+        $this->barrier->await()->onResolve(static function () use (&$resolved) {
             $resolved = true;
         });
 
-        $this->latch->arrive();
-        $this->latch->register();
-        $this->latch->arrive();
+        $this->barrier->arrive();
+        $this->barrier->register();
+        $this->barrier->arrive();
 
         $this->assertFalse($resolved);
 
-        $this->latch->arrive();
+        $this->barrier->arrive();
 
         $this->assertTrue($resolved);
     }
@@ -104,21 +104,21 @@ class LatchTest extends AsyncTestCase
     {
         $resolved = false;
 
-        $this->latch->await()->onResolve(static function () use (&$resolved) {
+        $this->barrier->await()->onResolve(static function () use (&$resolved) {
             $resolved = true;
         });
 
-        $this->latch->arrive();
-        $this->latch->register(2);
-        $this->latch->arrive();
+        $this->barrier->arrive();
+        $this->barrier->register(2);
+        $this->barrier->arrive();
 
         $this->assertFalse($resolved);
 
-        $this->latch->arrive();
+        $this->barrier->arrive();
 
         $this->assertFalse($resolved);
 
-        $this->latch->arrive();
+        $this->barrier->arrive();
 
         $this->assertTrue($resolved);
     }
@@ -128,24 +128,24 @@ class LatchTest extends AsyncTestCase
         $this->expectException(\Error::class);
         $this->expectExceptionMessage('Count must be at least 1, got 0');
 
-        $this->latch->register(0);
+        $this->barrier->register(0);
     }
 
     public function testRegisterCountWithResolvedBarrier(): void
     {
-        $this->latch->arrive();
-        $this->latch->arrive();
+        $this->barrier->arrive();
+        $this->barrier->arrive();
 
         $this->expectException(\Error::class);
         $this->expectExceptionMessage('Can\'t increase count, because the barrier already broke');
 
-        $this->latch->register(1);
+        $this->barrier->register(1);
     }
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->latch = new Latch(2);
+        $this->barrier = new Barrier(2);
     }
 }

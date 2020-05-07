@@ -6,7 +6,7 @@ use Amp\CancelledException;
 use Amp\Iterator;
 use Amp\Producer;
 use Amp\Promise;
-use Amp\Sync\Latch;
+use Amp\Sync\Barrier;
 use Amp\Sync\Lock;
 use Amp\Sync\Semaphore;
 use function Amp\asyncCall;
@@ -26,8 +26,8 @@ use function Amp\coroutine;
 function transform(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
 {
     return new Producer(static function (callable $emit) use ($iterator, $semaphore, $processor) {
-        // one dummy item, because we can't start the latch with a count of zero
-        $latch = new Latch(1);
+        // one dummy item, because we can't start the barrier with a count of zero
+        $barrier = new Barrier(1);
 
         /** @var \Throwable|null $error */
         $error = null;
@@ -38,7 +38,7 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
         $processor = static function (Lock $lock, $currentElement) use (
             $processor,
             $emit,
-            $latch,
+            $barrier,
             &$locks,
             &$error,
             &$gc
@@ -60,7 +60,7 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
                 unset($locks[$lock->getId()]);
 
                 $lock->release();
-                $latch->arrive();
+                $barrier->arrive();
             }
         };
 
@@ -77,13 +77,13 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             }
 
             $locks[$lock->getId()] = true;
-            $latch->register();
+            $barrier->register();
 
             asyncCall($processor, $lock, $iterator->getCurrent());
         }
 
-        $latch->arrive(); // remove dummy item
-        yield $latch->await();
+        $barrier->arrive(); // remove dummy item
+        yield $barrier->await();
 
         if ($error) {
             throw $error;

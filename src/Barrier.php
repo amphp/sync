@@ -6,9 +6,9 @@ use Amp\Deferred;
 use Amp\Promise;
 
 /**
- * A latch is a synchronization primitive.
+ * A barrier is a synchronization primitive.
  *
- * The latch is initialized with a certain count, which can be increased and decreased until it reaches zero.
+ * The barrier is initialized with a certain count, which can be increased and decreased until it reaches zero.
  *
  * A count of one can be used to block multiple coroutines until a certain condition is met.
  *
@@ -17,14 +17,14 @@ use Amp\Promise;
  * **Example**
  *
  * ```php
- * $latch = new Amp\Sync\Latch(2);
- * $latch->arrive();
- * $latch->arrive(); // promise returned from Latch::await() is now resolved
+ * $barrier = new Amp\Sync\Barrier(2);
+ * $barrier->arrive();
+ * $barrier->arrive(); // promise returned from Barrier::await() is now resolved
  *
- * yield $latch->await();
+ * yield $barrier->await();
  * ```
  */
-final class Latch
+final class Barrier
 {
     /** @var int */
     private $count;
