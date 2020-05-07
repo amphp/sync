@@ -134,7 +134,7 @@ function filter(Iterator $iterator, Semaphore $semaphore, callable $filter): Ite
     return transform($iterator, $semaphore, static function ($value, callable $emit) use ($filter) {
         $keep = yield $filter($value);
         if (!\is_bool($keep)) {
-            throw new \Error(__NAMESPACE__ . '\filter\'s callable must resolve to a boolean value, got ' . \gettype($keep));
+            throw new \TypeError(__NAMESPACE__ . '\filter\'s callable must resolve to a boolean value, got ' . \gettype($keep));
         }
 
         if ($keep) {

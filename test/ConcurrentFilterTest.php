@@ -126,6 +126,33 @@ class ConcurrentFilterTest extends AsyncTestCase
         yield $iterator->advance();
     }
 
+    public function testInvalidReturn(): \Generator
+    {
+        $processor = static function ($job) {
+            print $job;
+
+            yield delay(0);
+
+            if ($job === 2) {
+                return 0;
+            }
+
+            return true;
+        };
+
+        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+
+        // Job 2 errors, so only job 3 and 4 should be executed
+        $this->expectOutputString('1234');
+        $this->expectException(\TypeError::class);
+        $this->expectExceptionMessage('Amp\Sync\ConcurrentIterator\filter\'s callable must resolve to a boolean value, got integer');
+
+        yield $iterator->advance();
+        yield $iterator->advance();
+        yield $iterator->advance();
+        yield $iterator->advance();
+    }
+
     protected function tearDownAsync()
     {
         // Required to make testBackpressure fail instead of the following test
