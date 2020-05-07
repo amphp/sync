@@ -31,8 +31,7 @@ install:
     fi
 
 script:
-    # pthreads + phpdbg results in out of memory on Travis
-  - if [ "$TRAVIS_PHP_VERSION" = "7.1" ]; then
+  - if [ "$TRAVIS_PHP_VERSION" != "7.1" ]; then
       vendor/bin/phpunit --coverage-text --coverage-clover build/logs/clover.xml;
     else
       vendor/bin/phpunit;
