@@ -24,7 +24,7 @@ install:
   - composer update -n --prefer-dist
   - wget https://github.com/php-coveralls/php-coveralls/releases/download/v1.0.2/coveralls.phar
   - chmod +x coveralls.phar
-  - php -m
+  - travis/install-pcov.sh
   # pthreads is now only supported on PHP 7.2+
   - if [ "$TRAVIS_PHP_VERSION" != "7.1" ]; then
       travis/install-pthreads.sh;
