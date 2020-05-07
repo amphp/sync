@@ -6,9 +6,9 @@ use Amp\Deferred;
 use Amp\Promise;
 
 /**
- * A counting barrier is a synchronization primitive.
+ * A latch is a synchronization primitive.
  *
- * The barrier is initialized with a certain count, which can be increased and decreased until it reaches zero.
+ * The latch is initialized with a certain count, which can be increased and decreased until it reaches zero.
  *
  * A count of one can be used to block multiple coroutines until a certain condition is met.
  *
@@ -17,14 +17,14 @@ use Amp\Promise;
  * **Example**
  *
  * ```php
- * $countingBarrier = new Amp\CountingBarrier(2);
- * $countingBarrier->decrease();
- * $countingBarrier->decrease(); // promise returned from CountingBarrier::await() is now resolved
+ * $latch = new Amp\Sync\Latch(2);
+ * $latch->arrive();
+ * $latch->arrive(); // promise returned from Latch::await() is now resolved
  *
- * yield $countingBarrier->await();
+ * yield $latch->await();
  * ```
  */
-final class CountingBarrier
+final class Latch
 {
     /** @var int */
     private $count;
@@ -46,7 +46,7 @@ final class CountingBarrier
         return $this->count;
     }
 
-    public function decrease(int $count = 1): void
+    public function arrive(int $count = 1): void
     {
         if ($count < 1) {
             throw new \Error('Count must be at least 1, got ' . $count);
@@ -63,7 +63,7 @@ final class CountingBarrier
         }
     }
 
-    public function increase(int $count = 1): void
+    public function register(int $count = 1): void
     {
         if ($count < 1) {
             throw new \Error('Count must be at least 1, got ' . $count);
