@@ -26,3 +26,4 @@ shared_asset_path: "/sync/asset"
 navigation:
  - mutex
  - semaphore
+ - concurrent-iterator
