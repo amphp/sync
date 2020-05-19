@@ -3,7 +3,6 @@
 namespace Amp\Sync;
 
 use Amp\Promise;
-use InvalidArgumentException;
 
 /**
  * A handle on an acquired lock from a synchronization object.
@@ -14,7 +13,7 @@ use InvalidArgumentException;
  */
 class Lock
 {
-    /** @var callable(self): Promise<void> The function to be called on release or null if the lock has been released. */
+    /** @var callable(int): Promise<void> The function to be called on release or null if the lock has been released. */
     private $releaser;
 
     /** @var int */
@@ -27,7 +26,7 @@ class Lock
      * Creates a new lock permit object.
      *
      * @param int $id The lock identifier.
-     * @param callable(self): Promise<void> $releaser A function to be called upon release.
+     * @param callable(int): Promise<void> $releaser A function to be called upon release.
      */
     public function __construct(int $id, callable $releaser)
     {
@@ -66,7 +65,7 @@ class Lock
 
         // Invoke the releaser function given to us by the synchronization source
         // to release the lock.
-        $this->promise = Promise\call(($this->releaser)($this));
+        $this->promise = Promise\call(($this->releaser)($this->id));
 
         return $this->promise;
     }
