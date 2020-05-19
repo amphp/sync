@@ -37,10 +37,8 @@ final class LocalSemaphore implements Semaphore
         return $deferred->promise();
     }
 
-    private function release(Lock $lock): void
+    private function release(int $id): void
     {
-        $id = $lock->getId();
-
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);
             $deferred->resolve(new Lock($id, \Closure::fromCallable([$this, 'release'])));

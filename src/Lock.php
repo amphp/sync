@@ -2,7 +2,9 @@
 
 namespace Amp\Sync;
 
+use Amp\Deferred;
 use Amp\Promise;
+use function Amp\call;
 
 /**
  * A handle on an acquired lock from a synchronization object.
@@ -63,9 +65,12 @@ class Lock
             return $this->promise;
         }
 
+        $deferred = new Deferred();
+        $this->promise = $deferred->promise();
+
         // Invoke the releaser function given to us by the synchronization source
         // to release the lock.
-        $this->promise = Promise\call(($this->releaser)($this->id));
+        $deferred->resolve(call($this->releaser, $this->id));
 
         return $this->promise;
     }
