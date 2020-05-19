@@ -19,6 +19,8 @@ use Amp\Promise;
  * multiple times in the same process on Linux. Instead, exclusive file creation
  * is used to create a lock file, which is atomic on most systems.
  *
+ * Note: This implementation uses blocking API. For a non-blocking alternative see `Amp\File\Sync\AsyncFileMutex`.
+ *
  * @see https://www.php.net/fopen
  */
 final class FileMutex implements Mutex
