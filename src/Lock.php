@@ -14,7 +14,7 @@ use InvalidArgumentException;
  */
 class Lock
 {
-    /** @var callable The function to be called on release or null if the lock has been released. */
+    /** @var callable(self): Promise<void> The function to be called on release or null if the lock has been released. */
     private $releaser;
 
     /** @var int */
@@ -66,13 +66,9 @@ class Lock
 
         // Invoke the releaser function given to us by the synchronization source
         // to release the lock.
-        $promise = ($this->releaser)($this);
-        if (! $promise instanceof Promise) {
-            throw new InvalidArgumentException('The releaser must return a Promise.');
-        }
-        $this->promise = $promise;
+        $this->promise = Promise\call(($this->releaser)($this));
 
-        return $promise;
+        return $this->promise;
     }
 
     /**
