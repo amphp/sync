@@ -5,7 +5,7 @@ namespace Amp\Sync;
 use Amp\Promise;
 use function Amp\call;
 
-class SemaphoreMutex implements Mutex
+final class SemaphoreMutex implements Mutex
 {
     /** @var Semaphore */
     private $semaphore;
@@ -25,7 +25,7 @@ class SemaphoreMutex implements Mutex
             /** @var \Amp\Sync\Lock $lock */
             $lock = yield $this->semaphore->acquire();
             if ($lock->getId() !== 0) {
-                $lock->release();
+                yield $lock->release();
                 throw new \Error("Cannot use a semaphore with more than a single lock");
             }
             return $lock;

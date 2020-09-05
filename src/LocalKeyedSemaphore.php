@@ -34,12 +34,12 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
             /** @var Lock $lock */
             $lock = yield $this->semaphore[$key]->acquire();
 
-            return new Lock(0, function () use ($lock, $key) {
+            return new Lock(0, function () use ($lock, $key): Promise {
                 if (--$this->locks[$key] === 0) {
                     unset($this->semaphore[$key], $this->locks[$key]);
                 }
 
-                $lock->release();
+                return $lock->release();
             });
         });
     }

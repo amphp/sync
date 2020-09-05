@@ -19,9 +19,11 @@ use Amp\Promise;
  * multiple times in the same process on Linux. Instead, exclusive file creation
  * is used to create a lock file, which is atomic on most systems.
  *
+ * Note: This implementation uses blocking API. For a non-blocking alternative see `Amp\File\Sync\AsyncFileMutex`.
+ *
  * @see https://www.php.net/fopen
  */
-class FileMutex implements Mutex
+final class FileMutex implements Mutex
 {
     public const LATENCY_TIMEOUT = 10;
 
@@ -72,7 +74,7 @@ class FileMutex implements Mutex
      *
      * @throws SyncException If the unlock operation failed.
      */
-    protected function release()
+    private function release()
     {
         $success = @\unlink($this->fileName);
 
