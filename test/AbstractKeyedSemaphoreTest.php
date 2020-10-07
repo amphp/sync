@@ -2,23 +2,24 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Loop;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\KeyedSemaphore;
+use function Amp\defer;
+use function Amp\delay;
 
 abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
 {
     abstract public function createSemaphore(int $size): KeyedSemaphore;
 
-    public function testAcquire(): \Generator
+    public function testAcquire(): void
     {
         $mutex = $this->createSemaphore(1);
-        $lock = yield $mutex->acquire('test');
+        $lock = $mutex->acquire('test');
         $lock->release();
         $this->assertTrue($lock->isReleased());
     }
 
-    public function testAcquireMultiple(): \Generator
+    public function testAcquireMultiple(): void
     {
         $this->setMinimumRuntime(300);
         $this->setTimeout(500);
@@ -26,10 +27,13 @@ abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
         $mutex = $this->createSemaphore(5);
 
         for ($i = 0; $i < 15; $i++) {
-            $lock = yield $mutex->acquire('test');
-            Loop::delay(100, function () use ($lock) {
+            $lock = $mutex->acquire('test');
+            defer(function () use ($lock): void {
+                delay(100);
                 $lock->release();
             });
         }
+
+        delay(100); // Wait for locks to be released.
     }
 }

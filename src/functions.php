@@ -3,6 +3,7 @@
 namespace Amp\Sync;
 
 use Amp\Promise;
+use function Amp\await;
 use function Amp\call;
 
 /**
@@ -16,16 +17,13 @@ use function Amp\call;
  *
  * @return Promise Resolves with the return value of the callback.
  */
-function synchronized(Mutex $mutex, callable $callback, ...$args): Promise
+function synchronized(Mutex $mutex, callable $callback, ...$args): mixed
 {
-    return call(static function () use ($mutex, $callback, $args): \Generator {
-        /** @var Lock $lock */
-        $lock = yield $mutex->acquire();
+    $lock = $mutex->acquire();
 
-        try {
-            return yield call($callback, ...$args);
-        } finally {
-            $lock->release();
-        }
-    });
+    try {
+        return $callback(...$args);
+    } finally {
+        $lock->release();
+    }
 }

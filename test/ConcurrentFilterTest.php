@@ -30,7 +30,7 @@ class ConcurrentFilterTest extends AsyncTestCase
     public function testOutputOrder(): \Generator
     {
         $processor = static function ($job) {
-            yield delay($job * 100);
+            delay($job * 100);
 
             return true;
         };
@@ -44,7 +44,7 @@ class ConcurrentFilterTest extends AsyncTestCase
     public function testOutputOrderWithoutConcurrency(): \Generator
     {
         $processor = static function ($job) {
-            yield delay($job * 100);
+            delay($job * 100);
 
             return true;
         };
@@ -55,22 +55,26 @@ class ConcurrentFilterTest extends AsyncTestCase
         );
     }
 
-    public function testBackpressure(): void
+    public function testBackpressure(): \Generator
     {
-        $this->expectOutputString('12');
+        $this->setMinimumRuntime(300);
+        $this->setTimeout(350);
+        $this->ignoreLoopWatchers();
 
         $processor = static function ($job) {
-            print $job;
-
+            delay(100);
             return true;
         };
 
-        filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5, 6]), new LocalSemaphore(2), $processor);
+
+        while (yield $iterator->advance());
     }
 
     public function testBackpressurePartialConsume1(): \Generator
     {
-        $this->expectOutputString('123');
+        $this->expectOutputString('12');
+        $this->ignoreLoopWatchers();
 
         $processor = static function ($job) {
             print $job;
@@ -85,7 +89,8 @@ class ConcurrentFilterTest extends AsyncTestCase
 
     public function testBackpressurePartialConsume2(): \Generator
     {
-        $this->expectOutputString('1234');
+        $this->expectOutputString('123');
+        $this->ignoreLoopWatchers();
 
         $processor = static function ($job) {
             print $job;
@@ -104,7 +109,7 @@ class ConcurrentFilterTest extends AsyncTestCase
         $processor = static function ($job) {
             print $job;
 
-            yield delay(0);
+            delay(0);
 
             if ($job === 2) {
                 throw new \Exception('Failure');
@@ -115,8 +120,8 @@ class ConcurrentFilterTest extends AsyncTestCase
 
         $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        // Job 2 errors, so only job 3 and 4 should be executed
-        $this->expectOutputString('1234');
+        // Job 2 errors, so only jobs 1, 2, and 3 should be executed
+        $this->expectOutputString('123');
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
@@ -131,7 +136,7 @@ class ConcurrentFilterTest extends AsyncTestCase
         $processor = static function ($job) {
             print $job;
 
-            yield delay(0);
+            delay(0);
 
             if ($job === 2) {
                 return 0;
@@ -142,8 +147,8 @@ class ConcurrentFilterTest extends AsyncTestCase
 
         $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        // Job 2 errors, so only job 3 and 4 should be executed
-        $this->expectOutputString('1234');
+        // Job 2 errors, so only jobs 1, 2, and 3 should be executed
+        $this->expectOutputString('123');
         $this->expectException(\TypeError::class);
         $this->expectExceptionMessage('Amp\Sync\ConcurrentIterator\filter\'s callable must resolve to a boolean value, got integer');
 

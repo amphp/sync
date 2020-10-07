@@ -2,15 +2,13 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-
 final class StaticKeyMutex implements Mutex
 {
     /** @var KeyedMutex */
-    private $mutex;
+    private KeyedMutex $mutex;
 
     /** @var string */
-    private $key;
+    private string $key;
 
     public function __construct(KeyedMutex $mutex, string $key)
     {
@@ -18,7 +16,7 @@ final class StaticKeyMutex implements Mutex
         $this->key = $key;
     }
 
-    public function acquire(): Promise
+    public function acquire(): Lock
     {
         return $this->mutex->acquire($this->key);
     }

@@ -7,10 +7,10 @@ use Amp\Promise;
 final class PrefixedKeyedSemaphore implements KeyedSemaphore
 {
     /** @var KeyedSemaphore */
-    private $semaphore;
+    private KeyedSemaphore $semaphore;
 
     /** @var string */
-    private $prefix;
+    private string $prefix;
 
     public function __construct(KeyedSemaphore $semaphore, string $prefix)
     {
@@ -18,7 +18,7 @@ final class PrefixedKeyedSemaphore implements KeyedSemaphore
         $this->prefix = $prefix;
     }
 
-    public function acquire(string $key): Promise
+    public function acquire(string $key): Lock
     {
         return $this->semaphore->acquire($this->prefix . $key);
     }

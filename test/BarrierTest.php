@@ -8,26 +8,26 @@ use Amp\Sync\Barrier;
 class BarrierTest extends AsyncTestCase
 {
     /** @var Barrier */
-    private $barrier;
+    private Barrier $barrier;
+
+    public function setUp(): void
+    {
+        parent::setUp();
+
+        $this->barrier = new Barrier(2);
+    }
 
     public function testArriveUntilResolved(): void
     {
-        $resolved = false;
-
-        $this->barrier->await()->onResolve(static function () use (&$resolved) {
-            $resolved = true;
-        });
-
-        $this->assertFalse($resolved);
+        $this->setTimeout(10);
 
         $this->barrier->arrive();
         $this->assertSame(1, $this->barrier->getCount());
 
-        $this->assertFalse($resolved);
-
         $this->barrier->arrive();
 
-        $this->assertTrue($resolved);
+        $this->barrier->await();
+
         $this->assertSame(0, $this->barrier->getCount());
     }
 
@@ -42,17 +42,12 @@ class BarrierTest extends AsyncTestCase
 
     public function testArriveWithCount(): void
     {
-        $resolved = false;
-
-        $this->barrier->await()->onResolve(static function () use (&$resolved) {
-            $resolved = true;
-        });
-
-        $this->assertFalse($resolved);
+        $this->setTimeout(10);
 
         $this->barrier->arrive(2);
 
-        $this->assertTrue($resolved);
+        $this->assertSame(0, $this->barrier->getCount());
+        $this->barrier->await();
     }
 
     public function testArriveWithInvalidCount(): void
@@ -83,44 +78,31 @@ class BarrierTest extends AsyncTestCase
 
     public function testRegisterCount(): void
     {
-        $resolved = false;
-
-        $this->barrier->await()->onResolve(static function () use (&$resolved) {
-            $resolved = true;
-        });
+        $this->setTimeout(10);
 
         $this->barrier->arrive();
         $this->barrier->register();
-        $this->barrier->arrive();
-
-        $this->assertFalse($resolved);
+        $this->assertSame(2, $this->barrier->getCount());
 
         $this->barrier->arrive();
+        $this->barrier->arrive();
 
-        $this->assertTrue($resolved);
+        $this->barrier->await();
     }
 
     public function testRegisterCountWithCustomCount(): void
     {
-        $resolved = false;
-
-        $this->barrier->await()->onResolve(static function () use (&$resolved) {
-            $resolved = true;
-        });
+        $this->setTimeout(10);
 
         $this->barrier->arrive();
         $this->barrier->register(2);
-        $this->barrier->arrive();
-
-        $this->assertFalse($resolved);
+        $this->assertSame(3, $this->barrier->getCount());
 
         $this->barrier->arrive();
-
-        $this->assertFalse($resolved);
-
+        $this->barrier->arrive();
         $this->barrier->arrive();
 
-        $this->assertTrue($resolved);
+        $this->barrier->await();
     }
 
     public function testRegisterCountWithInvalidCount(): void
@@ -140,12 +122,5 @@ class BarrierTest extends AsyncTestCase
         $this->expectExceptionMessage('Can\'t increase count, because the barrier already broke');
 
         $this->barrier->register(1);
-    }
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->barrier = new Barrier(2);
     }
 }

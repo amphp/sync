@@ -2,31 +2,27 @@
 
 namespace Amp\Sync;
 
-use Amp\CallableMaker;
 use Amp\Deferred;
-use Amp\Promise;
-use Amp\Success;
+use function Amp\await;
 
 class LocalMutex implements Mutex
 {
-    use CallableMaker; // kept for BC only
-
     /** @var bool */
-    private $locked = false;
+    private bool $locked = false;
 
     /** @var Deferred[] */
-    private $queue = [];
+    private array $queue = [];
 
     /** {@inheritdoc} */
-    public function acquire(): Promise
+    public function acquire(): Lock
     {
         if (!$this->locked) {
             $this->locked = true;
-            return new Success(new Lock(0, \Closure::fromCallable([$this, 'release'])));
+            return new Lock(0, \Closure::fromCallable([$this, 'release']));
         }
 
         $this->queue[] = $deferred = new Deferred;
-        return $deferred->promise();
+        return await($deferred->promise());
     }
 
     private function release(): void

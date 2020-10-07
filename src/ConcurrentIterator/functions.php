@@ -9,9 +9,11 @@ use Amp\Promise;
 use Amp\Sync\Barrier;
 use Amp\Sync\Lock;
 use Amp\Sync\Semaphore;
-use function Amp\asyncCall;
+use function Amp\async;
+use function Amp\await;
 use function Amp\call;
 use function Amp\coroutine;
+use function Amp\defer;
 
 /**
  * Concurrently act on iterator values using {@code $processor}.
@@ -42,11 +44,11 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             &$locks,
             &$error,
             &$gc
-        ) {
+        ): void {
             $done = false;
 
             try {
-                yield $processor($currentElement, $emit);
+                await($processor($currentElement, $emit));
 
                 $done = true;
             } catch (\Throwable $e) {
@@ -64,13 +66,12 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             }
         };
 
-        while (yield $iterator->advance()) {
+        while (await($iterator->advance())) {
             if ($error) {
                 break;
             }
 
-            /** @var Lock $lock */
-            $lock = yield $semaphore->acquire();
+            $lock = $semaphore->acquire();
             if ($gc || isset($locks[$lock->getId()])) {
                 // Throwing here causes a segfault on PHP 7.3
                 return; // throw new CancelledException; // producer and locks have been GCed
@@ -79,11 +80,11 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             $locks[$lock->getId()] = true;
             $barrier->register();
 
-            asyncCall($processor, $lock, $iterator->getCurrent());
+            defer($processor, $lock, $iterator->getCurrent());
         }
 
         $barrier->arrive(); // remove dummy item
-        yield $barrier->await();
+        yield async(fn () => $barrier->await());
 
         if ($error) {
             throw $error;

@@ -2,20 +2,16 @@
 
 namespace Amp\Sync;
 
-use Amp\CallableMaker;
 use Amp\Deferred;
-use Amp\Promise;
-use Amp\Success;
+use function Amp\await;
 
 class LocalSemaphore implements Semaphore
 {
-    use CallableMaker; // kept for BC only
-
     /** @var int[] */
-    private $locks;
+    private array $locks;
 
     /** @var Deferred[] */
-    private $queue = [];
+    private array $queue = [];
 
     public function __construct(int $maxLocks)
     {
@@ -27,14 +23,14 @@ class LocalSemaphore implements Semaphore
     }
 
     /** {@inheritdoc} */
-    public function acquire(): Promise
+    public function acquire(): Lock
     {
         if (!empty($this->locks)) {
-            return new Success(new Lock(\array_shift($this->locks), \Closure::fromCallable([$this, 'release'])));
+            return new Lock(\array_shift($this->locks), \Closure::fromCallable([$this, 'release']));
         }
 
         $this->queue[] = $deferred = new Deferred;
-        return $deferred->promise();
+        return await($deferred->promise());
     }
 
     private function release(Lock $lock): void

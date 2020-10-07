@@ -14,8 +14,7 @@ class Lock
     /** @var callable|null The function to be called on release or null if the lock has been released. */
     private $releaser;
 
-    /** @var int */
-    private $id;
+    private int $id;
 
     /**
      * Creates a new lock permit object.
@@ -50,7 +49,7 @@ class Lock
     /**
      * Releases the lock. No-op if the lock has already been released.
      */
-    public function release()
+    public function release(): void
     {
         if (!$this->releaser) {
             return;

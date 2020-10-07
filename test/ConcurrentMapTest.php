@@ -28,7 +28,7 @@ class ConcurrentMapTest extends AsyncTestCase
     public function testOutputOrder(): \Generator
     {
         $processor = static function ($job) {
-            yield delay($job * 100);
+            delay($job * 100);
 
             return $job;
         };
@@ -42,7 +42,7 @@ class ConcurrentMapTest extends AsyncTestCase
     public function testOutputOrderWithoutConcurrency(): \Generator
     {
         $processor = static function ($job) {
-            yield delay($job * 100);
+            delay($job * 100);
 
             return $job;
         };
@@ -53,21 +53,26 @@ class ConcurrentMapTest extends AsyncTestCase
         );
     }
 
-    public function testBackpressure(): void
+    public function testBackpressure(): \Generator
     {
-        $this->expectOutputString('12');
+        $this->setMinimumRuntime(300);
+        $this->setTimeout(350);
+        $this->ignoreLoopWatchers();
 
         $processor = static function ($job) {
-            print $job;
-
-            return $job;
+            delay(100);
+            return true;
         };
 
-        map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5, 6]), new LocalSemaphore(2), $processor);
+
+        while (yield $iterator->advance());
     }
 
     public function testBackpressurePartialConsume1(): \Generator
     {
+        $this->ignoreLoopWatchers();
+
         $this->expectOutputString('123');
 
         $processor = static function ($job) {
@@ -79,10 +84,14 @@ class ConcurrentMapTest extends AsyncTestCase
         $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         yield $iterator->advance();
+
+        yield $iterator->advance();
     }
 
     public function testBackpressurePartialConsume2(): \Generator
     {
+        $this->ignoreLoopWatchers();
+
         $this->expectOutputString('1234');
 
         $processor = static function ($job) {
@@ -95,6 +104,7 @@ class ConcurrentMapTest extends AsyncTestCase
 
         yield $iterator->advance();
         yield $iterator->advance();
+        yield $iterator->advance();
     }
 
     public function testErrorHandling(): \Generator
@@ -102,7 +112,7 @@ class ConcurrentMapTest extends AsyncTestCase
         $processor = static function ($job) {
             print $job;
 
-            yield delay(0);
+            delay(0);
 
             if ($job === 2) {
                 throw new \Exception('Failure');
@@ -113,8 +123,8 @@ class ConcurrentMapTest extends AsyncTestCase
 
         $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        // Job 2 errors, so only job 3 and 4 should be executed
-        $this->expectOutputString('1234');
+        // Job 2 errors, so only jobs 1, 2, and 3 should be executed
+        $this->expectOutputString('123');
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
@@ -126,6 +136,8 @@ class ConcurrentMapTest extends AsyncTestCase
 
     public function testErrorHandlingCompletesPending(): \Generator
     {
+        $this->ignoreLoopWatchers();
+
         $processor = static function ($job) {
             print $job;
 
@@ -133,20 +145,19 @@ class ConcurrentMapTest extends AsyncTestCase
                 throw new \Exception('Failure');
             }
 
-            yield delay(0);
-
-            print $job;
+            delay(0);
 
             return $job;
         };
 
         $iterator = map(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        // Job 2 errors, so only job 3 and 4 should be executed
-        $this->expectOutputString('121');
+        // Job 2 errors, so only jobs 1, 2, and 3 should be executed
+        $this->expectOutputString('123');
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
+        yield $iterator->advance();
         yield $iterator->advance();
         yield $iterator->advance();
     }

@@ -2,9 +2,7 @@
 
 namespace Amp\Sync;
 
-use Amp\Coroutine;
-use Amp\Delayed;
-use Amp\Promise;
+use function Amp\delay;
 
 /**
  * A non-blocking, inter-process POSIX semaphore.
@@ -19,13 +17,13 @@ class PosixSemaphore implements Semaphore
     public const LATENCY_TIMEOUT = 10;
 
     /** @var string */
-    private $id;
+    private string $id;
 
     /** @var int The semaphore key. */
-    private $key;
+    private int $key;
 
     /** @var int PID of the process that created the semaphore. */
-    private $initializer = 0;
+    private int $initializer = 0;
 
     /** @var resource A message queue of available locks. */
     private $queue;
@@ -54,7 +52,7 @@ class PosixSemaphore implements Semaphore
     /**
      * @param string $id The unique name of the semaphore to use.
      *
-     * @return \Amp\Sync\PosixSemaphore
+     * @return PosixSemaphore
      */
     public static function use(string $id): self
     {
@@ -86,10 +84,11 @@ class PosixSemaphore implements Semaphore
     }
 
     /**
-     * Private to prevent serialization.
+     * Throws to prevent serialization.
      */
-    private function __sleep()
+    public function __sleep()
     {
+        throw new \Error('Cannot serialize '. self::class);
     }
 
     public function getId(): string
@@ -155,22 +154,14 @@ class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the operation failed.
      */
-    public function setPermissions(int $mode)
+    public function setPermissions(int $mode): void
     {
         if (!\msg_set_queue($this->queue, ['msg_perm.mode' => $mode])) {
             throw new SyncException('Failed to change the semaphore permissions.');
         }
     }
 
-    public function acquire(): Promise
-    {
-        return new Coroutine($this->doAcquire());
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    private function doAcquire(): \Generator
+    public function acquire(): Lock
     {
         do {
             // Attempt to acquire a lock from the semaphore.
@@ -186,7 +177,9 @@ class PosixSemaphore implements Semaphore
             if ($errno !== \MSG_ENOMSG) {
                 throw new SyncException(\sprintf('Failed to acquire a lock; errno: %d', $errno));
             }
-        } while (yield new Delayed(self::LATENCY_TIMEOUT, true));
+
+            delay(self::LATENCY_TIMEOUT);
+        } while (true);
     }
 
     /**
@@ -214,7 +207,7 @@ class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the operation failed.
      */
-    protected function release(int $id)
+    protected function release(int $id): void
     {
         if (!$this->queue) {
             return; // Queue already destroyed.

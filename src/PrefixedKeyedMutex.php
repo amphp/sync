@@ -2,15 +2,13 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-
 final class PrefixedKeyedMutex implements KeyedMutex
 {
     /** @var KeyedMutex */
-    private $mutex;
+    private KeyedMutex $mutex;
 
     /** @var string */
-    private $prefix;
+    private string $prefix;
 
     public function __construct(KeyedMutex $mutex, string $prefix)
     {
@@ -18,7 +16,7 @@ final class PrefixedKeyedMutex implements KeyedMutex
         $this->prefix = $prefix;
     }
 
-    public function acquire(string $key): Promise
+    public function acquire(string $key): Lock
     {
         return $this->mutex->acquire($this->prefix . $key);
     }

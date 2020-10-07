@@ -2,10 +2,13 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Loop;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\Semaphore;
 use Amp\Sync\SyncException;
+use function Amp\async;
+use function Amp\await;
+use function Amp\defer;
+use function Amp\delay;
 
 /**
  * @group posix
@@ -27,7 +30,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
      */
     public function createSemaphore(int $locks): Semaphore
     {
-        return PosixSemaphore::create(self::ID, $locks);
+        return PosixSemaphore::create(self::ID . \bin2hex(\random_bytes(4)), $locks);
     }
 
     public function testConstructorOnInvalidMaxLocks(): void
@@ -80,19 +83,20 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
     public function testUse()
     {
-        $this->setMinimumRuntime(500);
+        $this->setMinimumRuntime(100);
 
         $this->semaphore = $this->createSemaphore(1);
 
         $used = PosixSemaphore::use(self::ID);
 
-        $promise1 = $used->acquire();
-        $promise2 = $this->semaphore->acquire();
+        $promise1 = async(fn() => $used->acquire());
+        $promise2 = async(fn() => $this->semaphore->acquire());
 
-        Loop::delay(500, function () use ($promise1) {
-            (yield $promise1)->release();
+        defer(function () use ($promise1): void {
+            delay(100);
+            await($promise1)->release();
         });
 
-        (yield $promise2)->release();
+        await($promise2)->release();
     }
 }

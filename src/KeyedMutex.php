@@ -17,8 +17,8 @@ interface KeyedMutex extends KeyedSemaphore
      *
      * @param string $key Lock key
      *
-     * @return Promise<Lock> Resolves with a lock object with an ID of 0. May fail with a SyncException
-     *     if an error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
+     * @return Lock Returns a lock object with an ID of 0. May fail with a SyncException if an
+     *     error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
-    public function acquire(string $key): Promise;
+    public function acquire(string $key): Lock;
 }

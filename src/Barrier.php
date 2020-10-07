@@ -4,6 +4,7 @@ namespace Amp\Sync;
 
 use Amp\Deferred;
 use Amp\Promise;
+use function Amp\await;
 
 /**
  * A barrier is a synchronization primitive.
@@ -26,10 +27,9 @@ use Amp\Promise;
  */
 final class Barrier
 {
-    /** @var int */
-    private $count;
-    /** @var Deferred */
-    private $deferred;
+    private int $count;
+
+    private Deferred $deferred;
 
     public function __construct(int $count)
     {
@@ -76,8 +76,8 @@ final class Barrier
         $this->count += $count;
     }
 
-    public function await(): Promise
+    public function await(): void
     {
-        return $this->deferred->promise();
+        await($this->deferred->promise());
     }
 }

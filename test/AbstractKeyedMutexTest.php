@@ -2,41 +2,43 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Loop;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\KeyedMutex;
+use function Amp\defer;
+use function Amp\delay;
 
 abstract class AbstractKeyedMutexTest extends AsyncTestCase
 {
     abstract public function createMutex(): KeyedMutex;
 
-    public function testAcquire(): \Generator
+    public function testAcquire(): void
     {
         $mutex = $this->createMutex();
-        $lock = yield $mutex->acquire('test');
+        $lock = $mutex->acquire('test');
         $lock->release();
         $this->assertTrue($lock->isReleased());
     }
 
-    public function testAcquireMultiple(): \Generator
+    public function testAcquireMultiple(): void
     {
         $this->setMinimumRuntime(300);
 
         $mutex = $this->createMutex();
 
-        $lock1 = yield $mutex->acquire('test');
-        Loop::delay(100, function () use ($lock1) {
+        $lock1 = $mutex->acquire('test');
+        defer(function () use ($lock1): void {
+            delay(100);
             $lock1->release();
         });
 
-        $lock2 = yield $mutex->acquire('test');
-        Loop::delay(100, function () use ($lock2) {
+        $lock2 = $mutex->acquire('test');
+        defer(function () use ($lock2): void {
+            delay(100);
             $lock2->release();
         });
 
-        $lock3 = yield $mutex->acquire('test');
-        Loop::delay(100, function () use ($lock3) {
-            $lock3->release();
-        });
+        $lock3 = $mutex->acquire('test');
+        delay(100);
+        $lock3->release();
     }
 }
