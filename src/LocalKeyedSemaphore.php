@@ -26,7 +26,6 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
 
         $this->locks[$key]++;
 
-        /** @var Lock $lock */
         $lock = $this->semaphore[$key]->acquire();
 
         return new Lock(0, function () use ($lock, $key): void {

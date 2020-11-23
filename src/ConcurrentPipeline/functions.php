@@ -1,42 +1,43 @@
 <?php
 
-namespace Amp\Sync\ConcurrentIterator;
+namespace Amp\Sync\ConcurrentPipeline;
 
-use Amp\CancelledException;
 use Amp\Iterator;
-use Amp\Producer;
+use Amp\Pipeline;
+use Amp\PipelineSource;
 use Amp\Promise;
 use Amp\Sync\Barrier;
 use Amp\Sync\Lock;
 use Amp\Sync\Semaphore;
-use function Amp\async;
 use function Amp\await;
-use function Amp\call;
-use function Amp\coroutine;
 use function Amp\defer;
 
 /**
- * Concurrently act on iterator values using {@code $processor}.
+ * Concurrently act on source values using {@code $processor}.
  *
- * @param Iterator  $iterator Values to process.
+ * @param Pipeline  $source Values to process.
  * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
  * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
  *     otherwise the entire operation is aborted.
  *
- * @return Iterator Result values.
+ * @return Pipeline Result values.
  */
-function transform(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
+function transform(Pipeline $source, Semaphore $semaphore, callable $processor): Pipeline
 {
-    return new Producer(static function (callable $emit) use ($iterator, $semaphore, $processor) {
-        // one dummy item, because we can't start the barrier with a count of zero
-        $barrier = new Barrier(1);
+    $pipeline = new PipelineSource;
 
-        /** @var \Throwable|null $error */
-        $error = null;
+    // one dummy item, because we can't start the barrier with a count of zero
+    $barrier = new Barrier(1);
+
+    /** @var \Throwable|null $error */
+    $error = null;
+
+    defer(static function () use ($source, $semaphore, $processor, $pipeline, $barrier, &$error) {
         $locks = [];
         $gc = false;
 
-        $processor = coroutine($processor);
+        $emit = \Closure::fromCallable([$pipeline, 'emit']);
+
         $processor = static function (Lock $lock, $currentElement) use (
             $processor,
             $emit,
@@ -48,7 +49,10 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             $done = false;
 
             try {
-                await($processor($currentElement, $emit));
+                $processorValue = $processor($currentElement, $emit);
+                if ($processorValue instanceof Promise) {
+                    await($processorValue);
+                }
 
                 $done = true;
             } catch (\Throwable $e) {
@@ -66,7 +70,7 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             }
         };
 
-        while (await($iterator->advance())) {
+        while (null !== $current = $source->continue()) {
             if ($error) {
                 break;
             }
@@ -80,101 +84,87 @@ function transform(Iterator $iterator, Semaphore $semaphore, callable $processor
             $locks[$lock->getId()] = true;
             $barrier->register();
 
-            defer($processor, $lock, $iterator->getCurrent());
+            defer($processor, $lock, $current);
         }
 
         $barrier->arrive(); // remove dummy item
-        yield async(fn () => $barrier->await());
+
+        $barrier->await();
 
         if ($error) {
-            throw $error;
+            $pipeline->fail($error);
+        } else {
+            $pipeline->complete();
         }
     });
+
+    return $pipeline->pipe();
 }
 
 /**
- * Concurrently map all iterator values using {@code $processor}.
+ * Concurrently map all source values using {@code $processor}.
  *
- * The order of the items in the resulting iterator is not guaranteed in any way.
+ * The order of the items in the resulting source is not guaranteed in any way.
  *
- * @param Iterator  $iterator Values to map.
+ * @param Pipeline  $source Values to map.
  * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
  * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
  *     otherwise the entire operation is aborted.
  *
- * @return Iterator Mapped values.
+ * @return Pipeline Mapped values.
  */
-function map(Iterator $iterator, Semaphore $semaphore, callable $processor): Iterator
+function map(Pipeline $source, Semaphore $semaphore, callable $processor): Pipeline
 {
-    $processor = coroutine($processor);
-
-    return transform($iterator, $semaphore, static function ($value, callable $emit) use ($processor) {
-        $value = yield $processor($value);
-
-        yield $emit($value);
+    return transform($source, $semaphore, static function ($value, callable $emit) use ($processor) {
+        $emit($processor($value));
     });
 }
 
 /**
- * Concurrently filter all iterator values using {@code $filter}.
+ * Concurrently filter all source values using {@code $filter}.
  *
- * The order of the items in the resulting iterator is not guaranteed in any way.
+ * The order of the items in the resulting source is not guaranteed in any way.
  *
- * @param Iterator  $iterator Values to map.
+ * @param Iterator  $source Values to map.
  * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
  * @param callable  $filter Processing callable, which is run as coroutine. It should not throw any errors,
  *     otherwise the entire operation is aborted. Must resolve to a boolean, true to keep values in the resulting
- *     iterator.
+ *     source.
  *
  * @return Iterator Values, where {@code $filter} resolved to {@code true}.
  */
-function filter(Iterator $iterator, Semaphore $semaphore, callable $filter): Iterator
+function filter(Pipeline $source, Semaphore $semaphore, callable $filter): Pipeline
 {
-    $filter = coroutine($filter);
-
-    return transform($iterator, $semaphore, static function ($value, callable $emit) use ($filter) {
-        $keep = yield $filter($value);
+    return transform($source, $semaphore, static function ($value, callable $emit) use ($filter) {
+        $keep = $filter($value);
         if (!\is_bool($keep)) {
             throw new \TypeError(__NAMESPACE__ . '\filter\'s callable must resolve to a boolean value, got ' . \gettype($keep));
         }
 
         if ($keep) {
-            yield $emit($value);
+            $emit($value);
         }
     });
 }
 
 /**
- * Concurrently invoke a callback on all iterator values using {@code $processor}.
+ * Concurrently invoke a callback on all source values using {@code $processor}.
  *
- * @param Iterator  $iterator Values to act on.
+ * @param Pipeline  $source Values to act on.
  * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
  * @param callable  $processor Processing callable, which is run as coroutine. It should not throw any errors,
  *     otherwise the entire operation is aborted.
  *
- * @return Promise
+ * @return int
  */
-function each(Iterator $iterator, Semaphore $semaphore, callable $processor): Promise
+function each(Pipeline $source, Semaphore $semaphore, callable $processor): int
 {
-    $processor = coroutine($processor);
-
-    $iterator = transform(
-        $iterator,
+    return await(Pipeline\discard(transform(
+        $source,
         $semaphore,
         static function ($value, callable $emit) use ($processor) {
-            yield $processor($value);
-            yield $emit(null);
+            $processor($value);
+            $emit(true);
         }
-    );
-
-    // Use Amp\Iterator\discard in the future
-    return call(static function () use ($iterator) {
-        $count = 0;
-
-        while (yield $iterator->advance()) {
-            $count++;
-        }
-
-        return $count;
-    });
+    )));
 }

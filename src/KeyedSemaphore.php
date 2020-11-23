@@ -2,8 +2,6 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-
 /**
  * A non-blocking counting semaphore based on keys.
  *

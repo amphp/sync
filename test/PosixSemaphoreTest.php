@@ -50,18 +50,19 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
     public function testGetPermissions(): void
     {
-        $this->semaphore = PosixSemaphore::create(self::ID, 1);
-        $used = PosixSemaphore::use(self::ID);
+        $id = self::ID . \bin2hex(\random_bytes(4));
+        $this->semaphore = PosixSemaphore::create($id, 1);
+        $used = PosixSemaphore::use($id);
         $used->setPermissions(0644);
 
-        $this->assertSame(0644, $this->semaphore->getPermissions());
+        self::assertSame(0644, $this->semaphore->getPermissions());
     }
 
     public function testGetId(): void
     {
         $this->semaphore = $this->createSemaphore(1);
 
-        $this->assertSame(self::ID, $this->semaphore->getId());
+        self::assertStringStartsWith(self::ID, $this->semaphore->getId());
     }
 
     public function testUseOnInvalidSemaphoreId(): void
@@ -81,7 +82,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         $semaphore::create(self::ID, 1);
     }
 
-    public function testUse()
+    public function testUse(): void
     {
         $this->setMinimumRuntime(100);
 
@@ -92,11 +93,12 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         $promise1 = async(fn() => $used->acquire());
         $promise2 = async(fn() => $this->semaphore->acquire());
 
-        defer(function () use ($promise1): void {
+        $promise3 = async(function () use ($promise1): void {
             delay(100);
             await($promise1)->release();
         });
 
         await($promise2)->release();
+        await($promise3);
     }
 }

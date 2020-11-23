@@ -4,10 +4,8 @@ namespace Amp\Sync;
 
 final class PrefixedKeyedMutex implements KeyedMutex
 {
-    /** @var KeyedMutex */
     private KeyedMutex $mutex;
 
-    /** @var string */
     private string $prefix;
 
     public function __construct(KeyedMutex $mutex, string $prefix)

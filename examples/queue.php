@@ -1,39 +1,40 @@
 <?php
 
 use Amp\Emitter;
+use Amp\PipelineSource;
 use Amp\Sync\LocalSemaphore;
 use function Amp\delay;
 use function Amp\Promise\wait;
-use function Amp\Sync\ConcurrentIterator\each;
+use function Amp\Sync\ConcurrentPipeline\each;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-$emitter = new Emitter;
+$source = new PipelineSource;
 
 $jobId = 0;
 
 for ($i = 0; $i < 10; $i++) {
     print 'enqueued ' . $jobId . \PHP_EOL;
-    $emitter->emit($jobId++);
+    $source->emit($jobId++);
 }
 
-wait(each(
-    $emitter->iterate(),
+each(
+    $source->pipe(),
     new LocalSemaphore(3),
-    static function ($job) use ($emitter, &$jobId) {
+    static function ($job) use ($source, &$jobId) {
         print 'starting ' . $job . \PHP_EOL;
 
-        yield delay(1000);
+        delay(1000);
 
         if ($job < 10) {
             if (\random_int(0, 1)) {
                 print 'enqueued ' . $jobId . \PHP_EOL;
-                $emitter->emit($jobId++);
+                $source->emit($jobId++);
             }
         } elseif ($job === 10) {
-            $emitter->complete();
+            $source->complete();
         }
 
         print 'finished ' . $job . \PHP_EOL;
     }
-));
+);

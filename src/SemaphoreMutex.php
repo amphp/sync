@@ -4,7 +4,6 @@ namespace Amp\Sync;
 
 class SemaphoreMutex implements Mutex
 {
-    /** @var Semaphore */
     private Semaphore $semaphore;
 
     /**

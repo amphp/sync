@@ -2,8 +2,6 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-
 /**
  * A non-blocking synchronization primitive that can be used for mutual exclusion across contexts based on keys.
  *

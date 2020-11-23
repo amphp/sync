@@ -35,7 +35,7 @@
         },
         "files": [
             "src/functions.php",
-            "src/ConcurrentIterator/functions.php"
+            "src/ConcurrentPipeline/functions.php"
         ]
     },
     "autoload-dev": {

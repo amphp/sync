@@ -3,7 +3,6 @@
 namespace Amp\Sync;
 
 use Amp\Deferred;
-use Amp\Promise;
 use function Amp\await;
 
 /**
@@ -38,7 +37,7 @@ final class Barrier
         }
 
         $this->count = $count;
-        $this->deferred = new Deferred();
+        $this->deferred = new Deferred;
     }
 
     public function getCount(): int

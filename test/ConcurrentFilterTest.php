@@ -2,16 +2,18 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Iterator;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
+use function Amp\await;
 use function Amp\delay;
-use function Amp\Iterator\toArray;
-use function Amp\Sync\ConcurrentIterator\filter;
+use function Amp\Pipeline\discard;
+use function Amp\Pipeline\fromIterable;
+use function Amp\Pipeline\toArray;
+use function Amp\Sync\ConcurrentPipeline\filter;
 
 class ConcurrentFilterTest extends AsyncTestCase
 {
-    public function test(): \Generator
+    public function test(): void
     {
         $this->expectOutputString('123');
 
@@ -21,13 +23,13 @@ class ConcurrentFilterTest extends AsyncTestCase
             return $job === 2;
         };
 
-        $this->assertSame(
+        self::assertSame(
             [2],
-            yield toArray(filter(Iterator\fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor))
+            toArray(filter(fromIterable([1, 2, 3]), new LocalSemaphore(3), $processor))
         );
     }
 
-    public function testOutputOrder(): \Generator
+    public function testOutputOrder(): void
     {
         $processor = static function ($job) {
             delay($job * 100);
@@ -35,13 +37,13 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $this->assertSame(
+        self::assertSame(
             [1, 2, 3],
-            yield toArray(filter(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor))
+            toArray(filter(fromIterable([3, 2, 1]), new LocalSemaphore(3), $processor))
         );
     }
 
-    public function testOutputOrderWithoutConcurrency(): \Generator
+    public function testOutputOrderWithoutConcurrency(): void
     {
         $processor = static function ($job) {
             delay($job * 100);
@@ -49,29 +51,29 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $this->assertSame(
+        self::assertSame(
             [3, 2, 1],
-            yield toArray(filter(Iterator\fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor))
+            toArray(filter(fromIterable([3, 2, 1]), new LocalSemaphore(1), $processor))
         );
     }
 
-    public function testBackpressure(): \Generator
+    public function testBackpressure(): void
     {
         $this->setMinimumRuntime(300);
         $this->setTimeout(350);
         $this->ignoreLoopWatchers();
 
-        $processor = static function ($job) {
+        $processor = static function () {
             delay(100);
             return true;
         };
 
-        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5, 6]), new LocalSemaphore(2), $processor);
+        $pipeline = filter(fromIterable([1, 2, 3, 4, 5, 6]), new LocalSemaphore(2), $processor);
 
-        while (yield $iterator->advance());
+        await(discard($pipeline));
     }
 
-    public function testBackpressurePartialConsume1(): \Generator
+    public function testBackpressurePartialConsume1(): void
     {
         $this->expectOutputString('12');
         $this->ignoreLoopWatchers();
@@ -82,12 +84,12 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $pipeline = filter(fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        yield $iterator->advance();
+        $pipeline->continue();
     }
 
-    public function testBackpressurePartialConsume2(): \Generator
+    public function testBackpressurePartialConsume2(): void
     {
         $this->expectOutputString('123');
         $this->ignoreLoopWatchers();
@@ -98,13 +100,13 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $pipeline = filter(fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
-        yield $iterator->advance();
-        yield $iterator->advance();
+        $pipeline->continue();
+        $pipeline->continue();
     }
 
-    public function testErrorHandling(): \Generator
+    public function testErrorHandling(): void
     {
         $processor = static function ($job) {
             print $job;
@@ -118,20 +120,20 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $pipeline = filter(fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         // Job 2 errors, so only jobs 1, 2, and 3 should be executed
         $this->expectOutputString('123');
         $this->expectException(\Exception::class);
         $this->expectExceptionMessage('Failure');
 
-        yield $iterator->advance();
-        yield $iterator->advance();
-        yield $iterator->advance();
-        yield $iterator->advance();
+        $pipeline->continue();
+        $pipeline->continue();
+        $pipeline->continue();
+        $pipeline->continue();
     }
 
-    public function testInvalidReturn(): \Generator
+    public function testInvalidReturn(): void
     {
         $processor = static function ($job) {
             print $job;
@@ -145,20 +147,20 @@ class ConcurrentFilterTest extends AsyncTestCase
             return true;
         };
 
-        $iterator = filter(Iterator\fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
+        $pipeline = filter(fromIterable([1, 2, 3, 4, 5]), new LocalSemaphore(2), $processor);
 
         // Job 2 errors, so only jobs 1, 2, and 3 should be executed
         $this->expectOutputString('123');
         $this->expectException(\TypeError::class);
-        $this->expectExceptionMessage('Amp\Sync\ConcurrentIterator\filter\'s callable must resolve to a boolean value, got integer');
+        $this->expectExceptionMessage('Amp\Sync\ConcurrentPipeline\filter\'s callable must resolve to a boolean value, got integer');
 
-        yield $iterator->advance();
-        yield $iterator->advance();
-        yield $iterator->advance();
-        yield $iterator->advance();
+        $pipeline->continue();
+        $pipeline->continue();
+        $pipeline->continue();
+        $pipeline->continue();
     }
 
-    protected function tearDownAsync()
+    protected function tearDownAsync(): void
     {
         // Required to make testBackpressure fail instead of the following test
         \gc_collect_cycles();

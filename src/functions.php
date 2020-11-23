@@ -3,8 +3,6 @@
 namespace Amp\Sync;
 
 use Amp\Promise;
-use function Amp\await;
-use function Amp\call;
 
 /**
  * Invokes the given callback while maintaining a lock from the provided mutex. The lock is automatically released after

@@ -40,11 +40,11 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
 
         $lock = $this->semaphore->acquire();
 
-        $this->assertFalse($lock->isReleased());
+        self::assertFalse($lock->isReleased());
 
         $lock->release();
 
-        $this->assertTrue($lock->isReleased());
+        self::assertTrue($lock->isReleased());
     }
 
     public function testAcquireMultipleFromSingleLockSemaphore(): void
@@ -54,21 +54,21 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         $this->semaphore = $this->createSemaphore(1);
 
         $lock1 = $this->semaphore->acquire();
-        $this->assertSame(0, $lock1->getId());
+        self::assertSame(0, $lock1->getId());
         defer(function () use ($lock1): void {
             delay(100);
             $lock1->release();
         });
 
         $lock2 = $this->semaphore->acquire();
-        $this->assertSame(0, $lock2->getId());
+        self::assertSame(0, $lock2->getId());
         defer(function () use ($lock2): void {
             delay(100);
             $lock2->release();
         });
 
         $lock3 = $this->semaphore->acquire();
-        $this->assertSame(0, $lock3->getId());
+        self::assertSame(0, $lock3->getId());
         delay(100);
         $lock3->release();
     }
@@ -86,22 +86,22 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         });
 
         $lock2 = $this->semaphore->acquire();
-        $this->assertNotSame($lock1->getId(), $lock2->getId());
+        self::assertNotSame($lock1->getId(), $lock2->getId());
         defer(function () use ($lock2): void {
-            delay(100);
+            delay(101);
             $lock2->release();
         });
 
         $lock3 = $this->semaphore->acquire();
-        $this->assertNotSame($lock1->getId(), $lock3->getId());
-        $this->assertNotSame($lock2->getId(), $lock3->getId());
+        self::assertNotSame($lock1->getId(), $lock3->getId());
+        self::assertNotSame($lock2->getId(), $lock3->getId());
         defer(function () use ($lock3): void {
-            delay(100);
+            delay(101);
             $lock3->release();
         });
 
         $lock4 = $this->semaphore->acquire();
-        $this->assertSame($lock1->getId(), $lock4->getId());
+        self::assertSame($lock1->getId(), $lock4->getId());
         delay(100);
         $lock4->release();
     }

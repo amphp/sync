@@ -16,18 +16,6 @@ class PosixSemaphore implements Semaphore
 {
     public const LATENCY_TIMEOUT = 10;
 
-    /** @var string */
-    private string $id;
-
-    /** @var int The semaphore key. */
-    private int $key;
-
-    /** @var int PID of the process that created the semaphore. */
-    private int $initializer = 0;
-
-    /** @var resource A message queue of available locks. */
-    private $queue;
-
     /**
      * Creates a new semaphore with a given ID and number of locks.
      *
@@ -46,6 +34,7 @@ class PosixSemaphore implements Semaphore
 
         $semaphore = new self($id);
         $semaphore->init($maxLocks, $permissions);
+
         return $semaphore;
     }
 
@@ -58,8 +47,22 @@ class PosixSemaphore implements Semaphore
     {
         $semaphore = new self($id);
         $semaphore->open();
+
         return $semaphore;
     }
+
+    private static function makeKey(string $id): int
+    {
+        return \abs(\unpack("l", \md5($id, true))[1]);
+    }
+
+    private string $id;
+    /** @var int The semaphore key. */
+    private int $key;
+    /** @var int PID of the process that created the semaphore. */
+    private int $initializer = 0;
+    /** @var resource A message queue of available locks. */
+    private $queue;
 
     /**
      * @param string $id
@@ -77,61 +80,16 @@ class PosixSemaphore implements Semaphore
     }
 
     /**
-     * Private method to prevent cloning.
-     */
-    private function __clone()
-    {
-    }
-
-    /**
      * Throws to prevent serialization.
      */
-    public function __sleep()
+    public function __sleep(): array
     {
-        throw new \Error('Cannot serialize '. self::class);
+        throw new \Error('Cannot serialize ' . self::class);
     }
 
     public function getId(): string
     {
         return $this->id;
-    }
-
-    private function open(): void
-    {
-        if (!\msg_queue_exists($this->key)) {
-            throw new SyncException('No semaphore with that ID found');
-        }
-
-        $this->queue = \msg_get_queue($this->key);
-
-        if (!$this->queue) {
-            throw new SyncException('Failed to open the semaphore.');
-        }
-    }
-
-    /**
-     * @param int $maxLocks    The maximum number of locks that can be acquired from the semaphore.
-     * @param int $permissions Permissions to access the semaphore.
-     *
-     * @throws SyncException If the semaphore could not be created due to an internal error.
-     */
-    private function init(int $maxLocks, int $permissions): void
-    {
-        if (\msg_queue_exists($this->key)) {
-            throw new SyncException('A semaphore with that ID already exists');
-        }
-
-        $this->queue = \msg_get_queue($this->key, $permissions);
-        if (!$this->queue) {
-            throw new SyncException('Failed to create the semaphore.');
-        }
-
-        $this->initializer = \getmypid();
-
-        // Fill the semaphore with locks.
-        while (--$maxLocks >= 0) {
-            $this->release($maxLocks);
-        }
     }
 
     /**
@@ -224,8 +182,48 @@ class PosixSemaphore implements Semaphore
         }
     }
 
-    private static function makeKey(string $id): int
+    /**
+     * Private method to prevent cloning.
+     */
+    private function __clone()
     {
-        return \abs(\unpack("l", \md5($id, true))[1]);
+    }
+
+    private function open(): void
+    {
+        if (!\msg_queue_exists($this->key)) {
+            throw new SyncException('No semaphore with that ID found');
+        }
+
+        $this->queue = \msg_get_queue($this->key);
+
+        if (!$this->queue) {
+            throw new SyncException('Failed to open the semaphore.');
+        }
+    }
+
+    /**
+     * @param int $maxLocks The maximum number of locks that can be acquired from the semaphore.
+     * @param int $permissions Permissions to access the semaphore.
+     *
+     * @throws SyncException If the semaphore could not be created due to an internal error.
+     */
+    private function init(int $maxLocks, int $permissions): void
+    {
+        if (\msg_queue_exists($this->key)) {
+            throw new SyncException('A semaphore with that ID already exists');
+        }
+
+        $this->queue = \msg_get_queue($this->key, $permissions);
+        if (!$this->queue) {
+            throw new SyncException('Failed to create the semaphore.');
+        }
+
+        $this->initializer = \getmypid();
+
+        // Fill the semaphore with locks.
+        while (--$maxLocks >= 0) {
+            $this->release($maxLocks);
+        }
     }
 }

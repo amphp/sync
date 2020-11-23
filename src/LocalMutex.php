@@ -7,7 +7,6 @@ use function Amp\await;
 
 class LocalMutex implements Mutex
 {
-    /** @var bool */
     private bool $locked = false;
 
     /** @var Deferred[] */

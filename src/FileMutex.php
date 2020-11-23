@@ -41,7 +41,7 @@ class FileMutex implements Mutex
     {
         // Try to create the lock file. If the file already exists, someone else
         // has the lock, so set an asynchronous timer and try again.
-        while (($handle = @\fopen($this->fileName, 'x')) === false) {
+        while (($handle = @\fopen($this->fileName, 'xb')) === false) {
             delay(self::LATENCY_TIMEOUT);
         }
 
@@ -58,7 +58,7 @@ class FileMutex implements Mutex
      *
      * @throws SyncException If the unlock operation failed.
      */
-    protected function release()
+    protected function release(): void
     {
         $success = @\unlink($this->fileName);
 

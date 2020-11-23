@@ -4,10 +4,8 @@ namespace Amp\Sync;
 
 final class StaticKeyMutex implements Mutex
 {
-    /** @var KeyedMutex */
     private KeyedMutex $mutex;
 
-    /** @var string */
     private string $key;
 
     public function __construct(KeyedMutex $mutex, string $key)

@@ -2,14 +2,10 @@
 
 namespace Amp\Sync;
 
-use Amp\Promise;
-
 final class PrefixedKeyedSemaphore implements KeyedSemaphore
 {
-    /** @var KeyedSemaphore */
     private KeyedSemaphore $semaphore;
 
-    /** @var string */
     private string $prefix;
 
     public function __construct(KeyedSemaphore $semaphore, string $prefix)
