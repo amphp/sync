@@ -22,13 +22,13 @@ class BarrierTest extends AsyncTestCase
         $this->setTimeout(10);
 
         $this->barrier->arrive();
-        $this->assertSame(1, $this->barrier->getCount());
+        self::assertSame(1, $this->barrier->getCount());
 
         $this->barrier->arrive();
 
         $this->barrier->await();
 
-        $this->assertSame(0, $this->barrier->getCount());
+        self::assertSame(0, $this->barrier->getCount());
     }
 
     public function testArriveAfterResolved(): void
@@ -46,7 +46,7 @@ class BarrierTest extends AsyncTestCase
 
         $this->barrier->arrive(2);
 
-        $this->assertSame(0, $this->barrier->getCount());
+        self::assertSame(0, $this->barrier->getCount());
         $this->barrier->await();
     }
 
@@ -67,7 +67,7 @@ class BarrierTest extends AsyncTestCase
     public function testGetCurrentCount(): void
     {
         $this->barrier->arrive();
-        $this->assertEquals(1, $this->barrier->getCount());
+        self::assertEquals(1, $this->barrier->getCount());
     }
 
     public function testInvalidSignalCountInConstructor(): void
@@ -82,7 +82,7 @@ class BarrierTest extends AsyncTestCase
 
         $this->barrier->arrive();
         $this->barrier->register();
-        $this->assertSame(2, $this->barrier->getCount());
+        self::assertSame(2, $this->barrier->getCount());
 
         $this->barrier->arrive();
         $this->barrier->arrive();
@@ -96,7 +96,7 @@ class BarrierTest extends AsyncTestCase
 
         $this->barrier->arrive();
         $this->barrier->register(2);
-        $this->assertSame(3, $this->barrier->getCount());
+        self::assertSame(3, $this->barrier->getCount());
 
         $this->barrier->arrive();
         $this->barrier->arrive();

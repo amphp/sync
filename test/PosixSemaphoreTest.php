@@ -7,8 +7,7 @@ use Amp\Sync\Semaphore;
 use Amp\Sync\SyncException;
 use function Amp\async;
 use function Amp\await;
-use function Amp\defer;
-use function Amp\delay;
+use function Revolt\EventLoop\delay;
 
 /**
  * @group posix
@@ -26,7 +25,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
     /**
      * @param $locks
      *
-     * @return \Amp\Sync\PosixSemaphore
+     * @return PosixSemaphore
      */
     public function createSemaphore(int $locks): Semaphore
     {
@@ -90,8 +89,8 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
         $used = PosixSemaphore::use(self::ID);
 
-        $promise1 = async(fn() => $used->acquire());
-        $promise2 = async(fn() => $this->semaphore->acquire());
+        $promise1 = async(fn () => $used->acquire());
+        $promise2 = async(fn () => $this->semaphore->acquire());
 
         $promise3 = async(function () use ($promise1): void {
             delay(100);

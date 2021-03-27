@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-use function Amp\delay;
+use function Revolt\EventLoop\delay;
 
 /**
  * A non-blocking, inter-process POSIX semaphore.

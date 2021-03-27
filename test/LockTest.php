@@ -7,34 +7,34 @@ use Amp\Sync\Lock;
 
 class LockTest extends AsyncTestCase
 {
-    public function testIsReleased()
+    public function testIsReleased(): void
     {
         $lock = new Lock(0, $this->createCallback(1));
-        $this->assertFalse($lock->isReleased());
+        self::assertFalse($lock->isReleased());
         $lock->release();
-        $this->assertTrue($lock->isReleased());
+        self::assertTrue($lock->isReleased());
     }
 
-    public function testIsReleasedOnDestruct()
+    public function testIsReleasedOnDestruct(): void
     {
         $lock = new Lock(0, $this->createCallback(1));
         unset($lock);
     }
 
-    public function testThrowsOnMultiRelease()
+    public function testThrowsOnMultiRelease(): void
     {
         $lock = new Lock(0, $this->createCallback(1));
         $lock->release();
-        $this->assertTrue($lock->isReleased());
+        self::assertTrue($lock->isReleased());
         $lock->release();
-        $this->assertTrue($lock->isReleased());
+        self::assertTrue($lock->isReleased());
     }
 
-    public function testGetId()
+    public function testGetId(): void
     {
         $id = 42;
         $lock = new Lock($id, $this->createCallback(1));
-        $this->assertSame($id, $lock->getId());
+        self::assertSame($id, $lock->getId());
         $lock->release();
     }
 }

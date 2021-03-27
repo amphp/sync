@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-use function Amp\delay;
+use function Revolt\EventLoop\delay;
 
 /**
  * A cross-platform mutex that uses exclusive files as the lock mechanism.

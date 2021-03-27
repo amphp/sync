@@ -4,8 +4,8 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Mutex;
-use function Amp\defer;
-use function Amp\delay;
+use function Revolt\EventLoop\defer;
+use function Revolt\EventLoop\delay;
 
 abstract class AbstractMutexTest extends AsyncTestCase
 {
@@ -16,7 +16,7 @@ abstract class AbstractMutexTest extends AsyncTestCase
         $mutex = $this->createMutex();
         $lock = $mutex->acquire();
         $lock->release();
-        $this->assertTrue($lock->isReleased());
+        self::assertTrue($lock->isReleased());
     }
 
     public function testAcquireMultiple(): void
@@ -39,5 +39,6 @@ abstract class AbstractMutexTest extends AsyncTestCase
 
         $lock3 = $mutex->acquire();
         delay(100);
-        $lock3->release();    }
+        $lock3->release();
+    }
 }

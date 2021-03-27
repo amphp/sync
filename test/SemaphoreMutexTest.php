@@ -21,6 +21,8 @@ class SemaphoreMutexTest extends AbstractMutexTest
         $this->expectExceptionMessage('Cannot use a semaphore with more than a single lock');
 
         $mutex = new SemaphoreMutex(new LocalSemaphore(2));
-        while ($mutex->acquire());
+        while ($mutex->acquire()) {
+            ;
+        }
     }
 }

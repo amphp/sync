@@ -4,8 +4,8 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\KeyedSemaphore;
-use function Amp\defer;
-use function Amp\delay;
+use function Revolt\EventLoop\defer;
+use function Revolt\EventLoop\delay;
 
 abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
 {
@@ -16,7 +16,7 @@ abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
         $mutex = $this->createSemaphore(1);
         $lock = $mutex->acquire('test');
         $lock->release();
-        $this->assertTrue($lock->isReleased());
+        self::assertTrue($lock->isReleased());
     }
 
     public function testAcquireMultiple(): void

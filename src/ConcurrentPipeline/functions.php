@@ -2,7 +2,6 @@
 
 namespace Amp\Sync\ConcurrentPipeline;
 
-use Amp\Iterator;
 use Amp\Pipeline;
 use Amp\PipelineSource;
 use Amp\Promise;
@@ -10,7 +9,7 @@ use Amp\Sync\Barrier;
 use Amp\Sync\Lock;
 use Amp\Sync\Semaphore;
 use function Amp\await;
-use function Amp\defer;
+use function Revolt\EventLoop\defer;
 
 /**
  * Concurrently act on source values using {@code $processor}.
@@ -125,13 +124,13 @@ function map(Pipeline $source, Semaphore $semaphore, callable $processor): Pipel
  *
  * The order of the items in the resulting source is not guaranteed in any way.
  *
- * @param Iterator  $source Values to map.
+ * @param Pipeline  $source Values to map.
  * @param Semaphore $semaphore Semaphore limiting the concurrency, e.g. {@code LocalSemaphore}
  * @param callable  $filter Processing callable, which is run as coroutine. It should not throw any errors,
  *     otherwise the entire operation is aborted. Must resolve to a boolean, true to keep values in the resulting
  *     source.
  *
- * @return Iterator Values, where {@code $filter} resolved to {@code true}.
+ * @return Pipeline Values, where {@code $filter} resolved to {@code true}.
  */
 function filter(Pipeline $source, Semaphore $semaphore, callable $filter): Pipeline
 {

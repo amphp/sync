@@ -2,13 +2,12 @@
 
 namespace Amp\Sync\Test;
 
-use Amp\Loop;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Semaphore;
 use function Amp\async;
 use function Amp\await;
-use function Amp\defer;
-use function Amp\delay;
+use function Revolt\EventLoop\defer;
+use function Revolt\EventLoop\delay;
 
 abstract class AbstractSemaphoreTest extends AsyncTestCase
 {

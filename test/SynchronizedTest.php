@@ -6,8 +6,8 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalMutex;
 use function Amp\async;
 use function Amp\await;
-use function Amp\delay;
 use function Amp\Sync\synchronized;
+use function Revolt\EventLoop\delay;
 
 class SynchronizedTest extends AsyncTestCase
 {
@@ -23,10 +23,10 @@ class SynchronizedTest extends AsyncTestCase
 
         $promises = [];
         foreach (\range(0, 2) as $value) {
-            $promises[] = async(fn() => synchronized($mutex, $callback, $value));
+            $promises[] = async(fn () => synchronized($mutex, $callback, $value));
         }
 
         $result = await($promises);
-        $this->assertSame(\range(0, 2), $result);
+        self::assertSame(\range(0, 2), $result);
     }
 }

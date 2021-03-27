@@ -4,9 +4,9 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
-use function Amp\delay;
 use function Amp\Pipeline\fromIterable;
 use function Amp\Sync\ConcurrentPipeline\each;
+use function Revolt\EventLoop\delay;
 
 class ConcurrentEachTest extends AsyncTestCase
 {

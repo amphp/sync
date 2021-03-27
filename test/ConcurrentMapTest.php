@@ -5,11 +5,11 @@ namespace Amp\Sync\Test;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalSemaphore;
 use function Amp\await;
-use function Amp\delay;
 use function Amp\Pipeline\discard;
 use function Amp\Pipeline\fromIterable;
 use function Amp\Pipeline\toArray;
 use function Amp\Sync\ConcurrentPipeline\map;
+use function Revolt\EventLoop\delay;
 
 class ConcurrentMapTest extends AsyncTestCase
 {
