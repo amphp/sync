@@ -42,8 +42,7 @@
             "Amp\\Sync\\": "src"
         },
         "files": [
-            "src/functions.php",
-            "src/ConcurrentPipeline/functions.php"
+            "src/functions.php"
         ]
     },
     "autoload-dev": {
