@@ -21,19 +21,19 @@ abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
 
     public function testAcquireMultiple(): void
     {
-        $this->setMinimumRuntime(300);
-        $this->setTimeout(500);
+        $this->setMinimumRuntime(0.3);
+        $this->setTimeout(0.5);
 
         $mutex = $this->createSemaphore(5);
 
         for ($i = 0; $i < 15; $i++) {
             $lock = $mutex->acquire('test');
             defer(function () use ($lock): void {
-                delay(100);
+                delay(0.1);
                 $lock->release();
             });
         }
 
-        delay(100); // Wait for locks to be released.
+        delay(0.1); // Wait for locks to be released.
     }
 }

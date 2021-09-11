@@ -5,8 +5,7 @@ namespace Amp\Sync\Test;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\Semaphore;
 use Amp\Sync\SyncException;
-use function Amp\async;
-use function Amp\await;
+use function Amp\Future\spawn;
 use function Revolt\EventLoop\delay;
 
 /**
@@ -15,7 +14,7 @@ use function Revolt\EventLoop\delay;
  */
 class PosixSemaphoreTest extends AbstractSemaphoreTest
 {
-    const ID = __CLASS__ . '/4';
+    const ID = __CLASS__;
 
     public function makeId(): string
     {
@@ -83,21 +82,21 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
     public function testUse(): void
     {
-        $this->setMinimumRuntime(100);
+        $this->setMinimumRuntime(0.1);
 
         $this->semaphore = $this->createSemaphore(1);
 
         $used = PosixSemaphore::use(self::ID);
 
-        $promise1 = async(fn () => $used->acquire());
-        $promise2 = async(fn () => $this->semaphore->acquire());
+        $promise1 = spawn(fn () => $used->acquire());
+        $promise2 = spawn(fn () => $this->semaphore->acquire());
 
-        $promise3 = async(function () use ($promise1): void {
-            delay(100);
-            await($promise1)->release();
+        $promise3 = spawn(function () use ($promise1): void {
+            delay(0.1);
+            $promise1->join()->release();
         });
 
-        await($promise2)->release();
-        await($promise3);
+        $promise2->join()->release();
+        $promise3->join();
     }
 }

@@ -3,7 +3,6 @@
 namespace Amp\Sync;
 
 use Amp\Deferred;
-use function Amp\await;
 
 class LocalSemaphore implements Semaphore
 {
@@ -30,7 +29,7 @@ class LocalSemaphore implements Semaphore
         }
 
         $this->queue[] = $deferred = new Deferred;
-        return await($deferred->promise());
+        return $deferred->getFuture()->join();
     }
 
     private function release(Lock $lock): void
@@ -39,7 +38,7 @@ class LocalSemaphore implements Semaphore
 
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);
-            $deferred->resolve(new Lock($id, \Closure::fromCallable([$this, 'release'])));
+            $deferred->complete(new Lock($id, \Closure::fromCallable([$this, 'release'])));
             return;
         }
 

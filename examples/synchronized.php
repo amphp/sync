@@ -1,11 +1,10 @@
 <?php
 
 use Amp\Sync\LocalMutex;
-use function Amp\async;
-use function Amp\await;
-use function Amp\delay;
-use function Amp\Promise\all;
+use function Amp\Future\all;
+use function Amp\Future\spawn;
 use function Amp\Sync\synchronized;
+use function Revolt\EventLoop\delay;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -21,15 +20,15 @@ $task = function (string $identifier) use ($mutex) {
             print "[$identifier][$i] Acquired lock" . \PHP_EOL;
 
             // do anything exclusively
-            delay(\random_int(0, 1000));
+            delay(\random_int(0, 1000) / 1000);
         });
     }
 
     print "[$identifier] Finished" . \PHP_EOL;
 };
 
-$promiseA = async($task, 'A');
-$promiseB = async($task, 'B');
-$promiseC = async($task, 'C');
+$promiseA = spawn(fn () => $task('A'));
+$promiseB = spawn(fn () => $task('B'));
+$promiseC = spawn(fn () => $task('C'));
 
-await(all([$promiseA, $promiseB, $promiseC]));
+all([$promiseA, $promiseB, $promiseC]);

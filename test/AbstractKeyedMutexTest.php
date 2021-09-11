@@ -21,24 +21,24 @@ abstract class AbstractKeyedMutexTest extends AsyncTestCase
 
     public function testAcquireMultiple(): void
     {
-        $this->setMinimumRuntime(300);
+        $this->setMinimumRuntime(0.3);
 
         $mutex = $this->createMutex();
 
         $lock1 = $mutex->acquire('test');
         defer(function () use ($lock1): void {
-            delay(100);
+            delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $mutex->acquire('test');
         defer(function () use ($lock2): void {
-            delay(100);
+            delay(0.1);
             $lock2->release();
         });
 
         $lock3 = $mutex->acquire('test');
-        delay(100);
+        delay(0.1);
         $lock3->release();
     }
 }

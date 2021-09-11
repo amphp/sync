@@ -21,14 +21,14 @@ class LocalMutex implements Mutex
         }
 
         $this->queue[] = $deferred = new Deferred;
-        return await($deferred->promise());
+        return $deferred->getFuture()->join();
     }
 
     private function release(): void
     {
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);
-            $deferred->resolve(new Lock(0, \Closure::fromCallable([$this, 'release'])));
+            $deferred->complete(new Lock(0, \Closure::fromCallable([$this, 'release'])));
             return;
         }
 

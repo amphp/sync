@@ -4,8 +4,7 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Semaphore;
-use function Amp\async;
-use function Amp\await;
+use function Amp\Future\spawn;
 use function Revolt\EventLoop\defer;
 use function Revolt\EventLoop\delay;
 
@@ -48,46 +47,46 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
 
     public function testAcquireMultipleFromSingleLockSemaphore(): void
     {
-        $this->setMinimumRuntime(300);
+        $this->setMinimumRuntime(0.3);
 
         $this->semaphore = $this->createSemaphore(1);
 
         $lock1 = $this->semaphore->acquire();
         self::assertSame(0, $lock1->getId());
         defer(function () use ($lock1): void {
-            delay(100);
+            delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $this->semaphore->acquire();
         self::assertSame(0, $lock2->getId());
         defer(function () use ($lock2): void {
-            delay(100);
+            delay(0.1);
             $lock2->release();
         });
 
         $lock3 = $this->semaphore->acquire();
         self::assertSame(0, $lock3->getId());
-        delay(100);
+        delay(0.1);
         $lock3->release();
     }
 
     public function testAcquireMultipleFromMultipleLockSemaphore(): void
     {
-        $this->setMinimumRuntime(200);
+        $this->setMinimumRuntime(0.2);
 
         $this->semaphore = $this->createSemaphore(3);
 
         $lock1 = $this->semaphore->acquire();
         defer(function () use ($lock1): void {
-            delay(100);
+            delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $this->semaphore->acquire();
         self::assertNotSame($lock1->getId(), $lock2->getId());
         defer(function () use ($lock2): void {
-            delay(101);
+            delay(0.101);
             $lock2->release();
         });
 
@@ -95,13 +94,13 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         self::assertNotSame($lock1->getId(), $lock3->getId());
         self::assertNotSame($lock2->getId(), $lock3->getId());
         defer(function () use ($lock3): void {
-            delay(101);
+            delay(0.101);
             $lock3->release();
         });
 
         $lock4 = $this->semaphore->acquire();
         self::assertSame($lock1->getId(), $lock4->getId());
-        delay(100);
+        delay(0.1);
         $lock4->release();
     }
 
@@ -122,39 +121,37 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
      */
     public function testAcquireFromMultipleSizeSemaphores(int $count): void
     {
-        $this->ignoreLoopWatchers();
-
-        $this->setMinimumRuntime(100);
+        $this->setMinimumRuntime(0.1);
 
         $this->semaphore = $this->createSemaphore($count);
 
         foreach (\range(0, $count - 1) as $value) {
             defer(function (): void {
                 $lock = $this->semaphore->acquire();
-                delay(100);
+                delay(0.1);
                 $lock->release();
             });
         }
 
         $lock = $this->semaphore->acquire();
-        delay(100);
+        delay(0.1);
         $lock->release();
     }
 
     public function testSimultaneousAcquire(): void
     {
-        $this->setMinimumRuntime(100);
+        $this->setMinimumRuntime(0.1);
 
         $this->semaphore = $this->createSemaphore(1);
 
-        $promise1 = async(fn() => $this->semaphore->acquire());
-        $promise2 = async(fn() => $this->semaphore->acquire());
+        $promise1 = spawn(fn() => $this->semaphore->acquire());
+        $promise2 = spawn(fn() => $this->semaphore->acquire());
 
         defer(function () use ($promise1): void {
-            delay(100);
-            await($promise1)->release();
+            delay(0.1);
+            $promise1->join()->release();
         });
 
-        await($promise2)->release();
+        $promise2->join()->release();
     }
 }

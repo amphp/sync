@@ -19,7 +19,7 @@ class BarrierTest extends AsyncTestCase
 
     public function testArriveUntilResolved(): void
     {
-        $this->setTimeout(10);
+        $this->setTimeout(0.01);
 
         $this->barrier->arrive();
         self::assertSame(1, $this->barrier->getCount());
@@ -42,7 +42,7 @@ class BarrierTest extends AsyncTestCase
 
     public function testArriveWithCount(): void
     {
-        $this->setTimeout(10);
+        $this->setTimeout(0.01);
 
         $this->barrier->arrive(2);
 
@@ -78,7 +78,7 @@ class BarrierTest extends AsyncTestCase
 
     public function testRegisterCount(): void
     {
-        $this->setTimeout(10);
+        $this->setTimeout(0.01);
 
         $this->barrier->arrive();
         $this->barrier->register();
@@ -92,7 +92,7 @@ class BarrierTest extends AsyncTestCase
 
     public function testRegisterCountWithCustomCount(): void
     {
-        $this->setTimeout(10);
+        $this->setTimeout(0.01);
 
         $this->barrier->arrive();
         $this->barrier->register(2);

@@ -3,7 +3,6 @@
 namespace Amp\Sync;
 
 use Amp\Deferred;
-use function Amp\await;
 
 /**
  * A barrier is a synchronization primitive.
@@ -58,7 +57,7 @@ final class Barrier
         $this->count -= $count;
 
         if ($this->count === 0) {
-            $this->deferred->resolve();
+            $this->deferred->complete(null);
         }
     }
 
@@ -77,6 +76,6 @@ final class Barrier
 
     public function await(): void
     {
-        await($this->deferred->promise());
+        $this->deferred->getFuture()->join();
     }
 }

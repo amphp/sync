@@ -4,8 +4,8 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalMutex;
-use function Amp\async;
-use function Amp\await;
+use function Amp\Future\all;
+use function Amp\Future\spawn;
 use function Amp\Sync\synchronized;
 use function Revolt\EventLoop\delay;
 
@@ -13,20 +13,20 @@ class SynchronizedTest extends AsyncTestCase
 {
     public function testSynchronized(): void
     {
-        $this->setMinimumRuntime(300);
+        $this->setMinimumRuntime(0.3);
 
         $mutex = new LocalMutex;
         $callback = function (int $value): int {
-            delay(100);
+            delay(0.1);
             return $value;
         };
 
-        $promises = [];
+        $futures = [];
         foreach (\range(0, 2) as $value) {
-            $promises[] = async(fn () => synchronized($mutex, $callback, $value));
+            $futures[] = spawn(fn () => synchronized($mutex, $callback, $value));
         }
 
-        $result = await($promises);
+        $result = all($futures);
         self::assertSame(\range(0, 2), $result);
     }
 }

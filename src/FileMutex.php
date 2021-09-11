@@ -21,7 +21,7 @@ use function Revolt\EventLoop\delay;
  */
 class FileMutex implements Mutex
 {
-    public const LATENCY_TIMEOUT = 10;
+    public const LATENCY_TIMEOUT = 0.01;
 
     /** @var string The full path to the lock file. */
     private string $fileName;
