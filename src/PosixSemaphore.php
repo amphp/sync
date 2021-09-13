@@ -90,7 +90,7 @@ class PosixSemaphore implements Semaphore
      */
     public function __sleep()
     {
-        throw new SyncException('A semaphore cannot be serialized!');
+        throw new \Error('A semaphore cannot be serialized!');
     }
 
     public function getId(): string
