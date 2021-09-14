@@ -86,10 +86,11 @@ class PosixSemaphore implements Semaphore
     }
 
     /**
-     * Private to prevent serialization.
+     * Prevent serialization.
      */
-    private function __sleep()
+    public function __sleep()
     {
+        throw new \Error('A semaphore cannot be serialized!');
     }
 
     public function getId(): string
