@@ -5,8 +5,8 @@ namespace Amp\Sync\Test;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\Semaphore;
 use Amp\Sync\SyncException;
-use function Amp\Future\spawn;
-use function Revolt\EventLoop\delay;
+use function Amp\coroutine;
+use function Amp\delay;
 
 /**
  * @group posix
@@ -88,15 +88,15 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
         $used = PosixSemaphore::use(self::ID);
 
-        $promise1 = spawn(fn () => $used->acquire());
-        $promise2 = spawn(fn () => $this->semaphore->acquire());
+        $promise1 = coroutine(fn () => $used->acquire());
+        $promise2 = coroutine(fn () => $this->semaphore->acquire());
 
-        $promise3 = spawn(function () use ($promise1): void {
+        $promise3 = coroutine(function () use ($promise1): void {
             delay(0.1);
-            $promise1->join()->release();
+            $promise1->await()->release();
         });
 
-        $promise2->join()->release();
-        $promise3->join();
+        $promise2->await()->release();
+        $promise3->await();
     }
 }

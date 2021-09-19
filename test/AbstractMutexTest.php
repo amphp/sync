@@ -4,8 +4,8 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Mutex;
+use function Amp\delay;
 use function Revolt\EventLoop\defer;
-use function Revolt\EventLoop\delay;
 
 abstract class AbstractMutexTest extends AsyncTestCase
 {

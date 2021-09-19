@@ -76,6 +76,6 @@ final class Barrier
 
     public function await(): void
     {
-        $this->deferred->getFuture()->join();
+        $this->deferred->getFuture()->await();
     }
 }

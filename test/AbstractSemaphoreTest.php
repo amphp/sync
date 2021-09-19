@@ -4,9 +4,9 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Semaphore;
-use function Amp\Future\spawn;
+use function Amp\coroutine;
+use function Amp\delay;
 use function Revolt\EventLoop\defer;
-use function Revolt\EventLoop\delay;
 
 abstract class AbstractSemaphoreTest extends AsyncTestCase
 {
@@ -144,14 +144,14 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
 
         $this->semaphore = $this->createSemaphore(1);
 
-        $promise1 = spawn(fn() => $this->semaphore->acquire());
-        $promise2 = spawn(fn() => $this->semaphore->acquire());
+        $promise1 = coroutine(fn() => $this->semaphore->acquire());
+        $promise2 = coroutine(fn() => $this->semaphore->acquire());
 
         defer(function () use ($promise1): void {
             delay(0.1);
-            $promise1->join()->release();
+            $promise1->await()->release();
         });
 
-        $promise2->join()->release();
+        $promise2->await()->release();
     }
 }

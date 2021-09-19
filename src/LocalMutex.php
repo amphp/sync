@@ -21,7 +21,7 @@ class LocalMutex implements Mutex
         }
 
         $this->queue[] = $deferred = new Deferred;
-        return $deferred->getFuture()->join();
+        return $deferred->getFuture()->await();
     }
 
     private function release(): void
