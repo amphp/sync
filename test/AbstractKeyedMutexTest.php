@@ -5,7 +5,7 @@ namespace Amp\Sync\Test;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\KeyedMutex;
 use function Amp\delay;
-use function Revolt\EventLoop\defer;
+use function Revolt\EventLoop\queue;
 
 abstract class AbstractKeyedMutexTest extends AsyncTestCase
 {
@@ -26,13 +26,13 @@ abstract class AbstractKeyedMutexTest extends AsyncTestCase
         $mutex = $this->createMutex();
 
         $lock1 = $mutex->acquire('test');
-        defer(function () use ($lock1): void {
+        queue(function () use ($lock1): void {
             delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $mutex->acquire('test');
-        defer(function () use ($lock2): void {
+        queue(function () use ($lock2): void {
             delay(0.1);
             $lock2->release();
         });

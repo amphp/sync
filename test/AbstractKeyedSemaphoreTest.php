@@ -5,7 +5,7 @@ namespace Amp\Sync\Test;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\KeyedSemaphore;
 use function Amp\delay;
-use function Revolt\EventLoop\defer;
+use function Revolt\EventLoop\queue;
 
 abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
 {
@@ -28,7 +28,7 @@ abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
 
         for ($i = 0; $i < 15; $i++) {
             $lock = $mutex->acquire('test');
-            defer(function () use ($lock): void {
+            queue(function () use ($lock): void {
                 delay(0.1);
                 $lock->release();
             });
