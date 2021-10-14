@@ -1,10 +1,10 @@
 <?php
 
 use Amp\Sync\LocalMutex;
+use function Amp\coroutine;
+use function Amp\delay;
 use function Amp\Future\all;
-use function Amp\Future\spawn;
 use function Amp\Sync\synchronized;
-use function Revolt\EventLoop\delay;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -27,8 +27,8 @@ $task = function (string $identifier) use ($mutex) {
     print "[$identifier] Finished" . \PHP_EOL;
 };
 
-$promiseA = spawn(fn () => $task('A'));
-$promiseB = spawn(fn () => $task('B'));
-$promiseC = spawn(fn () => $task('C'));
+$promiseA = coroutine(fn () => $task('A'));
+$promiseB = coroutine(fn () => $task('B'));
+$promiseC = coroutine(fn () => $task('C'));
 
 all([$promiseA, $promiseB, $promiseC]);

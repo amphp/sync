@@ -6,7 +6,7 @@ use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Semaphore;
 use function Amp\coroutine;
 use function Amp\delay;
-use function Revolt\EventLoop\queue;
+use function Revolt\launch;
 
 abstract class AbstractSemaphoreTest extends AsyncTestCase
 {
@@ -53,14 +53,14 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
 
         $lock1 = $this->semaphore->acquire();
         self::assertSame(0, $lock1->getId());
-        queue(function () use ($lock1): void {
+        launch(function () use ($lock1): void {
             delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $this->semaphore->acquire();
         self::assertSame(0, $lock2->getId());
-        queue(function () use ($lock2): void {
+        launch(function () use ($lock2): void {
             delay(0.1);
             $lock2->release();
         });
@@ -78,14 +78,14 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         $this->semaphore = $this->createSemaphore(3);
 
         $lock1 = $this->semaphore->acquire();
-        queue(function () use ($lock1): void {
+        launch(function () use ($lock1): void {
             delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $this->semaphore->acquire();
         self::assertNotSame($lock1->getId(), $lock2->getId());
-        queue(function () use ($lock2): void {
+        launch(function () use ($lock2): void {
             delay(0.101);
             $lock2->release();
         });
@@ -93,7 +93,7 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         $lock3 = $this->semaphore->acquire();
         self::assertNotSame($lock1->getId(), $lock3->getId());
         self::assertNotSame($lock2->getId(), $lock3->getId());
-        queue(function () use ($lock3): void {
+        launch(function () use ($lock3): void {
             delay(0.101);
             $lock3->release();
         });
@@ -126,7 +126,7 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         $this->semaphore = $this->createSemaphore($count);
 
         foreach (\range(0, $count - 1) as $value) {
-            queue(function (): void {
+            launch(function (): void {
                 $lock = $this->semaphore->acquire();
                 delay(0.1);
                 $lock->release();
@@ -147,7 +147,7 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         $promise1 = coroutine(fn() => $this->semaphore->acquire());
         $promise2 = coroutine(fn() => $this->semaphore->acquire());
 
-        queue(function () use ($promise1): void {
+        launch(function () use ($promise1): void {
             delay(0.1);
             $promise1->await()->release();
         });
