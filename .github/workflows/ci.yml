@@ -23,21 +23,21 @@ jobs:
 
           - operating-system: 'ubuntu-latest'
             php-version: '7.4'
-            composer-require-checker-version: 2.1.0
+            composer-require-checker-version: 3.3.0
 
           - operating-system: 'ubuntu-latest'
             php-version: '8.0'
             composer-flags: '--ignore-platform-req=php'
-            composer-require-checker-version: 3.2.0
+            composer-require-checker-version: 3.3.0
 
           - operating-system: 'windows-latest'
             php-version: '7.4'
-            composer-require-checker-version: 2.1.0
+            composer-require-checker-version: 3.3.0
             job-description: 'on Windows'
 
           - operating-system: 'macos-latest'
             php-version: '7.4'
-            composer-require-checker-version: 2.1.0
+            composer-require-checker-version: 3.3.0
             job-description: 'on macOS'
 
     name: PHP ${{ matrix.php-version }} ${{ matrix.job-description }}
