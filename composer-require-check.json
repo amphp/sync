@@ -26,7 +26,8 @@
         "msg_set_queue",
         "msg_stat_queue",
         "Threaded",
-        "transform"
+        "transform",
+        "SysvMessageQueue"
     ],
     "php-core-extensions": [
         "Core",
