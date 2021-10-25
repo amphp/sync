@@ -14,7 +14,19 @@
         "iterable",
         "callable",
         "void",
-        "object"
+        "object",
+        "MSG_EAGAIN",
+        "MSG_ENOMSG",
+        "msg_get_queue",
+        "MSG_IPC_NOWAIT",
+        "msg_queue_exists",
+        "msg_receive",
+        "msg_remove_queue",
+        "msg_send",
+        "msg_set_queue",
+        "msg_stat_queue",
+        "Threaded",
+        "transform"
     ],
     "php-core-extensions": [
         "Core",
