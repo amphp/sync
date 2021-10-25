@@ -20,6 +20,16 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         return \spl_object_hash($this);
     }
 
+    protected function setUpAsync(): void
+    {
+        if (!\extension_loaded('sysvmsg')) {
+            self::markTestSkipped('ext-sysvmsg missing');
+        }
+
+        // Remove queue if it still exists
+        \msg_remove_queue(\msg_get_queue(\abs(\unpack("l", \md5(self::ID, true))[1])));
+    }
+
     /**
      * @param $locks
      *
