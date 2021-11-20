@@ -4,9 +4,9 @@ namespace Amp\Sync\Test;
 
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\LocalMutex;
-use function Amp\coroutine;
 use function Amp\delay;
 use function Amp\Future\all;
+use function Amp\launch;
 use function Amp\Sync\synchronized;
 
 class SynchronizedTest extends AsyncTestCase
@@ -23,7 +23,7 @@ class SynchronizedTest extends AsyncTestCase
 
         $futures = [];
         foreach (\range(0, 2) as $value) {
-            $futures[] = coroutine(fn () => synchronized($mutex, $callback, $value));
+            $futures[] = launch(fn () => synchronized($mutex, $callback, $value));
         }
 
         $result = all($futures);

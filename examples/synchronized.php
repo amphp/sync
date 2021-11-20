@@ -1,9 +1,9 @@
 <?php
 
 use Amp\Sync\LocalMutex;
-use function Amp\coroutine;
 use function Amp\delay;
 use function Amp\Future\all;
+use function Amp\launch;
 use function Amp\Sync\synchronized;
 
 require __DIR__ . '/../vendor/autoload.php';
@@ -27,8 +27,8 @@ $task = function (string $identifier) use ($mutex) {
     print "[$identifier] Finished" . \PHP_EOL;
 };
 
-$promiseA = coroutine(fn () => $task('A'));
-$promiseB = coroutine(fn () => $task('B'));
-$promiseC = coroutine(fn () => $task('C'));
+$futureA = launch(fn () => $task('A'));
+$futureB = launch(fn () => $task('B'));
+$futureC = launch(fn () => $task('C'));
 
-all([$promiseA, $promiseB, $promiseC]);
+all([$futureA, $futureB, $futureC]);
