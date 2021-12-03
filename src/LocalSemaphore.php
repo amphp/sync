@@ -4,7 +4,7 @@ namespace Amp\Sync;
 
 use Amp\DeferredFuture;
 
-class LocalSemaphore implements Semaphore
+final class LocalSemaphore implements Semaphore
 {
     /** @var int[] */
     private array $locks;

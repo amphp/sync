@@ -12,7 +12,7 @@ use function Amp\delay;
  *
  * Not compatible with Windows.
  */
-class PosixSemaphore implements Semaphore
+final class PosixSemaphore implements Semaphore
 {
     private const LATENCY_TIMEOUT = 0.01;
 

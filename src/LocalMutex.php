@@ -4,7 +4,7 @@ namespace Amp\Sync;
 
 use Amp\DeferredFuture;
 
-class LocalMutex implements Mutex
+final class LocalMutex implements Mutex
 {
     private bool $locked = false;
 

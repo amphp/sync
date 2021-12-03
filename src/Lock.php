@@ -9,7 +9,7 @@ namespace Amp\Sync;
  * semaphore, the lock should reside in the same thread or process until it is
  * released.
  */
-class Lock
+final class Lock
 {
     /** @var \Closure|null The function to be called on release or null if the lock has been released. */
     private ?\Closure $releaser;

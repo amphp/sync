@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-class SemaphoreMutex implements Mutex
+final class SemaphoreMutex implements Mutex
 {
     private Semaphore $semaphore;
 
