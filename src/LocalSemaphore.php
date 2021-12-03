@@ -2,14 +2,14 @@
 
 namespace Amp\Sync;
 
-use Amp\Deferred;
+use Amp\DeferredFuture;
 
 class LocalSemaphore implements Semaphore
 {
     /** @var int[] */
     private array $locks;
 
-    /** @var Deferred[] */
+    /** @var DeferredFuture[] */
     private array $queue = [];
 
     public function __construct(int $maxLocks)
@@ -28,7 +28,7 @@ class LocalSemaphore implements Semaphore
             return new Lock(\array_shift($this->locks), \Closure::fromCallable([$this, 'release']));
         }
 
-        $this->queue[] = $deferred = new Deferred;
+        $this->queue[] = $deferred = new DeferredFuture;
         return $deferred->getFuture()->await();
     }
 

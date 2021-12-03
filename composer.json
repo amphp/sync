@@ -22,7 +22,7 @@
     ],
     "require": {
         "php": ">=8",
-        "amphp/amp": "v3.x-dev"
+        "amphp/amp": "^3.0"
     },
     "minimum-stability": "dev",
     "prefer-stable": true,

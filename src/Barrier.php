@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-use Amp\Deferred;
+use Amp\DeferredFuture;
 
 /**
  * A barrier is a synchronization primitive.
@@ -27,7 +27,7 @@ final class Barrier
 {
     private int $count;
 
-    private Deferred $deferred;
+    private DeferredFuture $deferred;
 
     public function __construct(int $count)
     {
@@ -36,7 +36,7 @@ final class Barrier
         }
 
         $this->count = $count;
-        $this->deferred = new Deferred;
+        $this->deferred = new DeferredFuture;
     }
 
     public function getCount(): int

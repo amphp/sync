@@ -5,8 +5,8 @@ namespace Amp\Sync\Test;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Sync\Semaphore;
 use Revolt\EventLoop;
+use function Amp\async;
 use function Amp\delay;
-use function Amp\launch;
 
 abstract class AbstractSemaphoreTest extends AsyncTestCase
 {
@@ -144,8 +144,8 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
 
         $this->semaphore = $this->createSemaphore(1);
 
-        $future1 = launch(fn() => $this->semaphore->acquire());
-        $future2 = launch(fn() => $this->semaphore->acquire());
+        $future1 = async(fn() => $this->semaphore->acquire());
+        $future2 = async(fn() => $this->semaphore->acquire());
 
         EventLoop::queue(function () use ($future1): void {
             delay(0.1);

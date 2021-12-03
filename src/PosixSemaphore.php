@@ -2,7 +2,7 @@
 
 namespace Amp\Sync;
 
-use function Revolt\EventLoop\delay;
+use function Amp\delay;
 
 /**
  * A non-blocking, inter-process POSIX semaphore.
@@ -14,7 +14,7 @@ use function Revolt\EventLoop\delay;
  */
 class PosixSemaphore implements Semaphore
 {
-    public const LATENCY_TIMEOUT = 10;
+    private const LATENCY_TIMEOUT = 0.01;
 
     /**
      * Creates a new semaphore with a given ID and number of locks.
@@ -183,10 +183,11 @@ class PosixSemaphore implements Semaphore
     }
 
     /**
-     * Private method to prevent cloning.
+     * Clone method throws to prevent clone.
      */
-    private function __clone()
+    public function __clone()
     {
+        throw new \Error("Cloning is not allowed!");
     }
 
     private function open(): void

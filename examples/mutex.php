@@ -1,9 +1,9 @@
 <?php
 
 use Amp\Sync\LocalMutex;
+use function Amp\async;
 use function Amp\delay;
 use function Amp\Future\all;
-use function Amp\launch;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -32,8 +32,8 @@ $task = function (string $identifier) use ($mutex) {
     print "[$identifier] Finished" . \PHP_EOL;
 };
 
-$futureA = launch(fn () => $task('A'));
-$futureB = launch(fn () => $task('B'));
-$futureC = launch(fn () => $task('C'));
+$futureA = async(fn () => $task('A'));
+$futureB = async(fn () => $task('B'));
+$futureC = async(fn () => $task('C'));
 
 all([$futureA, $futureB, $futureC]);

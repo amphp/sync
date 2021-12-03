@@ -2,14 +2,13 @@
 
 namespace Amp\Sync;
 
-use Amp\Deferred;
-use function Amp\await;
+use Amp\DeferredFuture;
 
 class LocalMutex implements Mutex
 {
     private bool $locked = false;
 
-    /** @var Deferred[] */
+    /** @var DeferredFuture[] */
     private array $queue = [];
 
     /** {@inheritdoc} */
@@ -20,7 +19,7 @@ class LocalMutex implements Mutex
             return new Lock(0, \Closure::fromCallable([$this, 'release']));
         }
 
-        $this->queue[] = $deferred = new Deferred;
+        $this->queue[] = $deferred = new DeferredFuture;
         return $deferred->getFuture()->await();
     }
 
