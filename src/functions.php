@@ -7,13 +7,15 @@ namespace Amp\Sync;
  * invoking the callback or once the promise returned by the callback is resolved. If the callback returns a Generator,
  * it will be run as a coroutine. See Amp\call().
  *
- * @param Mutex    $mutex
- * @param callable $callback
- * @param array    ...$args
+ * @template T
+ *
+ * @param Mutex $mutex
+ * @param \Closure(...$args):T $callback
+ * @param mixed ...$args
  *
  * @return mixed The return value of the callback.
  */
-function synchronized(Mutex $mutex, callable $callback, ...$args): mixed
+function synchronized(Mutex $mutex, \Closure $callback, mixed ...$args): mixed
 {
     $lock = $mutex->acquire();
 
