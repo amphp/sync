@@ -151,7 +151,11 @@ final class PosixSemaphore implements Semaphore
             return;
         }
 
-        if (!\is_resource($this->queue) || !\msg_queue_exists($this->key)) {
+        if (!$this->queue instanceof \SysvMessageQueue) {
+            return;
+        }
+
+        if (!\msg_queue_exists($this->key)) {
             return;
         }
 
