@@ -26,6 +26,7 @@ final class SemaphoreMutex implements Mutex
         }
 
         $this->locked = true;
+
         return new Lock(function () use ($lock): void {
             $this->locked = false;
             $lock->release();
