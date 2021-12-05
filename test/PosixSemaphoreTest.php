@@ -25,6 +25,17 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         if (!\extension_loaded('sysvmsg')) {
             self::markTestSkipped('ext-sysvmsg missing');
         }
+
+        // Remove queue if it still exists
+        \msg_remove_queue(\msg_get_queue(\abs(\unpack("l", \md5(self::ID, true))[1])));
+    }
+
+    public function tearDown(): void
+    {
+        parent::tearDown();
+
+        // Await __destruct freeing semaphore
+        delay(1);
     }
 
     /**
@@ -34,7 +45,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
      */
     public function createSemaphore(int $locks): Semaphore
     {
-        return PosixSemaphore::create(self::ID . \bin2hex(\random_bytes(4)), $locks);
+        return PosixSemaphore::create(self::ID, $locks);
     }
 
     public function testConstructorOnInvalidMaxLocks(): void
