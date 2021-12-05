@@ -21,7 +21,7 @@ abstract class AbstractKeyedSemaphoreTest extends AsyncTestCase
     public function testAcquireMultiple(): void
     {
         $this->setMinimumRuntime(0.3);
-        $this->setTimeout(0.5);
+        $this->setTimeout(0.6);
 
         $mutex = $this->createSemaphore(5);
 
