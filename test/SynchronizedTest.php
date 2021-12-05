@@ -7,7 +7,7 @@ use function Amp\async;
 use function Amp\delay;
 use function Amp\Future\all;
 
-class SynchronizedTest extends AsyncTestCase
+final class SynchronizedTest extends AsyncTestCase
 {
     public function testSynchronized(): void
     {
@@ -16,15 +16,15 @@ class SynchronizedTest extends AsyncTestCase
         $mutex = new LocalMutex;
         $callback = function (int $value): int {
             delay(0.1);
+
             return $value;
         };
 
         $futures = [];
-        foreach (\range(0, 2) as $value) {
+        foreach ([0, 1, 2] as $value) {
             $futures[] = async(fn () => synchronized($mutex, $callback, $value));
         }
 
-        $result = all($futures);
-        self::assertSame(\range(0, 2), $result);
+        self::assertSame([0, 1, 2], all($futures));
     }
 }

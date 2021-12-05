@@ -3,9 +3,9 @@
 namespace Amp\Sync;
 
 /**
- * Invokes the given callback while maintaining a lock from the provided mutex. The lock is automatically released after
- * invoking the callback or once the promise returned by the callback is resolved. If the callback returns a Generator,
- * it will be run as a coroutine. See Amp\call().
+ * Invokes the given Closure while maintaining a lock from the provided mutex.
+ *
+ * The lock is automatically released after the Closure returns.
  *
  * @template T
  *
@@ -13,14 +13,14 @@ namespace Amp\Sync;
  * @param \Closure(...$args):T $callback
  * @param mixed ...$args
  *
- * @return mixed The return value of the callback.
+ * @return T The return value of the callback.
  */
-function synchronized(Mutex $mutex, \Closure $callback, mixed ...$args): mixed
+function synchronized(Mutex $mutex, \Closure $synchronized, mixed ...$args): mixed
 {
     $lock = $mutex->acquire();
 
     try {
-        return $callback(...$args);
+        return $synchronized(...$args);
     } finally {
         $lock->release();
     }
