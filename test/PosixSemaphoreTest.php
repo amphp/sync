@@ -11,15 +11,17 @@ use function Amp\delay;
  */
 class PosixSemaphoreTest extends AbstractSemaphoreTest
 {
-    const ID = __CLASS__;
+    private const ID = __CLASS__;
 
     public function makeId(): string
     {
         return \spl_object_hash($this);
     }
 
-    protected function setUpAsync(): void
+    protected function setUp(): void
     {
+        parent::setUp();
+
         if (!\extension_loaded('sysvmsg')) {
             self::markTestSkipped('ext-sysvmsg missing');
         }
