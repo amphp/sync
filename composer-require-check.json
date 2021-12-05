@@ -13,6 +13,7 @@
         "bool",
         "iterable",
         "callable",
+        "mixed",
         "void",
         "object",
         "MSG_EAGAIN",
