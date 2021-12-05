@@ -18,17 +18,22 @@ use Amp\DeferredFuture;
  * ```php
  * $barrier = new Amp\Sync\Barrier(2);
  * $barrier->arrive();
- * $barrier->arrive(); // promise returned from Barrier::await() is now resolved
+ * $barrier->arrive(); // Barrier::await() returns immediately now
  *
- * yield $barrier->await();
+ * $barrier->await();
  * ```
  */
 final class Barrier
 {
     private int $count;
 
-    private DeferredFuture $deferred;
+    private DeferredFuture $completion;
 
+    /**
+     * @param int $count
+     *
+     * @psalm-param positive-int $count
+     */
     public function __construct(int $count)
     {
         if ($count < 1) {
@@ -36,7 +41,7 @@ final class Barrier
         }
 
         $this->count = $count;
-        $this->deferred = new DeferredFuture;
+        $this->completion = new DeferredFuture;
     }
 
     public function getCount(): int
@@ -44,6 +49,11 @@ final class Barrier
         return $this->count;
     }
 
+    /**
+     * @param int $count
+     *
+     * @psalm-param positive-int $count
+     */
     public function arrive(int $count = 1): void
     {
         if ($count < 1) {
@@ -57,10 +67,15 @@ final class Barrier
         $this->count -= $count;
 
         if ($this->count === 0) {
-            $this->deferred->complete(null);
+            $this->completion->complete();
         }
     }
 
+    /**
+     * @param int $count
+     *
+     * @psalm-param positive-int $count
+     */
     public function register(int $count = 1): void
     {
         if ($count < 1) {
@@ -76,6 +91,6 @@ final class Barrier
 
     public function await(): void
     {
-        $this->deferred->getFuture()->await();
+        $this->completion->getFuture()->await();
     }
 }

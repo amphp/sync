@@ -4,9 +4,8 @@ namespace Amp\Sync;
 
 use Amp\PHPUnit\AsyncTestCase;
 
-class BarrierTest extends AsyncTestCase
+final class BarrierTest extends AsyncTestCase
 {
-    /** @var Barrier */
     private Barrier $barrier;
 
     public function setUp(): void
@@ -16,7 +15,7 @@ class BarrierTest extends AsyncTestCase
         $this->barrier = new Barrier(2);
     }
 
-    public function testArriveUntilResolved(): void
+    public function testArriveBeforeAwait(): void
     {
         $this->setTimeout(0.01);
 
@@ -30,12 +29,14 @@ class BarrierTest extends AsyncTestCase
         self::assertSame(0, $this->barrier->getCount());
     }
 
-    public function testArriveAfterResolved(): void
+    public function testArriveTooManyTimes(): void
     {
         $this->barrier->arrive();
         $this->barrier->arrive();
 
         $this->expectException(\Error::class);
+        $this->expectExceptionMessage('Count cannot be greater than remaining count: 1 > 0');
+
         $this->barrier->arrive();
     }
 
@@ -46,32 +47,38 @@ class BarrierTest extends AsyncTestCase
         $this->barrier->arrive(2);
 
         self::assertSame(0, $this->barrier->getCount());
+
         $this->barrier->await();
     }
 
-    public function testArriveWithInvalidCount(): void
+    public function testArriveWithInvalidCountZeo(): void
     {
         $this->expectException(\Error::class);
+        $this->expectExceptionMessage('Count must be at least 1, got 0');
 
         $this->barrier->arrive(0);
     }
 
-    public function testArriveTooHighCount(): void
+    public function testArriveWithInvalidCountTooHigh(): void
     {
         $this->expectException(\Error::class);
+        $this->expectExceptionMessage('Count cannot be greater than remaining count: 3 > 2');
 
         $this->barrier->arrive(3);
     }
 
-    public function testGetCurrentCount(): void
+    public function testGetCount(): void
     {
         $this->barrier->arrive();
-        self::assertEquals(1, $this->barrier->getCount());
+
+        self::assertSame(1, $this->barrier->getCount());
     }
 
-    public function testInvalidSignalCountInConstructor(): void
+    public function testInvalidCountInConstructor(): void
     {
         $this->expectException(\Error::class);
+        $this->expectExceptionMessage('Count must be positive, got 0');
+
         new Barrier(0);
     }
 
@@ -81,6 +88,7 @@ class BarrierTest extends AsyncTestCase
 
         $this->barrier->arrive();
         $this->barrier->register();
+
         self::assertSame(2, $this->barrier->getCount());
 
         $this->barrier->arrive();
@@ -95,6 +103,7 @@ class BarrierTest extends AsyncTestCase
 
         $this->barrier->arrive();
         $this->barrier->register(2);
+
         self::assertSame(3, $this->barrier->getCount());
 
         $this->barrier->arrive();
@@ -112,7 +121,7 @@ class BarrierTest extends AsyncTestCase
         $this->barrier->register(0);
     }
 
-    public function testRegisterCountWithResolvedBarrier(): void
+    public function testRegisterCountWithBrokenBarrier(): void
     {
         $this->barrier->arrive();
         $this->barrier->arrive();
