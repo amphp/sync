@@ -21,7 +21,7 @@ final class LocalKeyedMutex implements KeyedMutex
 
         $lock = $this->mutex[$key]->acquire();
 
-        return new Lock(0, function () use ($lock, $key): void {
+        return new Lock(function () use ($lock, $key): void {
             if (--$this->locks[$key] === 0) {
                 unset($this->mutex[$key], $this->locks[$key]);
             }

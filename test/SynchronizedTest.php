@@ -25,6 +25,6 @@ final class SynchronizedTest extends AsyncTestCase
             $futures[] = async(fn () => synchronized($mutex, $callback, $value));
         }
 
-        self::assertSame([0, 1, 2], all($futures));
+        self::assertEquals([0, 1, 2], all($futures));
     }
 }

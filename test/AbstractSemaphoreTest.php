@@ -51,21 +51,18 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         $this->semaphore = $this->createSemaphore(1);
 
         $lock1 = $this->semaphore->acquire();
-        self::assertSame(0, $lock1->getId());
         EventLoop::queue(function () use ($lock1): void {
             delay(0.1);
             $lock1->release();
         });
 
         $lock2 = $this->semaphore->acquire();
-        self::assertSame(0, $lock2->getId());
         EventLoop::queue(function () use ($lock2): void {
             delay(0.1);
             $lock2->release();
         });
 
         $lock3 = $this->semaphore->acquire();
-        self::assertSame(0, $lock3->getId());
         delay(0.1);
         $lock3->release();
     }
@@ -83,22 +80,18 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
         });
 
         $lock2 = $this->semaphore->acquire();
-        self::assertNotSame($lock1->getId(), $lock2->getId());
         EventLoop::queue(function () use ($lock2): void {
             delay(0.101);
             $lock2->release();
         });
 
         $lock3 = $this->semaphore->acquire();
-        self::assertNotSame($lock1->getId(), $lock3->getId());
-        self::assertNotSame($lock2->getId(), $lock3->getId());
         EventLoop::queue(function () use ($lock3): void {
             delay(0.101);
             $lock3->release();
         });
 
         $lock4 = $this->semaphore->acquire();
-        self::assertSame($lock1->getId(), $lock4->getId());
         delay(0.1);
         $lock4->release();
     }

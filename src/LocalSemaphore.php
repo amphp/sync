@@ -25,23 +25,27 @@ final class LocalSemaphore implements Semaphore
     public function acquire(): Lock
     {
         if (!empty($this->locks)) {
-            return new Lock(\array_shift($this->locks), \Closure::fromCallable([$this, 'release']));
+            $id = \array_pop($this->locks);
+            return $this->createLock($id);
         }
 
         $this->queue[] = $deferred = new DeferredFuture;
         return $deferred->getFuture()->await();
     }
 
-    private function release(Lock $lock): void
+    private function release(int $id): void
     {
-        $id = $lock->getId();
-
         if (!empty($this->queue)) {
             $deferred = \array_shift($this->queue);
-            $deferred->complete(new Lock($id, \Closure::fromCallable([$this, 'release'])));
+            $deferred->complete($this->createLock($id));
             return;
         }
 
         $this->locks[] = $id;
+    }
+
+    private function createLock(int $id): Lock
+    {
+        return new Lock(fn () => $this->release($id));
     }
 }

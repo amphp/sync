@@ -38,6 +38,6 @@ final class LocalMutex implements Mutex
 
     private function createLock(): Lock
     {
-        return new Lock(0, \Closure::fromCallable([$this, 'release']));
+        return new Lock(\Closure::fromCallable([$this, 'release']));
     }
 }

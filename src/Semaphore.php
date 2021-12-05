@@ -11,11 +11,10 @@ namespace Amp\Sync;
 interface Semaphore
 {
     /**
-     * Acquires a lock on the semaphore.
+     * Acquires a lock on the semaphore. Semaphores may have 1 or more locks.
      *
-     * @return Lock Returns an integer keyed lock object once a lock is obtained. Identifiers returned by the
-     *    locks should be 0-indexed. Releasing an identifier MUST make that same identifier available. May fail with
-     *    a SyncException if an error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
+     * @return Lock Returns with a lock object once a lock is obtained. May fail with a SyncException if an
+     *     error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
     public function acquire(): Lock;
 }

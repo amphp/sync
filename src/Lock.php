@@ -14,17 +14,13 @@ final class Lock
     /** @var \Closure|null The function to be called on release or null if the lock has been released. */
     private ?\Closure $releaser;
 
-    private int $id;
-
     /**
      * Creates a new lock permit object.
      *
-     * @param int $id The lock identifier.
      * @param \Closure(self): void $releaser A function to be called upon release.
      */
-    public function __construct(int $id, \Closure $releaser)
+    public function __construct(\Closure $releaser)
     {
-        $this->id = $id;
         $this->releaser = $releaser;
     }
 
@@ -36,14 +32,6 @@ final class Lock
     public function isReleased(): bool
     {
         return !$this->releaser;
-    }
-
-    /**
-     * @return int Lock identifier.
-     */
-    public function getId(): int
-    {
-        return $this->id;
     }
 
     /**

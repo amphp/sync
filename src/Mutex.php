@@ -11,9 +11,9 @@ namespace Amp\Sync;
 interface Mutex extends Semaphore
 {
     /**
-     * Acquires a lock on the mutex.
+     * Acquires a lock on the mutex. A mutex has only a single lock available.
      *
-     * @return Lock Returns with a lock object with an ID of 0. May fail with a SyncException if an
+     * @return Lock Returns with a lock object once a lock is obtained. May fail with a SyncException if an
      *     error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
     public function acquire(): Lock;

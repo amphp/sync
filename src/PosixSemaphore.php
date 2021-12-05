@@ -126,9 +126,8 @@ final class PosixSemaphore implements Semaphore
             if (@\msg_receive($this->queue, 0, $type, 1, $id, false, \MSG_IPC_NOWAIT, $errno)) {
                 // A free lock was found, so resolve with a lock object that can
                 // be used to release the lock.
-                return new Lock(\unpack("C", $id)[1], function (Lock $lock) {
-                    $this->release($lock->getId());
-                });
+                $id = \unpack("C", $id)[1];
+                return new Lock(fn () => $this->release($id));
             }
 
             // Check for unusual errors.

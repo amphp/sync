@@ -6,6 +6,8 @@ final class SemaphoreMutex implements Mutex
 {
     private Semaphore $semaphore;
 
+    private bool $locked = false;
+
     /**
      * @param Semaphore $semaphore A semaphore with a single lock.
      */
@@ -18,10 +20,15 @@ final class SemaphoreMutex implements Mutex
     public function acquire(): Lock
     {
         $lock = $this->semaphore->acquire();
-        if ($lock->getId() !== 0) {
-            $lock->release();
+
+        if ($this->locked) {
             throw new \Error("Cannot use a semaphore with more than a single lock");
         }
-        return $lock;
+
+        $this->locked = true;
+        return new Lock(function () use ($lock): void {
+            $this->locked = false;
+            $lock->release();
+        });
     }
 }
