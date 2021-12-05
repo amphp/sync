@@ -10,34 +10,34 @@ final class LocalSemaphore implements Semaphore
     private array $locks;
 
     /** @var DeferredFuture[] */
-    private array $queue = [];
+    private array $waitingDeferreds = [];
 
     public function __construct(int $maxLocks)
     {
         if ($maxLocks < 1) {
-            throw new \Error('The number of locks must be greater than 0');
+            throw new \Error('The number of locks must be greater than 0, got ' . $maxLocks);
         }
 
         $this->locks = \range(0, $maxLocks - 1);
     }
 
-    /** {@inheritdoc} */
     public function acquire(): Lock
     {
         if (!empty($this->locks)) {
-            $id = \array_pop($this->locks);
-            return $this->createLock($id);
+            return $this->createLock(\array_pop($this->locks));
         }
 
-        $this->queue[] = $deferred = new DeferredFuture;
+        $this->waitingDeferreds[] = $deferred = new DeferredFuture;
+
         return $deferred->getFuture()->await();
     }
 
     private function release(int $id): void
     {
-        if (!empty($this->queue)) {
-            $deferred = \array_shift($this->queue);
+        if (!empty($this->waitingDeferreds)) {
+            $deferred = \array_shift($this->waitingDeferreds);
             $deferred->complete($this->createLock($id));
+
             return;
         }
 
