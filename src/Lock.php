@@ -5,23 +5,22 @@ namespace Amp\Sync;
 /**
  * A handle on an acquired lock from a synchronization object.
  *
- * This object is not thread-safe; after acquiring a lock from a mutex or
- * semaphore, the lock should reside in the same thread or process until it is
- * released.
+ * This object is not thread-safe; after acquiring a lock from a mutex or semaphore, the lock should reside in the same
+ * thread or process until it is released.
  */
 final class Lock
 {
     /** @var \Closure|null The function to be called on release or null if the lock has been released. */
-    private ?\Closure $releaser;
+    private ?\Closure $release;
 
     /**
      * Creates a new lock permit object.
      *
-     * @param \Closure(self): void $releaser A function to be called upon release.
+     * @param \Closure(self): void $release A function to be called upon release.
      */
-    public function __construct(\Closure $releaser)
+    public function __construct(\Closure $release)
     {
-        $this->releaser = $releaser;
+        $this->release = $release;
     }
 
     /**
@@ -31,7 +30,7 @@ final class Lock
      */
     public function isReleased(): bool
     {
-        return !$this->releaser;
+        return $this->release === null;
     }
 
     /**
@@ -39,14 +38,14 @@ final class Lock
      */
     public function release(): void
     {
-        if (!$this->releaser) {
+        if ($this->isReleased()) {
             return;
         }
 
         // Invoke the releaser function given to us by the synchronization source
         // to release the lock.
-        $releaser = $this->releaser;
-        $this->releaser = null;
+        $releaser = $this->release;
+        $this->release = null;
         $releaser($this);
     }
 
