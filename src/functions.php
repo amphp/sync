@@ -9,15 +9,15 @@ namespace Amp\Sync;
  *
  * @template T
  *
- * @param Mutex $mutex
+ * @param Semaphore $semaphore
  * @param \Closure(...$args):T $synchronized
  * @param mixed ...$args
  *
  * @return T The return value of the Closure.
  */
-function synchronized(Mutex $mutex, \Closure $synchronized, mixed ...$args): mixed
+function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$args): mixed
 {
-    $lock = $mutex->acquire();
+    $lock = $semaphore->acquire();
 
     try {
         return $synchronized(...$args);
