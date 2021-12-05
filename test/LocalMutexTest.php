@@ -1,9 +1,6 @@
 <?php
 
-namespace Amp\Sync\Test;
-
-use Amp\Sync\LocalMutex;
-use Amp\Sync\Mutex;
+namespace Amp\Sync;
 
 class LocalMutexTest extends AbstractMutexTest
 {

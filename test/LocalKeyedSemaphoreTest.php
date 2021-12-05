@@ -1,9 +1,6 @@
 <?php
 
-namespace Amp\Sync\Test;
-
-use Amp\Sync\KeyedSemaphore;
-use Amp\Sync\LocalKeyedSemaphore;
+namespace Amp\Sync;
 
 class LocalKeyedSemaphoreTest extends AbstractKeyedSemaphoreTest
 {

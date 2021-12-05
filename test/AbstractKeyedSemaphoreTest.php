@@ -1,9 +1,8 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Sync\KeyedSemaphore;
 use Revolt\EventLoop;
 use function Amp\delay;
 

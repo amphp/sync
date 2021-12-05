@@ -1,9 +1,8 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Sync\KeyedMutex;
 use Revolt\EventLoop;
 use function Amp\delay;
 

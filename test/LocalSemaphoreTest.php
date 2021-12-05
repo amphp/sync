@@ -1,9 +1,6 @@
 <?php
 
-namespace Amp\Sync\Test;
-
-use Amp\Sync\LocalSemaphore;
-use Amp\Sync\Semaphore;
+namespace Amp\Sync;
 
 class LocalSemaphoreTest extends AbstractSemaphoreTest
 {

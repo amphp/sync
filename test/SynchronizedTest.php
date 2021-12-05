@@ -1,13 +1,11 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync;
 
 use Amp\PHPUnit\AsyncTestCase;
-use Amp\Sync\LocalMutex;
 use function Amp\async;
 use function Amp\delay;
 use function Amp\Future\all;
-use function Amp\Sync\synchronized;
 
 class SynchronizedTest extends AsyncTestCase
 {

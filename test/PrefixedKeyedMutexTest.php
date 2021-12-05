@@ -1,10 +1,6 @@
 <?php
 
-namespace Amp\Sync\Test;
-
-use Amp\Sync\KeyedMutex;
-use Amp\Sync\LocalKeyedMutex;
-use Amp\Sync\PrefixedKeyedMutex;
+namespace Amp\Sync;
 
 class PrefixedKeyedMutexTest extends AbstractKeyedMutexTest
 {

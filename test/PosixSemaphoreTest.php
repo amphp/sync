@@ -1,10 +1,7 @@
 <?php
 
-namespace Amp\Sync\Test;
+namespace Amp\Sync;
 
-use Amp\Sync\PosixSemaphore;
-use Amp\Sync\Semaphore;
-use Amp\Sync\SyncException;
 use function Amp\async;
 use function Amp\delay;
 

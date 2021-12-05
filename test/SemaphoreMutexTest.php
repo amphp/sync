@@ -1,10 +1,6 @@
 <?php
 
-namespace Amp\Sync\Test;
-
-use Amp\Sync\LocalSemaphore;
-use Amp\Sync\Mutex;
-use Amp\Sync\SemaphoreMutex;
+namespace Amp\Sync;
 
 class SemaphoreMutexTest extends AbstractMutexTest
 {
