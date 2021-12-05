@@ -9,28 +9,35 @@ final class LocalMutex implements Mutex
     private bool $locked = false;
 
     /** @var DeferredFuture[] */
-    private array $queue = [];
+    private array $waitingDeferreds = [];
 
-    /** {@inheritdoc} */
     public function acquire(): Lock
     {
         if (!$this->locked) {
             $this->locked = true;
-            return new Lock(0, \Closure::fromCallable([$this, 'release']));
+
+            return $this->createLock();
         }
 
-        $this->queue[] = $deferred = new DeferredFuture;
-        return $deferred->getFuture()->await();
+        $this->waitingDeferreds[] = $waitingDeferred = new DeferredFuture;
+
+        return $waitingDeferred->getFuture()->await();
     }
 
     private function release(): void
     {
-        if (!empty($this->queue)) {
-            $deferred = \array_shift($this->queue);
-            $deferred->complete(new Lock(0, \Closure::fromCallable([$this, 'release'])));
+        if (!empty($this->waitingDeferreds)) {
+            $waitingDeferred = \array_shift($this->waitingDeferreds);
+            $waitingDeferred->complete($this->createLock());
+
             return;
         }
 
         $this->locked = false;
+    }
+
+    private function createLock(): Lock
+    {
+        return new Lock(0, \Closure::fromCallable([$this, 'release']));
     }
 }
