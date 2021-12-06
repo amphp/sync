@@ -90,7 +90,7 @@ final class Barrier
         $this->count += $count;
     }
 
-    public function await(?Cancellation $cancellation): void
+    public function await(?Cancellation $cancellation = null): void
     {
         $this->completion->getFuture()->await($cancellation);
     }
