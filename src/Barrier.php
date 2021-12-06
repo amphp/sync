@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\DeferredFuture;
 
 /**
@@ -89,8 +90,8 @@ final class Barrier
         $this->count += $count;
     }
 
-    public function await(): void
+    public function await(?Cancellation $cancellation): void
     {
-        $this->completion->getFuture()->await();
+        $this->completion->getFuture()->await($cancellation);
     }
 }
