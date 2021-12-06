@@ -2,15 +2,16 @@
 
 namespace Amp\Sync;
 
-use Amp\DeferredFuture;
+use Revolt\EventLoop;
+use Revolt\EventLoop\Suspension;
 
 final class LocalSemaphore implements Semaphore
 {
     /** @var int[] */
     private array $locks;
 
-    /** @var DeferredFuture[] */
-    private array $waitingDeferreds = [];
+    /** @var Suspension[] */
+    private array $waiting = [];
 
     public function __construct(int $maxLocks)
     {
@@ -27,16 +28,16 @@ final class LocalSemaphore implements Semaphore
             return $this->createLock(\array_pop($this->locks));
         }
 
-        $this->waitingDeferreds[] = $deferred = new DeferredFuture;
+        $this->waiting[] = $suspension = EventLoop::createSuspension();
 
-        return $deferred->getFuture()->await();
+        return $suspension->suspend();
     }
 
     private function release(int $id): void
     {
-        if (!empty($this->waitingDeferreds)) {
-            $deferred = \array_shift($this->waitingDeferreds);
-            $deferred->complete($this->createLock($id));
+        if (!empty($this->waiting)) {
+            $deferred = \array_shift($this->waiting);
+            $deferred->resume($this->createLock($id));
 
             return;
         }

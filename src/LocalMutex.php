@@ -2,14 +2,15 @@
 
 namespace Amp\Sync;
 
-use Amp\DeferredFuture;
+use Revolt\EventLoop;
+use Revolt\EventLoop\Suspension;
 
 final class LocalMutex implements Mutex
 {
     private bool $locked = false;
 
-    /** @var DeferredFuture[] */
-    private array $waitingDeferreds = [];
+    /** @var Suspension[] */
+    private array $waiting = [];
 
     public function acquire(): Lock
     {
@@ -19,16 +20,16 @@ final class LocalMutex implements Mutex
             return $this->createLock();
         }
 
-        $this->waitingDeferreds[] = $waitingDeferred = new DeferredFuture;
+        $this->waiting[] = $suspension = EventLoop::createSuspension();
 
-        return $waitingDeferred->getFuture()->await();
+        return $suspension->suspend();
     }
 
     private function release(): void
     {
-        if (!empty($this->waitingDeferreds)) {
-            $waitingDeferred = \array_shift($this->waitingDeferreds);
-            $waitingDeferred->complete($this->createLock());
+        if (!empty($this->waiting)) {
+            $waiting = \array_shift($this->waiting);
+            $waiting->resume($this->createLock());
 
             return;
         }
