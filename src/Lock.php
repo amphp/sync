@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Revolt\EventLoop;
+
 /**
  * A handle on an acquired lock from a synchronization object.
  *
@@ -42,11 +44,9 @@ final class Lock
             return;
         }
 
-        // Invoke the releaser function given to us by the synchronization source
-        // to release the lock.
-        $releaser = $this->release;
+        // Invoke the releaser function given to us by the synchronization source to release the lock.
+        EventLoop::queue($this->release);
         $this->release = null;
-        $releaser($this);
     }
 
     /**

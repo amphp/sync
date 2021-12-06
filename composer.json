@@ -24,7 +24,8 @@
     "prefer-stable": true,
     "require": {
         "php": ">=8",
-        "amphp/amp": "^3"
+        "amphp/amp": "^3",
+        "revolt/event-loop": "^0.1"
     },
     "require-dev": {
         "phpunit/phpunit": "^9",
