@@ -20,8 +20,8 @@ final class PosixSemaphore implements Semaphore
      * Creates a new semaphore with a given ID and number of locks.
      *
      * @param string $id The unique name for the new semaphore.
-     * @param int    $maxLocks The maximum number of locks that can be acquired from the semaphore.
-     * @param int    $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
+     * @param int $maxLocks The maximum number of locks that can be acquired from the semaphore.
+     * @param int $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
      *
      * @return PosixSemaphore
      * @throws SyncException If the semaphore could not be created due to an internal error.
@@ -29,7 +29,7 @@ final class PosixSemaphore implements Semaphore
     public static function create(string $id, int $maxLocks, int $permissions = 0600): self
     {
         if ($maxLocks < 1) {
-            throw new \Error('Number of locks must be greater than 0');
+            throw new \Error('Number of locks must be greater than 0, got ' . $maxLocks);
         }
 
         $semaphore = new self($id);
@@ -61,8 +61,8 @@ final class PosixSemaphore implements Semaphore
     private int $key;
     /** @var int PID of the process that created the semaphore. */
     private int $initializer = 0;
-    /** @var resource A message queue of available locks. */
-    private $queue;
+    /** @var \SysvMessageQueue A message queue of available locks. */
+    private \SysvMessageQueue $queue;
 
     /**
      * @param string $id
@@ -123,11 +123,10 @@ final class PosixSemaphore implements Semaphore
     {
         do {
             // Attempt to acquire a lock from the semaphore.
-            if (@\msg_receive($this->queue, 0, $type, 1, $id, false, \MSG_IPC_NOWAIT, $errno)) {
+            if (@\msg_receive($this->queue, 0, $type, 1, $message, false, \MSG_IPC_NOWAIT, $errno)) {
                 // A free lock was found, so resolve with a lock object that can
                 // be used to release the lock.
-                $id = \unpack("C", $id)[1];
-                return new Lock(fn () => $this->release($id));
+                return new Lock(fn () => $this->release());
             }
 
             // Check for unusual errors.
@@ -164,19 +163,17 @@ final class PosixSemaphore implements Semaphore
     /**
      * Releases a lock from the semaphore.
      *
-     * @param int $id Lock identifier.
-     *
      * @throws SyncException If the operation failed.
      */
-    protected function release(int $id): void
+    protected function release(): void
     {
         if (!$this->queue) {
             return; // Queue already destroyed.
         }
 
-        // Call send in non-blocking mode. If the call fails because the queue
-        // is full, then the number of locks configured is too large.
-        if (!@\msg_send($this->queue, 1, \pack("C", $id), false, false, $errno)) {
+        // Send in non-blocking mode. If the call fails because the queue is full,
+        // then the number of locks configured is too large.
+        if (!@\msg_send($this->queue, 1, "\0", false, false, $errno)) {
             if ($errno === \MSG_EAGAIN) {
                 throw new SyncException('The semaphore size is larger than the system allows.');
             }
@@ -199,11 +196,12 @@ final class PosixSemaphore implements Semaphore
             throw new SyncException('No semaphore with that ID found');
         }
 
-        $this->queue = \msg_get_queue($this->key);
-
-        if (!$this->queue) {
+        $queue = \msg_get_queue($this->key);
+        if (!$queue) {
             throw new SyncException('Failed to open the semaphore.');
         }
+
+        $this->queue = $queue;
     }
 
     /**
@@ -218,16 +216,17 @@ final class PosixSemaphore implements Semaphore
             throw new SyncException('A semaphore with that ID already exists');
         }
 
-        $this->queue = \msg_get_queue($this->key, $permissions);
-        if (!$this->queue) {
+        $queue = \msg_get_queue($this->key, $permissions);
+        if (!$queue) {
             throw new SyncException('Failed to create the semaphore.');
         }
 
+        $this->queue = $queue;
         $this->initializer = \getmypid();
 
         // Fill the semaphore with locks.
         while (--$maxLocks >= 0) {
-            $this->release($maxLocks);
+            $this->release();
         }
     }
 }
