@@ -10,8 +10,12 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
     /** @var int[] */
     private array $locks = [];
 
+    /** @var positive-int */
     private int $maxLocks;
 
+    /**
+     * @param positive-int $maxLocks
+     */
     public function __construct(int $maxLocks)
     {
         $this->maxLocks = $maxLocks;

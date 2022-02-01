@@ -13,8 +13,12 @@ final class LocalSemaphore implements Semaphore
     /** @var Suspension[] */
     private array $waiting = [];
 
+    /**
+     * @param positive-int $maxLocks
+     */
     public function __construct(int $maxLocks)
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($maxLocks < 1) {
             throw new \Error('The number of locks must be greater than 0, got ' . $maxLocks);
         }
@@ -28,7 +32,7 @@ final class LocalSemaphore implements Semaphore
             return $this->createLock(\array_pop($this->locks));
         }
 
-        $this->waiting[] = $suspension = EventLoop::createSuspension();
+        $this->waiting[] = $suspension = EventLoop::getSuspension();
 
         return $suspension->suspend();
     }

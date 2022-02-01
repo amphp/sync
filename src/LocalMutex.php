@@ -20,7 +20,7 @@ final class LocalMutex implements Mutex
             return $this->createLock();
         }
 
-        $this->waiting[] = $suspension = EventLoop::createSuspension();
+        $this->waiting[] = $suspension = EventLoop::getSuspension();
 
         return $suspension->suspend();
     }

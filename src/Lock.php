@@ -40,7 +40,7 @@ final class Lock
      */
     public function release(): void
     {
-        if ($this->isReleased()) {
+        if ($this->release === null) {
             return;
         }
 

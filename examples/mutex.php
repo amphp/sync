@@ -3,7 +3,7 @@
 use Amp\Sync\LocalMutex;
 use function Amp\async;
 use function Amp\delay;
-use function Amp\Future\all;
+use function Amp\Future\await;
 
 require __DIR__ . '/../vendor/autoload.php';
 
@@ -36,4 +36,4 @@ $futureA = async(fn () => $task('A'));
 $futureB = async(fn () => $task('B'));
 $futureC = async(fn () => $task('C'));
 
-all([$futureA, $futureB, $futureC]);
+await([$futureA, $futureB, $futureC]);

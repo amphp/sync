@@ -53,15 +53,22 @@ final class PosixSemaphore implements Semaphore
 
     private static function makeKey(string $id): int
     {
+        /** @var int */
         return \abs(\unpack("l", \md5($id, true))[1]);
     }
 
     private string $id;
+
     /** @var int The semaphore key. */
     private int $key;
+
     /** @var int PID of the process that created the semaphore. */
     private int $initializer = 0;
-    /** @var \SysvMessageQueue A message queue of available locks. */
+
+    /**
+     * @var \SysvMessageQueue A message queue of available locks.
+     * @psalm-suppress PropertyNotSetInConstructor
+     */
     private \SysvMessageQueue $queue;
 
     /**
@@ -99,6 +106,7 @@ final class PosixSemaphore implements Semaphore
      */
     public function getPermissions(): int
     {
+        /** @psalm-suppress InvalidArgument */
         $stat = \msg_stat_queue($this->queue);
         return $stat['msg_perm.mode'];
     }
@@ -114,15 +122,19 @@ final class PosixSemaphore implements Semaphore
      */
     public function setPermissions(int $mode): void
     {
+        /** @psalm-suppress InvalidArgument */
         if (!\msg_set_queue($this->queue, ['msg_perm.mode' => $mode])) {
             throw new SyncException('Failed to change the semaphore permissions.');
         }
     }
 
+    /** @psalm-suppress InvalidReturnType */
     public function acquire(): Lock
     {
         do {
             // Attempt to acquire a lock from the semaphore.
+
+            /** @psalm-suppress InvalidArgument */
             if (@\msg_receive($this->queue, 0, $type, 1, $message, false, \MSG_IPC_NOWAIT, $errno)) {
                 // A free lock was found, so resolve with a lock object that can
                 // be used to release the lock.
@@ -153,10 +165,12 @@ final class PosixSemaphore implements Semaphore
             return;
         }
 
+        /** @psalm-suppress InvalidArgument */
         if (!\msg_queue_exists($this->key)) {
             return;
         }
 
+        /** @psalm-suppress InvalidArgument */
         \msg_remove_queue($this->queue);
     }
 
@@ -167,12 +181,15 @@ final class PosixSemaphore implements Semaphore
      */
     protected function release(): void
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if (!$this->queue) {
             return; // Queue already destroyed.
         }
 
         // Send in non-blocking mode. If the call fails because the queue is full,
         // then the number of locks configured is too large.
+
+        /** @psalm-suppress InvalidArgument */
         if (!@\msg_send($this->queue, 1, "\0", false, false, $errno)) {
             if ($errno === \MSG_EAGAIN) {
                 throw new SyncException('The semaphore size is larger than the system allows.');
@@ -197,10 +214,13 @@ final class PosixSemaphore implements Semaphore
         }
 
         $queue = \msg_get_queue($this->key);
+
+        /** @psalm-suppress TypeDoesNotContainType */
         if (!$queue) {
             throw new SyncException('Failed to open the semaphore.');
         }
 
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
         $this->queue = $queue;
     }
 
@@ -216,11 +236,15 @@ final class PosixSemaphore implements Semaphore
             throw new SyncException('A semaphore with that ID already exists');
         }
 
+        /** @psalm-suppress TypeDoesNotContainType */
         $queue = \msg_get_queue($this->key, $permissions);
+
+        /** @psalm-suppress TypeDoesNotContainType */
         if (!$queue) {
             throw new SyncException('Failed to create the semaphore.');
         }
 
+        /** @psalm-suppress InvalidPropertyAssignmentValue */
         $this->queue = $queue;
         $this->initializer = \getmypid();
 

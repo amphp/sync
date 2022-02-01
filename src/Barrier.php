@@ -37,6 +37,7 @@ final class Barrier
      */
     public function __construct(int $count)
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($count < 1) {
             throw new \Error('Count must be positive, got ' . $count);
         }
@@ -57,6 +58,7 @@ final class Barrier
      */
     public function arrive(int $count = 1): void
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($count < 1) {
             throw new \Error('Count must be at least 1, got ' . $count);
         }
@@ -79,6 +81,7 @@ final class Barrier
      */
     public function register(int $count = 1): void
     {
+        /** @psalm-suppress TypeDoesNotContainType */
         if ($count < 1) {
             throw new \Error('Count must be at least 1, got ' . $count);
         }

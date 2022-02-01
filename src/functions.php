@@ -10,7 +10,7 @@ namespace Amp\Sync;
  * @template T
  *
  * @param Semaphore $semaphore
- * @param \Closure(...$args):T $synchronized
+ * @param \Closure(...mixed):T $synchronized
  * @param mixed ...$args
  *
  * @return T The return value of the Closure.
