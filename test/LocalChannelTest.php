@@ -43,8 +43,6 @@ class LocalChannelTest extends AsyncTestCase
 
     public function testCancelReceive(): void
     {
-        $this->markTestSkipped('Requires amphp/pipeline-1.0.0-beta.3');
-
         $deferredCancellation = new DeferredCancellation();
         $future = async(fn () => $this->channel->receive($deferredCancellation->getCancellation()));
         $deferredCancellation->cancel();

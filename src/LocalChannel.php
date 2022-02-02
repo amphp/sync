@@ -4,7 +4,7 @@ namespace Amp\Sync;
 
 use Amp\ByteStream\ClosableStream;
 use Amp\Cancellation;
-use Amp\Pipeline\Emitter;
+use Amp\Pipeline\Queue;
 
 /**
  * Creates a channel where data sent is immediately receivable on the same channel.
@@ -14,13 +14,13 @@ use Amp\Pipeline\Emitter;
  */
 final class LocalChannel implements Channel, ClosableStream
 {
-    /** @var PipelineChannel<TValue, TValue> */
-    private PipelineChannel $channel;
+    /** @var ConcurrentIteratorChannel<TValue, TValue> */
+    private ConcurrentIteratorChannel $channel;
 
     public function __construct(int $capacity = 0)
     {
-        $emitter = new Emitter($capacity);
-        $this->channel = new PipelineChannel($emitter->pipe(), $emitter);
+        $queue = new Queue($capacity);
+        $this->channel = new ConcurrentIteratorChannel($queue->iterate(), $queue);
     }
 
     public function __destruct()

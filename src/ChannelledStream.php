@@ -7,9 +7,9 @@ use Amp\ByteStream\ReadableStream;
 use Amp\ByteStream\WritableStream;
 use Amp\ByteStream\StreamException;
 use Amp\Cancellation;
+use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 use Amp\Serialization\Serializer;
-use function Amp\Pipeline\fromIterable;
 
 /**
  * An asynchronous channel for sending data between threads and processes.
@@ -28,8 +28,8 @@ final class ChannelledStream implements Channel, ClosableStream
 
     private ChannelParser $parser;
 
-    /** @var Pipeline<TReceive> */
-    private Pipeline $pipeline;
+    /** @var ConcurrentIterator<TReceive> */
+    private ConcurrentIterator $iterator;
 
     /**
      * Creates a new channel from the given stream objects. Note that $read and $write can be the same object.
@@ -46,7 +46,7 @@ final class ChannelledStream implements Channel, ClosableStream
         $received = new \SplQueue();
         $this->parser = $parser = new ChannelParser(\Closure::fromCallable([$received, 'push']), $serializer);
 
-        $this->pipeline = fromIterable(static function () use ($read, $received, $parser): \Generator {
+        $this->iterator = Pipeline::fromIterable(static function () use ($read, $received, $parser): \Generator {
             while (true) {
                 try {
                     $chunk = $read->read();
@@ -68,7 +68,7 @@ final class ChannelledStream implements Channel, ClosableStream
                     yield $received->shift();
                 }
             }
-        });
+        })->getIterator();
     }
 
     public function __destruct()
@@ -89,7 +89,11 @@ final class ChannelledStream implements Channel, ClosableStream
 
     public function receive(?Cancellation $cancellation = null): mixed
     {
-        return $this->pipeline->continue($cancellation);
+        if (!$this->iterator->continue($cancellation)) {
+            return null;
+        }
+
+        return $this->iterator->getValue();
     }
 
     public function isClosed(): bool

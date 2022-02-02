@@ -4,8 +4,8 @@ namespace Amp\Sync;
 
 use Amp\ByteStream\ClosableStream;
 use Amp\Cancellation;
-use Amp\Pipeline\Emitter;
-use Amp\Pipeline\Pipeline;
+use Amp\Pipeline\ConcurrentIterator;
+use Amp\Pipeline\Queue;
 
 /**
  * Creates a channel from a Pipeline and Emitter. The Pipeline emits data to be received on the channel (data
@@ -16,15 +16,15 @@ use Amp\Pipeline\Pipeline;
  * @template TSend
  * @template-implements Channel<TReceive, TSend>
  */
-final class PipelineChannel implements Channel, ClosableStream
+final class ConcurrentIteratorChannel implements Channel, ClosableStream
 {
     /**
-     * @param Pipeline<TReceive> $receive
-     * @param Emitter<TSend> $send
+     * @param ConcurrentIterator<TReceive> $receive
+     * @param Queue<TSend> $send
      */
     public function __construct(
-        private Pipeline $receive,
-        private Emitter $send,
+        private ConcurrentIterator $receive,
+        private Queue $send,
     ) {
     }
 
@@ -49,7 +49,11 @@ final class PipelineChannel implements Channel, ClosableStream
 
     public function receive(?Cancellation $cancellation = null): mixed
     {
-        return $this->receive->continue($cancellation);
+        if (!$this->receive->continue($cancellation)) {
+            return null;
+        }
+
+        return $this->receive->getValue();
     }
 
     public function send(mixed $data): void
@@ -62,6 +66,6 @@ final class PipelineChannel implements Channel, ClosableStream
             throw new ChannelException("Cannot send on a closed channel");
         }
 
-        $this->send->yield($data);
+        $this->send->push($data);
     }
 }
