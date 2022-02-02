@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\Pipeline\Emitter;
+
 /**
  * Invokes the given Closure while maintaining a lock from the provided mutex.
  *
@@ -24,4 +26,21 @@ function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$ar
     } finally {
         $lock->release();
     }
+}
+
+/**
+ * @template TReceive
+ * @template TSend
+ *
+ * @return array{PipelineChannel<TReceive, TSend>, PipelineChannel<TSend, TReceive>}
+ */
+function createChannelPair(): array
+{
+    $west = new Emitter();
+    $east = new Emitter();
+
+    return [
+        new PipelineChannel($west->pipe(), $east),
+        new PipelineChannel($east->pipe(), $west),
+    ];
 }

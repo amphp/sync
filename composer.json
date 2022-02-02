@@ -25,9 +25,15 @@
     "require": {
         "php": ">=8",
         "amphp/amp": "^3",
+        "amphp/parser": "^1",
+        "amphp/pipeline": "^1",
+        "amphp/byte-stream": "^2",
+        "amphp/serialization": "^1",
         "revolt/event-loop": "^0.2"
     },
     "require-dev": {
+        "ext-shmop": "*",
+        "ext-sysvmsg": "*",
         "phpunit/phpunit": "^9",
         "amphp/phpunit-util": "^3",
         "amphp/php-cs-fixer-config": "^2-dev",
@@ -38,7 +44,8 @@
             "Amp\\Sync\\": "src"
         },
         "files": [
-            "src/functions.php"
+            "src/functions.php",
+            "src/Pipeline/functions.php"
         ]
     },
     "autoload-dev": {
