@@ -8,12 +8,12 @@ use Amp\ByteStream\WritableStream;
 use Amp\ByteStream\StreamException;
 use Amp\PHPUnit\AsyncTestCase;
 
-class ChannelledStreamTest extends AsyncTestCase
+class StreamChannelTest extends AsyncTestCase
 {
     public function testSendReceive()
     {
         $pipe = new Pipe(0);
-        $channel = new ChannelledStream($pipe->getSource(), $pipe->getSink());
+        $channel = new StreamChannel($pipe->getSource(), $pipe->getSink());
 
         $message = 'hello';
 
@@ -28,7 +28,7 @@ class ChannelledStreamTest extends AsyncTestCase
     public function testSendReceiveLongData()
     {
         $pipe = new Pipe(0);
-        $channel = new ChannelledStream($pipe->getSource(), $pipe->getSink());
+        $channel = new StreamChannel($pipe->getSource(), $pipe->getSink());
 
         $length = 0xffff;
         $message = '';
@@ -50,7 +50,7 @@ class ChannelledStreamTest extends AsyncTestCase
 
         $pipe = new Pipe(0);
         $sink = $pipe->getSink();
-        $channel = new ChannelledStream($pipe->getSource(), $sink);
+        $channel = new StreamChannel($pipe->getSource(), $sink);
 
         // Close $a. $b should close on next read...
         $sink->write(\pack('L', 10) . '1234567890');
@@ -66,7 +66,7 @@ class ChannelledStreamTest extends AsyncTestCase
 
         $pipe = new Pipe(0);
         $sink = $pipe->getSink();
-        $channel = new ChannelledStream($pipe->getSource(), $sink);
+        $channel = new StreamChannel($pipe->getSource(), $sink);
 
         // Close $a. $b should close on next read...
         $channel->send(fn () => null);
@@ -85,8 +85,8 @@ class ChannelledStreamTest extends AsyncTestCase
             ->method('write')
             ->will($this->throwException(new StreamException));
 
-        $a = new ChannelledStream($this->createMock(ReadableStream::class), $mock);
-        $b = new ChannelledStream(
+        $a = new StreamChannel($this->createMock(ReadableStream::class), $mock);
+        $b = new StreamChannel(
             $this->createMock(ReadableStream::class),
             $this->createMock(WritableStream::class)
         );
@@ -104,7 +104,7 @@ class ChannelledStreamTest extends AsyncTestCase
             ->method('read')
             ->willReturn(null);
 
-        $a = new ChannelledStream($mock, $this->createMock(WritableStream::class));
+        $a = new StreamChannel($mock, $this->createMock(WritableStream::class));
 
         self::assertNull($a->receive());
     }

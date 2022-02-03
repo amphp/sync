@@ -3,7 +3,6 @@
 namespace Amp\Sync;
 
 use Amp\Cancellation;
-use Amp\Serialization\SerializationException;
 
 /**
  * Interface for sending messages between execution contexts, such as two coroutines or two processes.
@@ -29,4 +28,16 @@ interface Channel
      * @throws ChannelException If sending on the channel fails.
      */
     public function send(mixed $data): void;
+
+    /**
+     * Closes the channel, preventing further sends or receives.
+     */
+    public function close(): void;
+
+    /**
+     * Returns whether the channel has been closed.
+     *
+     * @return bool {@code true} if closed, otherwise {@code false}
+     */
+    public function isClosed(): bool;
 }

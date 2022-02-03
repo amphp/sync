@@ -20,7 +20,7 @@ use Amp\Serialization\Serializer;
  * @template TSend
  * @template-implements Channel<TReceive, TSend>
  */
-final class ChannelledStream implements Channel, ClosableStream
+final class StreamChannel implements Channel
 {
     private ReadableStream $read;
 
