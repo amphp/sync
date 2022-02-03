@@ -187,7 +187,7 @@ final class SharedMemoryParcel implements Parcel
         $this->setHeader(self::STATE_FREED, 0, 0);
 
         // Request the block to be deleted, then close our local handle.
-        $this->memDelete();
+        $this->deleteSegment();
         $this->handle = null;
 
         unset($this->semaphore);
@@ -213,14 +213,14 @@ final class SharedMemoryParcel implements Parcel
     {
         $this->initializer = \getmypid();
 
-        $this->memOpen($this->key, 'n', $permissions, $size + self::MEM_DATA_OFFSET);
+        $this->openSegment($this->key, 'n', $permissions, $size + self::MEM_DATA_OFFSET);
         $this->setHeader(self::STATE_ALLOCATED, 0, $permissions);
         $this->wrap($value);
     }
 
     private function open(): void
     {
-        $this->memOpen($this->key, 'w', 0, 0);
+        $this->openSegment($this->key, 'w', 0, 0);
     }
 
     /**
@@ -264,7 +264,7 @@ final class SharedMemoryParcel implements Parcel
         }
 
         // Read the actual value data from memory and unserialize it.
-        $data = $this->memGet(self::MEM_DATA_OFFSET, $header['size']);
+        $data = $this->readSegment(self::MEM_DATA_OFFSET, $header['size']);
         return $this->serializer->unserialize($data);
     }
 
@@ -297,14 +297,14 @@ final class SharedMemoryParcel implements Parcel
             $this->key = $this->key < 0xffffffff ? $this->key + 1 : \random_int(0x10, 0xfffffffe);
             $this->setHeader(self::STATE_MOVED, $this->key, 0);
 
-            $this->memDelete();
+            $this->deleteSegment();
 
-            $this->memOpen($this->key, 'n', $header['permissions'], $size * 2);
+            $this->openSegment($this->key, 'n', $header['permissions'], $size * 2);
         }
 
         // Rewrite the header and the serialized value to memory.
         $this->setHeader(self::STATE_ALLOCATED, $size, $header['permissions']);
-        $this->memSet(self::MEM_DATA_OFFSET, $serialized);
+        $this->writeSegment(self::MEM_DATA_OFFSET, $serialized);
     }
 
     /**
@@ -334,7 +334,7 @@ final class SharedMemoryParcel implements Parcel
             }
 
             $this->key = $header['size'];
-            $this->memOpen($this->key, 'w', 0, 0);
+            $this->openSegment($this->key, 'w', 0, 0);
         }
     }
 
@@ -347,7 +347,7 @@ final class SharedMemoryParcel implements Parcel
      */
     private function getHeader(): array
     {
-        $data = $this->memGet(0, self::MEM_DATA_OFFSET);
+        $data = $this->readSegment(0, self::MEM_DATA_OFFSET);
         return \unpack('Cstate/Lsize/Spermissions', $data);
     }
 
@@ -363,7 +363,7 @@ final class SharedMemoryParcel implements Parcel
     private function setHeader(int $state, int $size, int $permissions): void
     {
         $header = \pack('CLS', $state, $size, $permissions);
-        $this->memSet(0, $header);
+        $this->writeSegment(0, $header);
     }
 
     /**
@@ -376,7 +376,7 @@ final class SharedMemoryParcel implements Parcel
      *
      * @throws ParcelException
      */
-    private function memOpen(int $key, string $mode, int $permissions, int $size): void
+    private function openSegment(int $key, string $mode, int $permissions, int $size): void
     {
         $handle = @\shmop_open($key, $mode, $permissions, $size);
         if ($handle === false) {
@@ -398,7 +398,7 @@ final class SharedMemoryParcel implements Parcel
      *
      * @throws ParcelException
      */
-    private function memGet(int $offset, int $size): string
+    private function readSegment(int $offset, int $size): string
     {
         $data = \shmop_read($this->handle, $offset, $size);
         if ($data === false) {
@@ -418,7 +418,7 @@ final class SharedMemoryParcel implements Parcel
      *
      * @throws ParcelException
      */
-    private function memSet(int $offset, string $data): void
+    private function writeSegment(int $offset, string $data): void
     {
         if (!\shmop_write($this->handle, $data, $offset)) {
             $error = \error_get_last();
@@ -433,7 +433,7 @@ final class SharedMemoryParcel implements Parcel
      *
      * @throws ParcelException
      */
-    private function memDelete(): void
+    private function deleteSegment(): void
     {
         if (!\shmop_delete($this->handle)) {
             $error = \error_get_last();
