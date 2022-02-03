@@ -8,9 +8,10 @@ use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
 
 /**
- * Creates a channel from a Pipeline and Emitter. The Pipeline emits data to be received on the channel (data
- * emitted on the Pipeline will be returned from calls to {@see Channel::receive()}). The Emitter will receive data
- * that sent on the channel (data passed to {@see Channel::send()} will be passed to {@see Emitter::yield()}).
+ * Creates a Channel from a ConcurrentIterator and Queue. The ConcurrentIterator emits data to be received on the
+ * channel (data emitted on the ConcurrentIterator will be returned from calls to {@see Channel::receive()}).
+ * The Queue will receive data that sent on the channel (data passed to {@see Channel::send()} will be passed to
+ * {@see Queue::push()}).
  *
  * @template TReceive
  * @template TSend
