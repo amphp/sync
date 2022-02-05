@@ -6,7 +6,6 @@ use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\SerializationException;
 use Amp\Serialization\Serializer;
 
-
 /**
  * A container object for sharing a value across contexts.
  *
