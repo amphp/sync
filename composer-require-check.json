@@ -28,7 +28,13 @@
         "msg_stat_queue",
         "Threaded",
         "transform",
-        "SysvMessageQueue"
+        "SysvMessageQueue",
+        "Shmop",
+        "shmop_delete",
+        "shmop_open",
+        "shmop_read",
+        "shmop_size",
+        "shmop_write"
     ],
     "php-core-extensions": [
         "Core",

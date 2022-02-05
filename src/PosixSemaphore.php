@@ -15,37 +15,39 @@ use function Amp\delay;
 final class PosixSemaphore implements Semaphore
 {
     private const LATENCY_TIMEOUT = 0.01;
+    private const MAX_ID = 0x7fffffff;
+
+    private static int $nextId = 0;
 
     /**
      * Creates a new semaphore with a given ID and number of locks.
      *
-     * @param string $id The unique name for the new semaphore.
      * @param int $maxLocks The maximum number of locks that can be acquired from the semaphore.
      * @param int $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
      *
      * @return PosixSemaphore
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
-    public static function create(string $id, int $maxLocks, int $permissions = 0600): self
+    public static function create(int $maxLocks, int $permissions = 0600): self
     {
         if ($maxLocks < 1) {
             throw new \Error('Number of locks must be greater than 0, got ' . $maxLocks);
         }
 
-        $semaphore = new self($id);
+        $semaphore = new self(0);
         $semaphore->init($maxLocks, $permissions);
 
         return $semaphore;
     }
 
     /**
-     * @param string $id The unique name of the semaphore to use.
+     * @param int $key Use {@see getKey()} on the creating process and send this key to another process.
      *
      * @return PosixSemaphore
      */
-    public static function use(string $id): self
+    public static function use(int $key): self
     {
-        $semaphore = new self($id);
+        $semaphore = new self($key);
         $semaphore->open();
 
         return $semaphore;
@@ -56,8 +58,6 @@ final class PosixSemaphore implements Semaphore
         /** @var int */
         return \abs(\unpack("l", \md5($id, true))[1]);
     }
-
-    private string $id;
 
     /** @var int The semaphore key. */
     private int $key;
@@ -72,18 +72,15 @@ final class PosixSemaphore implements Semaphore
     private \SysvMessageQueue $queue;
 
     /**
-     * @param string $id
-     *
      * @throws \Error If the sysvmsg extension is not loaded.
      */
-    private function __construct(string $id)
+    private function __construct(int $key)
     {
         if (!\extension_loaded("sysvmsg")) {
             throw new \Error(__CLASS__ . " requires the sysvmsg extension.");
         }
 
-        $this->id = $id;
-        $this->key = self::makeKey($this->id);
+        $this->key = $key;
     }
 
     /**
@@ -94,9 +91,9 @@ final class PosixSemaphore implements Semaphore
         throw new \Error('Cannot serialize ' . self::class);
     }
 
-    public function getId(): string
+    public function getKey(): int
     {
-        return $this->id;
+        return $this->key;
     }
 
     /**
@@ -232,21 +229,44 @@ final class PosixSemaphore implements Semaphore
      */
     private function init(int $maxLocks, int $permissions): void
     {
-        if (\msg_queue_exists($this->key)) {
-            throw new SyncException('A semaphore with that ID already exists');
+        if (self::$nextId === 0) {
+            self::$nextId = \random_int(1, self::MAX_ID);
         }
 
-        /** @psalm-suppress TypeDoesNotContainType */
-        $queue = \msg_get_queue($this->key, $permissions);
+        \set_error_handler(static function (int $errno, string $errstr): bool {
+            if (\str_contains($errstr, 'Failed for key')) {
+                return true;
+            }
 
-        /** @psalm-suppress TypeDoesNotContainType */
-        if (!$queue) {
-            throw new SyncException('Failed to create the semaphore.');
+            throw new SyncException('Failed to create semaphore: ' . $errstr, $errno);
+        });
+
+        try {
+            $id = self::$nextId;
+
+            do {
+                while (\msg_queue_exists($id)) {
+                    $id = self::$nextId = self::$nextId % self::MAX_ID + 1;
+                }
+
+                /** @psalm-suppress TypeDoesNotContainType */
+                $queue = \msg_get_queue($id, $permissions);
+
+                /** @psalm-suppress RedundantCondition */
+                if ($queue) {
+                    /** @psalm-suppress InvalidPropertyAssignmentValue */
+                    $this->queue = $queue;
+                    $this->initializer = \getmypid();
+                    break;
+                }
+
+                ++self::$nextId;
+            } while (true);
+        } finally {
+            \restore_error_handler();
         }
 
-        /** @psalm-suppress InvalidPropertyAssignmentValue */
-        $this->queue = $queue;
-        $this->initializer = \getmypid();
+        $this->key = $id;
 
         // Fill the semaphore with locks.
         while (--$maxLocks >= 0) {

@@ -39,13 +39,13 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
     }
 
     /**
-     * @param $locks
+     * @param int $locks
      *
      * @return PosixSemaphore
      */
     public function createSemaphore(int $locks): Semaphore
     {
-        return PosixSemaphore::create(self::ID, $locks);
+        return PosixSemaphore::create($locks);
     }
 
     public function testConstructorOnInvalidMaxLocks(): void
@@ -60,24 +60,16 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
     {
         $this->expectException(\Error::class);
 
-        PosixSemaphore::create(self::ID, -1);
+        PosixSemaphore::create(-1);
     }
 
     public function testGetPermissions(): void
     {
-        $id = self::ID . \bin2hex(\random_bytes(4));
-        $this->semaphore = PosixSemaphore::create($id, 1);
-        $used = PosixSemaphore::use($id);
+        $this->semaphore = PosixSemaphore::create(1);
+        $used = PosixSemaphore::use($this->semaphore->getKey());
         $used->setPermissions(0644);
 
         self::assertSame(0644, $this->semaphore->getPermissions());
-    }
-
-    public function testGetId(): void
-    {
-        $this->semaphore = $this->createSemaphore(1);
-
-        self::assertStringStartsWith(self::ID, $this->semaphore->getId());
     }
 
     public function testUseOnInvalidSemaphoreId(): void
@@ -88,22 +80,13 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         PosixSemaphore::use(1);
     }
 
-    public function testCreateOnDuplicatedSemaphoreId(): void
-    {
-        $this->expectException(SyncException::class);
-        $this->expectExceptionMessage("A semaphore with that ID already exists");
-
-        $semaphore = PosixSemaphore::create(self::ID, 1);
-        $semaphore::create(self::ID, 1);
-    }
-
     public function testUse(): void
     {
         $this->setMinimumRuntime(0.1);
 
         $this->semaphore = $this->createSemaphore(1);
 
-        $used = PosixSemaphore::use(self::ID);
+        $used = PosixSemaphore::use($this->semaphore->getKey());
 
         $future1 = async(fn () => $used->acquire());
         $future2 = async(fn () => $this->semaphore->acquire());
