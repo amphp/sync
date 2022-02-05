@@ -242,15 +242,17 @@ final class PosixSemaphore implements Semaphore
         });
 
         try {
+            $id = self::$nextId;
+
             do {
-                while (\msg_queue_exists($id = self::$nextId)) {
-                    self::$nextId = self::$nextId % self::MAX_ID + 1;
+                while (\msg_queue_exists($id)) {
+                    $id = self::$nextId = self::$nextId % self::MAX_ID + 1;
                 }
 
                 /** @psalm-suppress TypeDoesNotContainType */
                 $queue = \msg_get_queue($id, $permissions);
 
-                /** @psalm-suppress TypeDoesNotContainType */
+                /** @psalm-suppress RedundantCondition */
                 if ($queue) {
                     /** @psalm-suppress InvalidPropertyAssignmentValue */
                     $this->queue = $queue;

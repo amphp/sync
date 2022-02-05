@@ -291,6 +291,7 @@ final class SharedMemoryParcel implements Parcel
            automatically after all other processes notice the change and close
            the old handle.
         */
+        /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
         if (\shmop_size($this->handle) < $size + self::MEM_DATA_OFFSET) {
             [$key, $handle] = self::createSegment($header['permissions'], $size * 2);
 
@@ -368,6 +369,8 @@ final class SharedMemoryParcel implements Parcel
      * @return array{int, \Shmop}
      *
      * @throws ParcelException
+     *
+     * @psalm-suppress InvalidReturnType
      */
     private static function createSegment(int $permissions, int $size): array
     {
@@ -388,6 +391,7 @@ final class SharedMemoryParcel implements Parcel
                 $id = self::$nextId;
 
                 if ($handle = \shmop_open($id, 'n', $permissions, $size)) {
+                    /** @psalm-suppress InvalidReturnStatement Psalm needs to be updated for ext-shmop using objects. */
                     return [$id, $handle];
                 }
 
@@ -405,6 +409,7 @@ final class SharedMemoryParcel implements Parcel
         });
 
         try {
+            /** @psalm-suppress InvalidPropertyAssignmentValue Psalm needs to be updated for ext-shmop using objects. */
             $this->handle = \shmop_open($id, $mode, $permissions, $size);
             $this->key = $id;
         } finally {
@@ -424,6 +429,9 @@ final class SharedMemoryParcel implements Parcel
      */
     private function readSegment(int $offset, int $size): string
     {
+        \assert($this->handle !== null);
+
+        /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
         $data = \shmop_read($this->handle, $offset, $size);
         if ($data === false) {
             $error = \error_get_last();
@@ -443,6 +451,9 @@ final class SharedMemoryParcel implements Parcel
      */
     private function writeSegment(string $data): void
     {
+        \assert($this->handle !== null);
+
+        /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
         if (!\shmop_write($this->handle, $data, 0)) {
             $error = \error_get_last();
             throw new ParcelException(
@@ -458,6 +469,9 @@ final class SharedMemoryParcel implements Parcel
      */
     private function deleteSegment(): void
     {
+        \assert($this->handle !== null);
+
+        /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
         if (!\shmop_delete($this->handle)) {
             $error = \error_get_last();
             throw new ParcelException(
