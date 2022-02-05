@@ -9,18 +9,18 @@ namespace Amp\Sync;
 final class LocalParcel implements Parcel
 {
     /**
-     * @param Semaphore $semaphore
+     * @param Mutex $mutex
      * @param T $value
      */
     public function __construct(
-        private Semaphore $semaphore,
+        private Mutex $mutex,
         private mixed $value,
     ) {
     }
 
     public function synchronized(\Closure $closure): mixed
     {
-        $lock = $this->semaphore->acquire();
+        $lock = $this->mutex->acquire();
 
         try {
             $this->value = $closure($this->value);

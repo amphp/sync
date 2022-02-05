@@ -6,6 +6,6 @@ class LocalParcelTest extends AbstractParcelTest
 {
     protected function createParcel(mixed $value): Parcel
     {
-        return new LocalParcel(new LocalSemaphore(1), $value);
+        return new LocalParcel(new LocalMutex(), $value);
     }
 }
