@@ -41,7 +41,7 @@ final class PosixSemaphore implements Semaphore
     }
 
     /**
-     * @param int $key The unique key of the semaphore to use.
+     * @param int $key Use {@see getKey()} on the creating process and send this key to another process.
      *
      * @return PosixSemaphore
      */

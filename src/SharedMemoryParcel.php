@@ -42,12 +42,12 @@ final class SharedMemoryParcel implements Parcel
     private const STATE_UNALLOCATED = 0;
     private const STATE_ALLOCATED = 1;
     private const STATE_MOVED = 2;
-    private const STATE_FREED = 3;
 
     private static int $nextId = 0;
 
     /**
-     * @param string $id
+     * @param Mutex $mutex Mutex to control access to the shared memory. Recommended: Since lock {@see PosixSemaphore}
+     * wrapped in an instance of {@see SemaphoreMutex}.
      * @param mixed $value
      * @param int $size The initial size in bytes of the shared memory segment. It will automatically be
      *     expanded as necessary.
@@ -83,7 +83,7 @@ final class SharedMemoryParcel implements Parcel
 
     /**
      * @param Mutex $mutex
-     * @param int $key
+     * @param int $key Use {@see getKey()} on the creating process and send this key to another process.
      * @param Serializer|null $serializer
      *
      * @return self
@@ -175,9 +175,6 @@ final class SharedMemoryParcel implements Parcel
             return;
         }
 
-        // Invalidate the memory block by setting its state to FREED.
-        $this->writeSegment(self::generateHeader(self::STATE_FREED, 0, 0));
-
         // Request the block to be deleted, then close our local handle.
         $this->deleteSegment();
         $this->handle = null;
@@ -229,8 +226,7 @@ final class SharedMemoryParcel implements Parcel
         // been invalidated.
         if ($this->handle !== null) {
             $this->handleMovedMemory();
-            $header = $this->readHeader();
-            return $header['state'] === self::STATE_FREED;
+            return false;
         }
 
         return true;
