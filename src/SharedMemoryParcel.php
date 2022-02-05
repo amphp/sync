@@ -36,7 +36,7 @@ final class SharedMemoryParcel implements Parcel
     /** @var int The byte offset to the start of the object data in memory. */
     private const MEM_DATA_OFFSET = 7;
 
-    private const MAX_ID = 0xffffffff;
+    private const MAX_ID = 0x7fffffff;
 
     // A list of valid states the object can be in.
     private const STATE_UNALLOCATED = 0;

@@ -15,7 +15,7 @@ use function Amp\delay;
 final class PosixSemaphore implements Semaphore
 {
     private const LATENCY_TIMEOUT = 0.01;
-    private const MAX_ID = 0xffffffff;
+    private const MAX_ID = 0x7fffffff;
 
     private static int $nextId = 0;
 
