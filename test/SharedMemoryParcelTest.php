@@ -48,11 +48,11 @@ class SharedMemoryParcelTest extends AbstractParcelTest
 
     public function testTooBig(): void
     {
-        $this->expectException(ParcelException::class);
-        $this->expectExceptionMessage('Failed to create shared memory block');
+        $this->expectException(\Error::class);
+        $this->expectExceptionMessage('memory size');
 
         $mutex = new SemaphoreMutex(PosixSemaphore::create(1));
-        SharedMemoryParcel::create($mutex, 42, 1 << 50);
+        SharedMemoryParcel::create($mutex, 42, 1 << 30);
     }
 
     protected function createParcel(mixed $value): Parcel

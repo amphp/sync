@@ -68,8 +68,8 @@ final class SharedMemoryParcel implements Parcel
         int $permissions = 0600,
         ?Serializer $serializer = null
     ): self {
-        if ($size <= 0) {
-            throw new \Error('The memory size must be greater than 0');
+        if ($size <= 0 || $size > 1 << 27) {
+            throw new \Error('The memory size must be greater than 0 and less than 128 MB');
         }
 
         if ($permissions <= 0 || $permissions > 0777) {
@@ -374,11 +374,11 @@ final class SharedMemoryParcel implements Parcel
     private static function createSegment(int $permissions, int $size): array
     {
         \set_error_handler(static function (int $errno, string $errstr): bool {
-            static $attempts = 0;
-            if (++$attempts > 10) {
-                throw new ParcelException('Failed to create shared memory block: ' . $errstr, $errno);
+            if (\str_contains($errstr, 'Unable to attach or create shared memory segment')) {
+                return true;
             }
-            return true;
+
+            throw new ParcelException('Failed to create shared memory block: ' . $errstr, $errno);
         });
 
         if (!self::$nextId) {

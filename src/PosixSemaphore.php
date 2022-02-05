@@ -234,11 +234,11 @@ final class PosixSemaphore implements Semaphore
         }
 
         \set_error_handler(static function (int $errno, string $errstr): bool {
-            static $attempts = 0;
-            if (++$attempts > 10) {
-                throw new SyncException('Failed to create semaphore: ' . $errstr, $errno);
+            if (\str_contains($errstr, 'Failed for key')) {
+                return true;
             }
-            return true;
+
+            throw new SyncException('Failed to create semaphore: ' . $errstr, $errno);
         });
 
         try {
