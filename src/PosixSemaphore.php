@@ -15,6 +15,7 @@ use function Amp\delay;
 final class PosixSemaphore implements Semaphore
 {
     private const LATENCY_TIMEOUT = 0.01;
+    private const MAX_ID = 0xffffffff;
 
     private static int $nextId = 0;
 
@@ -229,7 +230,7 @@ final class PosixSemaphore implements Semaphore
     private function init(int $maxLocks, int $permissions): void
     {
         if (!self::$nextId) {
-            self::$nextId = \random_int(1, \PHP_INT_MAX - 1);
+            self::$nextId = \random_int(1, self::MAX_ID);
         }
 
         \set_error_handler(static function (int $errno, string $errstr): bool {
@@ -243,7 +244,7 @@ final class PosixSemaphore implements Semaphore
         try {
             do {
                 while (\msg_queue_exists($id = self::$nextId)) {
-                    self::$nextId = self::$nextId % \PHP_INT_MAX + 1;
+                    self::$nextId = self::$nextId % self::MAX_ID + 1;
                 }
 
                 /** @psalm-suppress TypeDoesNotContainType */

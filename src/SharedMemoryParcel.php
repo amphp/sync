@@ -38,6 +38,8 @@ final class SharedMemoryParcel implements Parcel
     /** @var int The byte offset to the start of the object data in memory. */
     private const MEM_DATA_OFFSET = 7;
 
+    private const MAX_ID = 0xffffffff;
+
     // A list of valid states the object can be in.
     private const STATE_UNALLOCATED = 0;
     private const STATE_ALLOCATED = 1;
@@ -380,7 +382,7 @@ final class SharedMemoryParcel implements Parcel
         });
 
         if (!self::$nextId) {
-            self::$nextId = \random_int(1, \PHP_INT_MAX - 1);
+            self::$nextId = \random_int(1, self::MAX_ID);
         }
 
         try {
@@ -391,7 +393,7 @@ final class SharedMemoryParcel implements Parcel
                     return [$id, $handle];
                 }
 
-                self::$nextId = self::$nextId % \PHP_INT_MAX + 1;
+                self::$nextId = self::$nextId % self::MAX_ID + 1;
             } while (true);
         } finally {
             \restore_error_handler();
