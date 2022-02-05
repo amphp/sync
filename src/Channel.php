@@ -18,7 +18,7 @@ interface Channel
      *
      * @return TReceive Data received.
      *
-     * @throws ChannelException If receiving from the channel fails.
+     * @throws ChannelException If receiving from the channel fails or the channel closed.
      */
     public function receive(?Cancellation $cancellation = null): mixed;
 
