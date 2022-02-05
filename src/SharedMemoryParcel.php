@@ -3,6 +3,7 @@
 namespace Amp\Sync;
 
 use Amp\Serialization\NativeSerializer;
+use Amp\Serialization\SerializationException;
 use Amp\Serialization\Serializer;
 use Amp\Sync\PosixSemaphore;
 use Amp\Sync\SyncException;
@@ -43,12 +44,14 @@ final class SharedMemoryParcel implements Parcel
     private const STATE_MOVED = 2;
     private const STATE_FREED = 3;
 
+    private static int $nextId = 0;
+
     /**
-     * @param string          $id
-     * @param mixed           $value
-     * @param int             $size The initial size in bytes of the shared memory segment. It will automatically be
+     * @param string $id
+     * @param mixed $value
+     * @param int $size The initial size in bytes of the shared memory segment. It will automatically be
      *     expanded as necessary.
-     * @param int             $permissions Permissions to access the semaphore. Use file permission format specified as
+     * @param int $permissions Permissions to access the semaphore. Use file permission format specified as
      *     0xxx.
      * @param Serializer|null $serializer
      *
@@ -59,7 +62,7 @@ final class SharedMemoryParcel implements Parcel
      * @throws \Error If the size or permissions are invalid.
      */
     public static function create(
-        string $id,
+        Mutex $mutex,
         mixed $value,
         int $size = 8192,
         int $permissions = 0600,
@@ -74,24 +77,23 @@ final class SharedMemoryParcel implements Parcel
             throw new \Error('Invalid permissions');
         }
 
-        $semaphore = PosixSemaphore::create($id, 1);
-        $parcel = new self($id, $semaphore, $serializer);
+        $parcel = new self(0, $mutex, $serializer);
         $parcel->init($value, $size, $permissions);
         return $parcel;
     }
 
     /**
-     * @param string          $id
+     * @param Mutex $mutex
+     * @param int $key
      * @param Serializer|null $serializer
      *
      * @return self
      *
      * @throws ParcelException
      */
-    public static function use(string $id, ?Serializer $serializer = null): self
+    public static function use(Mutex $mutex, int $key, ?Serializer $serializer = null): self
     {
-        $semaphore = PosixSemaphore::use($id);
-        $parcel = new self($id, $semaphore, $serializer);
+        $parcel = new self($key, $mutex, $serializer);
         $parcel->open();
         return $parcel;
     }
@@ -101,14 +103,11 @@ final class SharedMemoryParcel implements Parcel
         return (int) \abs(\unpack("l", \md5($id, true))[1]);
     }
 
-    /** @var string */
-    private string $id;
-
     /** @var int The shared memory segment key. */
     private int $key;
 
-    /** @var PosixSemaphore A semaphore for synchronizing on the parcel. */
-    private PosixSemaphore $semaphore;
+    /** @var Mutex A mutex for synchronizing on the parcel. */
+    private Mutex $mutex;
 
     /** @var \Shmop An open handle to the shared memory segment. */
     private ?\Shmop $handle = null;
@@ -118,29 +117,28 @@ final class SharedMemoryParcel implements Parcel
     private Serializer $serializer;
 
     /**
-     * @param string          $id
+     * @param int $key
      * @param Serializer|null $serializer
      */
-    private function __construct(string $id, PosixSemaphore $semaphore, ?Serializer $serializer = null)
+    private function __construct(int $key, Mutex $mutex, ?Serializer $serializer = null)
     {
         if (!\extension_loaded("shmop")) {
             throw new \Error(__CLASS__ . " requires the shmop extension");
         }
 
-        $this->id = $id;
-        $this->semaphore = $semaphore;
-        $this->key = self::makeKey($id);
+        $this->key = $key;
+        $this->mutex = $mutex;
         $this->serializer = $serializer ?? new NativeSerializer;
     }
 
-    public function getId(): string
+    public function getId(): int
     {
-        return $this->id;
+        return $this->key;
     }
 
     public function unwrap(): mixed
     {
-        $lock = $this->semaphore->acquire();
+        $lock = $this->mutex->acquire();
 
         try {
             return $this->getValue();
@@ -151,7 +149,7 @@ final class SharedMemoryParcel implements Parcel
 
     public function synchronized(\Closure $closure): mixed
     {
-        $lock = $this->semaphore->acquire();
+        $lock = $this->mutex->acquire();
 
         try {
             $result = $closure($this->getValue());
@@ -184,13 +182,13 @@ final class SharedMemoryParcel implements Parcel
         }
 
         // Invalidate the memory block by setting its state to FREED.
-        $this->setHeader(self::STATE_FREED, 0, 0);
+        $this->writeSegment(self::generateHeader(self::STATE_FREED, 0, 0));
 
         // Request the block to be deleted, then close our local handle.
         $this->deleteSegment();
         $this->handle = null;
 
-        unset($this->semaphore);
+        unset($this->mutex);
     }
 
     /**
@@ -203,8 +201,8 @@ final class SharedMemoryParcel implements Parcel
 
     /**
      * @param mixed $value
-     * @param int   $size
-     * @param int   $permissions
+     * @param int $size
+     * @param int $permissions
      *
      * @throws ParcelException
      * @throws \Error If the size or permissions are invalid.
@@ -213,8 +211,8 @@ final class SharedMemoryParcel implements Parcel
     {
         $this->initializer = \getmypid();
 
-        $this->openSegment($this->key, 'n', $permissions, $size + self::MEM_DATA_OFFSET);
-        $this->setHeader(self::STATE_ALLOCATED, 0, $permissions);
+        [$this->key, $this->handle] = self::createSegment($permissions, $size + self::MEM_DATA_OFFSET);
+        $this->writeSegment(self::generateHeader(self::STATE_ALLOCATED, 0, $permissions));
         $this->wrap($value);
     }
 
@@ -237,7 +235,7 @@ final class SharedMemoryParcel implements Parcel
         // been invalidated.
         if ($this->handle !== null) {
             $this->handleMovedMemory();
-            $header = $this->getHeader();
+            $header = $this->readHeader();
             return $header['state'] === self::STATE_FREED;
         }
 
@@ -256,7 +254,7 @@ final class SharedMemoryParcel implements Parcel
             throw new ParcelException('The object has already been freed');
         }
 
-        $header = $this->getHeader();
+        $header = $this->readHeader();
 
         // Make sure the header is in a valid state and format.
         if ($header['state'] !== self::STATE_ALLOCATED || $header['size'] <= 0) {
@@ -284,7 +282,7 @@ final class SharedMemoryParcel implements Parcel
 
         $serialized = $this->serializer->serialize($value);
         $size = \strlen($serialized);
-        $header = $this->getHeader();
+        $header = $this->readHeader();
 
         /* If we run out of space, we need to allocate a new shared memory
            segment that is larger than the current one. To coordinate with other
@@ -294,17 +292,17 @@ final class SharedMemoryParcel implements Parcel
            the old handle.
         */
         if (\shmop_size($this->handle) < $size + self::MEM_DATA_OFFSET) {
-            $this->key = $this->key < 0xffffffff ? $this->key + 1 : \random_int(0x10, 0xfffffffe);
-            $this->setHeader(self::STATE_MOVED, $this->key, 0);
+            [$key, $handle] = self::createSegment($header['permissions'], $size * 2);
 
+            $this->writeSegment(self::generateHeader(self::STATE_MOVED, $key, 0));
             $this->deleteSegment();
 
-            $this->openSegment($this->key, 'n', $header['permissions'], $size * 2);
+            $this->key = $key;
+            $this->handle = $handle;
         }
 
         // Rewrite the header and the serialized value to memory.
-        $this->setHeader(self::STATE_ALLOCATED, $size, $header['permissions']);
-        $this->writeSegment(self::MEM_DATA_OFFSET, $serialized);
+        $this->writeSegment(self::generateHeader(self::STATE_ALLOCATED, $size, $header['permissions']) . $serialized);
     }
 
     /**
@@ -325,7 +323,7 @@ final class SharedMemoryParcel implements Parcel
         // Read from the memory block and handle moved blocks until we find the
         // correct block.
         while (true) {
-            $header = $this->getHeader();
+            $header = $this->readHeader();
 
             // If the state is STATE_MOVED, the memory is stale and has been moved
             // to a new location. Move handle and try to read again.
@@ -345,47 +343,73 @@ final class SharedMemoryParcel implements Parcel
      *
      * @throws ParcelException
      */
-    private function getHeader(): array
+    private function readHeader(): array
     {
         $data = $this->readSegment(0, self::MEM_DATA_OFFSET);
         return \unpack('Cstate/Lsize/Spermissions', $data);
     }
 
     /**
-     * Sets the header data for the current memory segment.
-     *
      * @param int $state An object state.
      * @param int $size The size of the stored data, or other value.
      * @param int $permissions The permissions mask on the memory segment.
-     *
-     * @throws ParcelException
      */
-    private function setHeader(int $state, int $size, int $permissions): void
+    private static function generateHeader(int $state, int $size, int $permissions): string
     {
-        $header = \pack('CLS', $state, $size, $permissions);
-        $this->writeSegment(0, $header);
+        return \pack('CLS', $state, $size, $permissions);
     }
 
     /**
      * Opens a shared memory handle.
      *
-     * @param int    $key The shared memory key.
-     * @param string $mode The mode to open the shared memory in.
-     * @param int    $permissions Process permissions on the shared memory.
-     * @param int    $size The size to crate the shared memory in bytes.
+     * @param int $permissions Process permissions on the shared memory.
+     * @param int $size The size to crate the shared memory in bytes.
+     *
+     * @return array{int, \Shmop}
      *
      * @throws ParcelException
      */
-    private function openSegment(int $key, string $mode, int $permissions, int $size): void
+    private static function createSegment(int $permissions, int $size): array
     {
-        $handle = @\shmop_open($key, $mode, $permissions, $size);
-        if ($handle === false) {
-            $error = \error_get_last();
-            throw new ParcelException(
-                'Failed to create shared memory block: ' . ($error['message'] ?? 'unknown error')
-            );
+        \set_error_handler(static function (int $errno, string $errstr): bool {
+            static $attempts = 0;
+            if (++$attempts > 10) {
+                throw new ParcelException('Failed to create shared memory block: ' . $errstr, $errno);
+            }
+            return true;
+        });
+
+        if (!self::$nextId) {
+            self::$nextId = \random_int(1, \PHP_INT_MAX - 1);
         }
-        $this->handle = $handle;
+
+        try {
+            do {
+                $id = self::$nextId;
+
+                if ($handle = \shmop_open($id, 'n', $permissions, $size)) {
+                    return [$id, $handle];
+                }
+
+                self::$nextId = self::$nextId % \PHP_INT_MAX + 1;
+            } while (true);
+        } finally {
+            \restore_error_handler();
+        }
+    }
+
+    private function openSegment(int $id, string $mode, int $permissions, int $size): void
+    {
+        \set_error_handler(static function (int $errno, string $errstr): bool {
+            throw new ParcelException('Failed to open shared memory block: ' . $errstr, $errno);
+        });
+
+        try {
+            $this->handle = \shmop_open($id, $mode, $permissions, $size);
+            $this->key = $id;
+        } finally {
+            \restore_error_handler();
+        }
     }
 
     /**
@@ -413,14 +437,13 @@ final class SharedMemoryParcel implements Parcel
     /**
      * Writes binary data to shared memory.
      *
-     * @param int    $offset The offset to write to.
      * @param string $data The binary data to write.
      *
      * @throws ParcelException
      */
-    private function writeSegment(int $offset, string $data): void
+    private function writeSegment(string $data): void
     {
-        if (!\shmop_write($this->handle, $data, $offset)) {
+        if (!\shmop_write($this->handle, $data, 0)) {
             $error = \error_get_last();
             throw new ParcelException(
                 'Failed to write to shared memory block: ' . ($error['message'] ?? 'unknown error')
