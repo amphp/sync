@@ -16,7 +16,7 @@ interface Channel
      * @param Cancellation|null $cancellation Cancels waiting for the next value. Note the next value is not discarded
      * if the operation is cancelled, rather it will be returned from the next call to this method.
      *
-     * @return TReceive|null Data received or null if the channel closed.
+     * @return TReceive Data received.
      *
      * @throws ChannelException If receiving from the channel fails.
      */
