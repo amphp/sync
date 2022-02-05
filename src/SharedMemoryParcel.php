@@ -97,11 +97,6 @@ final class SharedMemoryParcel implements Parcel
         return $parcel;
     }
 
-    private static function makeKey(string $id): int
-    {
-        return (int) \abs(\unpack("l", \md5($id, true))[1]);
-    }
-
     /** @var int The shared memory segment key. */
     private int $key;
 
