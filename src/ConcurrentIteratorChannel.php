@@ -2,7 +2,6 @@
 
 namespace Amp\Sync;
 
-use Amp\ByteStream\ClosableStream;
 use Amp\Cancellation;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
@@ -17,7 +16,7 @@ use Amp\Pipeline\Queue;
  * @template TSend
  * @template-implements Channel<TReceive, TSend>
  */
-final class ConcurrentIteratorChannel implements Channel, ClosableStream
+final class ConcurrentIteratorChannel implements Channel
 {
     /**
      * @param ConcurrentIterator<TReceive> $receive

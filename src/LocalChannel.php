@@ -2,7 +2,6 @@
 
 namespace Amp\Sync;
 
-use Amp\ByteStream\ClosableStream;
 use Amp\Cancellation;
 use Amp\Pipeline\Queue;
 
@@ -12,7 +11,7 @@ use Amp\Pipeline\Queue;
  * @template TValue
  * @template-implements Channel<TValue, TValue>
  */
-final class LocalChannel implements Channel, ClosableStream
+final class LocalChannel implements Channel
 {
     /** @var ConcurrentIteratorChannel<TValue, TValue> */
     private ConcurrentIteratorChannel $channel;
