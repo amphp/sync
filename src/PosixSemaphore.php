@@ -229,7 +229,7 @@ final class PosixSemaphore implements Semaphore
      */
     private function init(int $maxLocks, int $permissions): void
     {
-        if (!self::$nextId) {
+        if (self::$nextId === 0) {
             self::$nextId = \random_int(1, self::MAX_ID);
         }
 
