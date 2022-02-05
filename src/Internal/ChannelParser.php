@@ -59,13 +59,13 @@ final class ChannelParser extends Parser
     private Serializer $serializer;
 
     /**
-     * @param \Closure(mixed):void $closure Closure invoked when data is parsed.
+     * @param \Closure(mixed):void $onMessage Closure invoked when data is parsed.
      * @param Serializer|null $serializer
      */
-    public function __construct(\Closure $closure, ?Serializer $serializer = null)
+    public function __construct(\Closure $onMessage, ?Serializer $serializer = null)
     {
         $this->serializer = $serializer ?? new NativeSerializer;
-        parent::__construct(self::parser($closure, $this->serializer));
+        parent::__construct(self::parser($onMessage, $this->serializer));
     }
 
     /**
