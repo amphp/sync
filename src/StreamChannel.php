@@ -90,7 +90,7 @@ final class StreamChannel implements Channel
     public function receive(?Cancellation $cancellation = null): mixed
     {
         if (!$this->iterator->continue($cancellation)) {
-            return null;
+            throw new ChannelException("The channel closed while waiting to receive the next value");
         }
 
         return $this->iterator->getValue();
