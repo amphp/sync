@@ -25,7 +25,7 @@ interface Channel
     /**
      * @param TSend $data
      *
-     * @throws ChannelException If sending on the channel fails.
+     * @throws ChannelException If sending on the channel fails or the channel is already closed.
      */
     public function send(mixed $data): void;
 
