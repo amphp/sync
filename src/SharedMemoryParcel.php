@@ -131,7 +131,7 @@ final class SharedMemoryParcel implements Parcel
         $this->serializer = $serializer ?? new NativeSerializer;
     }
 
-    public function getId(): int
+    public function getKey(): int
     {
         return $this->key;
     }

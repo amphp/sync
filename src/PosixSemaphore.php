@@ -40,7 +40,7 @@ final class PosixSemaphore implements Semaphore
     }
 
     /**
-     * @param string $id The unique name of the semaphore to use.
+     * @param int $key The unique key of the semaphore to use.
      *
      * @return PosixSemaphore
      */
@@ -90,7 +90,7 @@ final class PosixSemaphore implements Semaphore
         throw new \Error('Cannot serialize ' . self::class);
     }
 
-    public function getId(): int
+    public function getKey(): int
     {
         return $this->key;
     }

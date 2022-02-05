@@ -66,7 +66,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
     public function testGetPermissions(): void
     {
         $this->semaphore = PosixSemaphore::create(1);
-        $used = PosixSemaphore::use($this->semaphore->getId());
+        $used = PosixSemaphore::use($this->semaphore->getKey());
         $used->setPermissions(0644);
 
         self::assertSame(0644, $this->semaphore->getPermissions());
@@ -86,7 +86,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
 
         $this->semaphore = $this->createSemaphore(1);
 
-        $used = PosixSemaphore::use($this->semaphore->getId());
+        $used = PosixSemaphore::use($this->semaphore->getKey());
 
         $future1 = async(fn () => $used->acquire());
         $future2 = async(fn () => $this->semaphore->acquire());
