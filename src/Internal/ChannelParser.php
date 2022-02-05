@@ -9,6 +9,7 @@ use Amp\Serialization\Serializer;
 use Amp\Sync\ChannelException;
 use function Amp\Serialization\encodeUnprintableChars;
 
+/** @internal */
 final class ChannelParser extends Parser
 {
     private const HEADER_LENGTH = 5;
@@ -76,10 +77,6 @@ final class ChannelParser extends Parser
      */
     public function encode(mixed $data): string
     {
-        if ($data === null) {
-            throw new ChannelException("Cannot send null on a channel");
-        }
-
         try {
             $data = $this->serializer->serialize($data);
         } catch (SerializationException $exception) {

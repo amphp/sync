@@ -17,6 +17,8 @@ use Amp\Sync\ChannelException;
  * @template TReceive
  * @template TSend
  * @template-implements Channel<TReceive, TSend>
+ *
+ * @internal
  */
 final class ConcurrentIteratorChannel implements Channel
 {
@@ -52,7 +54,7 @@ final class ConcurrentIteratorChannel implements Channel
     public function receive(?Cancellation $cancellation = null): mixed
     {
         if (!$this->receive->continue($cancellation)) {
-            return null;
+            throw new ChannelException("The channel closed while waiting to receive the next value");
         }
 
         return $this->receive->getValue();

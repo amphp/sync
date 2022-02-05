@@ -106,6 +106,8 @@ class StreamChannelTest extends AsyncTestCase
 
         $a = new StreamChannel($mock, $this->createMock(WritableStream::class));
 
-        self::assertNull($a->receive());
+        $this->expectException(ChannelException::class);
+        $this->expectExceptionMessage('channel closed');
+        $a->receive();
     }
 }

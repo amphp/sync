@@ -59,7 +59,7 @@ final class StreamChannel implements Channel
                 }
 
                 if ($chunk === null) {
-                    return;
+                    throw new ChannelException("The channel closed while waiting to receive the next value");
                 }
 
                 $parser->push($chunk);

@@ -30,10 +30,7 @@ function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$ar
 }
 
 /**
- * @template TReceive
- * @template TSend
- *
- * @return array{ConcurrentIteratorChannel<TReceive, TSend>, ConcurrentIteratorChannel<TSend, TReceive>}
+ * @return array{ConcurrentIteratorChannel, ConcurrentIteratorChannel}
  */
 function createChannelPair(): array
 {
