@@ -2,10 +2,9 @@
 
 namespace Amp\Sync;
 
-use Amp\ByteStream\ClosableStream;
 use Amp\ByteStream\ReadableStream;
-use Amp\ByteStream\WritableStream;
 use Amp\ByteStream\StreamException;
+use Amp\ByteStream\WritableStream;
 use Amp\Cancellation;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;

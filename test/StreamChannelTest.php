@@ -4,8 +4,8 @@ namespace Amp\Sync;
 
 use Amp\ByteStream\Pipe;
 use Amp\ByteStream\ReadableStream;
-use Amp\ByteStream\WritableStream;
 use Amp\ByteStream\StreamException;
+use Amp\ByteStream\WritableStream;
 use Amp\PHPUnit\AsyncTestCase;
 
 class StreamChannelTest extends AsyncTestCase

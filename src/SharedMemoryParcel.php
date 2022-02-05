@@ -5,8 +5,7 @@ namespace Amp\Sync;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\SerializationException;
 use Amp\Serialization\Serializer;
-use Amp\Sync\PosixSemaphore;
-use Amp\Sync\SyncException;
+
 
 /**
  * A container object for sharing a value across contexts.
@@ -70,7 +69,6 @@ final class SharedMemoryParcel implements Parcel
         int $permissions = 0600,
         ?Serializer $serializer = null
     ): self {
-
         if ($size <= 0) {
             throw new \Error('The memory size must be greater than 0');
         }
