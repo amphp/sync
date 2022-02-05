@@ -1,10 +1,12 @@
 <?php
 
-namespace Amp\Sync;
+namespace Amp\Sync\Internal;
 
 use Amp\Cancellation;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
+use Amp\Sync\Channel;
+use Amp\Sync\ChannelException;
 
 /**
  * Creates a Channel from a ConcurrentIterator and Queue. The ConcurrentIterator emits data to be received on the

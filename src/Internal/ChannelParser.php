@@ -1,11 +1,12 @@
 <?php
 
-namespace Amp\Sync;
+namespace Amp\Sync\Internal;
 
 use Amp\Parser\Parser;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\SerializationException;
 use Amp\Serialization\Serializer;
+use Amp\Sync\ChannelException;
 use function Amp\Serialization\encodeUnprintableChars;
 
 final class ChannelParser extends Parser

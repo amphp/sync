@@ -3,6 +3,7 @@
 namespace Amp\Sync;
 
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\Sync\Internal\ChannelParser;
 
 class ChannelParserTest extends AsyncTestCase
 {

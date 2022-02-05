@@ -3,6 +3,7 @@
 namespace Amp\Sync;
 
 use Amp\Pipeline\Queue;
+use Amp\Sync\Internal\ConcurrentIteratorChannel;
 
 /**
  * Invokes the given Closure while maintaining a lock from the provided mutex.

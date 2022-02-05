@@ -9,6 +9,7 @@ use Amp\Cancellation;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Pipeline;
 use Amp\Serialization\Serializer;
+use Amp\Sync\Internal\ChannelParser;
 
 /**
  * An asynchronous channel for sending data between threads and processes.
