@@ -3,6 +3,7 @@
 namespace Amp\Sync;
 
 use Amp\Cancellation;
+use Amp\Serialization\SerializationException;
 
 /**
  * Interface for sending messages between execution contexts, such as two coroutines or two processes.
@@ -19,6 +20,7 @@ interface Channel
      * @return TReceive Data received.
      *
      * @throws ChannelException If receiving from the channel fails or the channel closed.
+     * @throws SerializationException If the underlying transport mechanism uses serialization and fails.
      */
     public function receive(?Cancellation $cancellation = null): mixed;
 
@@ -26,6 +28,7 @@ interface Channel
      * @param TSend $data
      *
      * @throws ChannelException If sending on the channel fails or the channel is already closed.
+     * @throws SerializationException If the underlying transport mechanism uses serialization and fails.
      */
     public function send(mixed $data): void;
 
