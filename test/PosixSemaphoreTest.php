@@ -38,12 +38,7 @@ class PosixSemaphoreTest extends AbstractSemaphoreTest
         delay(1);
     }
 
-    /**
-     * @param int $locks
-     *
-     * @return PosixSemaphore
-     */
-    public function createSemaphore(int $locks): Semaphore
+    public function createSemaphore(int $locks): PosixSemaphore
     {
         return PosixSemaphore::create($locks);
     }

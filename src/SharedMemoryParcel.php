@@ -48,14 +48,10 @@ final class SharedMemoryParcel implements Parcel
     /**
      * @param Mutex $mutex Mutex to control access to the shared memory. Recommended: Since lock {@see PosixSemaphore}
      * wrapped in an instance of {@see SemaphoreMutex}.
-     * @param mixed $value
      * @param int $size The initial size in bytes of the shared memory segment. It will automatically be
      *     expanded as necessary.
      * @param int $permissions Permissions to access the semaphore. Use file permission format specified as
      *     0xxx.
-     * @param Serializer|null $serializer
-     *
-     * @return self
      *
      * @throws ParcelException
      * @throws SyncException
@@ -82,11 +78,7 @@ final class SharedMemoryParcel implements Parcel
     }
 
     /**
-     * @param Mutex $mutex
      * @param int $key Use {@see getKey()} on the creating process and send this key to another process.
-     * @param Serializer|null $serializer
-     *
-     * @return self
      *
      * @throws ParcelException
      */
@@ -110,10 +102,6 @@ final class SharedMemoryParcel implements Parcel
 
     private readonly Serializer $serializer;
 
-    /**
-     * @param int $key
-     * @param Serializer|null $serializer
-     */
     private function __construct(int $key, Mutex $mutex, ?Serializer $serializer = null)
     {
         if (!\extension_loaded("shmop")) {
@@ -189,10 +177,6 @@ final class SharedMemoryParcel implements Parcel
     }
 
     /**
-     * @param mixed $value
-     * @param int $size
-     * @param int $permissions
-     *
      * @throws ParcelException
      * @throws \Error If the size or permissions are invalid.
      */
@@ -231,8 +215,6 @@ final class SharedMemoryParcel implements Parcel
     }
 
     /**
-     * @return mixed
-     *
      * @throws ParcelException
      * @throws SerializationException
      */

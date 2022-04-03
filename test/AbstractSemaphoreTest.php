@@ -13,8 +13,6 @@ abstract class AbstractSemaphoreTest extends AsyncTestCase
 
     /**
      * @param int $locks Number of locks in the semaphore.
-     *
-     * @return Semaphore
      */
     abstract public function createSemaphore(int $locks): Semaphore;
 

@@ -12,9 +12,7 @@ use Amp\Sync\Internal\ConcurrentIteratorChannel;
  *
  * @template T
  *
- * @param Mutex $mutex
- * @param \Closure(...mixed):T $synchronized
- * @param mixed ...$args
+ * @param \Closure(...):T $synchronized
  *
  * @return T The return value of the Closure.
  */
