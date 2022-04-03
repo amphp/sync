@@ -10,12 +10,12 @@ final class LocalSemaphore implements Semaphore
     private int $locks = 0;
 
     /** @var \SplQueue<Suspension> */
-    private \SplQueue $waiting;
+    private readonly \SplQueue $waiting;
 
     /**
      * @param positive-int $maxLocks
      */
-    public function __construct(private int $maxLocks)
+    public function __construct(private readonly int $maxLocks)
     {
         /** @psalm-suppress TypeDoesNotContainType */
         if ($maxLocks < 1) {
@@ -51,6 +51,6 @@ final class LocalSemaphore implements Semaphore
 
     private function createLock(): Lock
     {
-        return new Lock(fn () => $this->release());
+        return new Lock($this->release(...));
     }
 }

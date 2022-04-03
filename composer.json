@@ -23,7 +23,7 @@
     "minimum-stability": "beta",
     "prefer-stable": true,
     "require": {
-        "php": ">=8",
+        "php": ">=8.1",
         "amphp/amp": "^3",
         "amphp/pipeline": "^1",
         "amphp/serialization": "^1",

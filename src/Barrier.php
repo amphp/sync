@@ -28,7 +28,7 @@ final class Barrier
 {
     private int $count;
 
-    private DeferredFuture $completion;
+    private readonly DeferredFuture $completion;
 
     /**
      * @param int $count

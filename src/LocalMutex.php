@@ -9,8 +9,13 @@ final class LocalMutex implements Mutex
 {
     private bool $locked = false;
 
-    /** @var Suspension[] */
-    private array $waiting = [];
+    /** @var \SplQueue<Suspension> */
+    private readonly \SplQueue $waiting;
+
+    public function __construct()
+    {
+        $this->waiting = new \SplQueue();
+    }
 
     public function acquire(): Lock
     {
@@ -20,15 +25,15 @@ final class LocalMutex implements Mutex
             return $this->createLock();
         }
 
-        $this->waiting[] = $suspension = EventLoop::getSuspension();
+        $this->waiting->enqueue($suspension = EventLoop::getSuspension());
 
         return $suspension->suspend();
     }
 
     private function release(): void
     {
-        if (!empty($this->waiting)) {
-            $waiting = \array_shift($this->waiting);
+        if (!$this->waiting->isEmpty()) {
+            $waiting = $this->waiting->dequeue();
             $waiting->resume($this->createLock());
 
             return;
@@ -39,6 +44,6 @@ final class LocalMutex implements Mutex
 
     private function createLock(): Lock
     {
-        return new Lock(\Closure::fromCallable([$this, 'release']));
+        return new Lock($this->release(...));
     }
 }

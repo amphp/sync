@@ -27,8 +27,8 @@ final class ConcurrentIteratorChannel implements Channel
      * @param Queue<TSend> $send
      */
     public function __construct(
-        private ConcurrentIterator $receive,
-        private Queue $send,
+        private readonly ConcurrentIterator $receive,
+        private readonly Queue $send,
     ) {
     }
 

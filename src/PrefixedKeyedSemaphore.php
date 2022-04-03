@@ -4,9 +4,9 @@ namespace Amp\Sync;
 
 final class PrefixedKeyedSemaphore implements KeyedSemaphore
 {
-    private KeyedSemaphore $semaphore;
+    private readonly KeyedSemaphore $semaphore;
 
-    private string $prefix;
+    private readonly string $prefix;
 
     public function __construct(KeyedSemaphore $semaphore, string $prefix)
     {

@@ -4,7 +4,7 @@ namespace Amp\Sync;
 
 final class SemaphoreMutex implements Mutex
 {
-    private Semaphore $semaphore;
+    private readonly Semaphore $semaphore;
 
     private bool $locked = false;
 
