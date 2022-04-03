@@ -98,7 +98,7 @@ final class SharedMemoryParcel implements Parcel
     }
 
     /** @var int The shared memory segment key. */
-    private readonly int $key;
+    private int $key;
 
     /** @var Mutex A mutex for synchronizing on the parcel. */
     private readonly Mutex $mutex;

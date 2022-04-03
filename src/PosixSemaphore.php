@@ -60,7 +60,7 @@ final class PosixSemaphore implements Semaphore
     }
 
     /** @var int The semaphore key. */
-    private readonly int $key;
+    private int $key;
 
     /** @var int PID of the process that created the semaphore. */
     private int $initializer = 0;
