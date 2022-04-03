@@ -178,8 +178,6 @@ final class SharedMemoryParcel implements Parcel
         // Request the block to be deleted, then close our local handle.
         $this->deleteSegment();
         $this->handle = null;
-
-        unset($this->mutex);
     }
 
     /**
