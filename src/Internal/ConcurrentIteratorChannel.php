@@ -3,6 +3,7 @@
 namespace Amp\Sync\Internal;
 
 use Amp\Cancellation;
+use Amp\DeferredFuture;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
 use Amp\Sync\Channel;
@@ -22,6 +23,8 @@ use Amp\Sync\ChannelException;
  */
 final class ConcurrentIteratorChannel implements Channel
 {
+    private readonly DeferredFuture $onClose;
+
     /**
      * @param ConcurrentIterator<TReceive> $receive
      * @param Queue<TSend> $send
@@ -30,6 +33,7 @@ final class ConcurrentIteratorChannel implements Channel
         private readonly ConcurrentIterator $receive,
         private readonly Queue $send,
     ) {
+        $this->onClose = new DeferredFuture();
     }
 
     public function __destruct()
@@ -49,11 +53,21 @@ final class ConcurrentIteratorChannel implements Channel
         }
 
         $this->receive->dispose();
+
+        if ($this->onClose->isComplete()) {
+            $this->onClose->complete();
+        }
+    }
+
+    public function onClose(\Closure $onClose): void
+    {
+        $this->onClose->getFuture()->finally($onClose);
     }
 
     public function receive(?Cancellation $cancellation = null): mixed
     {
         if (!$this->receive->continue($cancellation)) {
+            $this->close();
             throw new ChannelException("The channel closed while waiting to receive the next value");
         }
 

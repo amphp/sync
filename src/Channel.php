@@ -3,6 +3,7 @@
 namespace Amp\Sync;
 
 use Amp\Cancellation;
+use Amp\Closable;
 use Amp\Serialization\SerializationException;
 
 /**
@@ -11,7 +12,7 @@ use Amp\Serialization\SerializationException;
  * @template TReceive
  * @template TSend
  */
-interface Channel
+interface Channel extends Closable
 {
     /**
      * @param Cancellation|null $cancellation Cancels waiting for the next value. Note the next value is not discarded
@@ -31,16 +32,4 @@ interface Channel
      * @throws SerializationException If the underlying transport mechanism uses serialization and fails.
      */
     public function send(mixed $data): void;
-
-    /**
-     * Closes the channel, preventing further sends or receives.
-     */
-    public function close(): void;
-
-    /**
-     * Returns whether the channel has been closed.
-     *
-     * @return bool {@code true} if closed, otherwise {@code false}
-     */
-    public function isClosed(): bool;
 }
