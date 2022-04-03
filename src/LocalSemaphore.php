@@ -7,50 +7,50 @@ use Revolt\EventLoop\Suspension;
 
 final class LocalSemaphore implements Semaphore
 {
-    /** @var int[] */
-    private array $locks;
+    private int $locks = 0;
 
-    /** @var Suspension[] */
-    private array $waiting = [];
+    /** @var \SplQueue<Suspension> */
+    private \SplQueue $waiting;
 
     /**
      * @param positive-int $maxLocks
      */
-    public function __construct(int $maxLocks)
+    public function __construct(private int $maxLocks)
     {
         /** @psalm-suppress TypeDoesNotContainType */
         if ($maxLocks < 1) {
             throw new \Error('The number of locks must be greater than 0, got ' . $maxLocks);
         }
 
-        $this->locks = \range(0, $maxLocks - 1);
+        $this->waiting = new \SplQueue();
     }
 
     public function acquire(): Lock
     {
-        if (!empty($this->locks)) {
-            return $this->createLock(\array_pop($this->locks));
+        if ($this->locks < $this->maxLocks) {
+            ++$this->locks;
+            return $this->createLock();
         }
 
-        $this->waiting[] = $suspension = EventLoop::getSuspension();
+        $this->waiting->enqueue($suspension = EventLoop::getSuspension());
 
         return $suspension->suspend();
     }
 
-    private function release(int $id): void
+    private function release(): void
     {
-        if (!empty($this->waiting)) {
-            $deferred = \array_shift($this->waiting);
-            $deferred->resume($this->createLock($id));
+        if (!$this->waiting->isEmpty()) {
+            $suspension = $this->waiting->dequeue();
+            $suspension->resume($this->createLock());
 
             return;
         }
 
-        $this->locks[] = $id;
+        --$this->locks;
     }
 
-    private function createLock(int $id): Lock
+    private function createLock(): Lock
     {
-        return new Lock(fn () => $this->release($id));
+        return new Lock(fn () => $this->release());
     }
 }
