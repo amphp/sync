@@ -10,9 +10,6 @@ jobs:
       matrix:
         include:
           - operating-system: 'ubuntu-latest'
-            php-version: '8.0'
-
-          - operating-system: 'ubuntu-latest'
             php-version: '8.1'
 
           - operating-system: 'windows-latest'
@@ -40,7 +37,6 @@ jobs:
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php-version }}
-          extensions: fiber-amphp/ext-fiber@master
 
       - name: Get Composer cache directory
         id: composer-cache
