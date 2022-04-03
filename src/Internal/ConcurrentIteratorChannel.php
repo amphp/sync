@@ -54,7 +54,7 @@ final class ConcurrentIteratorChannel implements Channel
 
         $this->receive->dispose();
 
-        if ($this->onClose->isComplete()) {
+        if (!$this->onClose->isComplete()) {
             $this->onClose->complete();
         }
     }
