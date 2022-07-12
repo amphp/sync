@@ -5,7 +5,7 @@ namespace Amp\Sync;
 use Amp\PHPUnit\AsyncTestCase;
 use function Amp\async;
 use function Amp\delay;
-use function Amp\Future\all;
+use function Amp\Future\await;
 
 final class SynchronizedTest extends AsyncTestCase
 {
@@ -25,6 +25,6 @@ final class SynchronizedTest extends AsyncTestCase
             $futures[] = async(fn () => synchronized($mutex, $callback, $value));
         }
 
-        self::assertEquals([0, 1, 2], all($futures));
+        self::assertEquals([0, 1, 2], await($futures));
     }
 }
