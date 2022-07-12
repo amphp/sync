@@ -9,7 +9,6 @@ namespace Amp\Sync;
 final class LocalParcel implements Parcel
 {
     /**
-     * @param Mutex $mutex
      * @param T $value
      */
     public function __construct(
