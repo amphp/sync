@@ -28,7 +28,7 @@ function synchronized(Mutex $mutex, \Closure $synchronized, mixed ...$args): mix
 }
 
 /**
- * @return array{ConcurrentIteratorChannel, ConcurrentIteratorChannel}
+ * @return array{Channel, Channel}
  */
 function createChannelPair(): array
 {
