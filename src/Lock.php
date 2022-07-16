@@ -12,13 +12,13 @@ use function Amp\async;
  */
 final class Lock
 {
-    /** @var \Closure|null The function to be called on release or null if the lock has been released. */
+    /** @var null|\Closure():void The function to be called on release or null if the lock has been released. */
     private ?\Closure $release;
 
     /**
      * Creates a new lock permit object.
      *
-     * @param \Closure(self): void $release A function to be called upon release.
+     * @param \Closure():void $release A function to be called upon release.
      */
     public function __construct(\Closure $release)
     {
