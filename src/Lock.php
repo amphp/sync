@@ -56,8 +56,9 @@ final class Lock
      */
     public function __destruct()
     {
-        if (!$this->isReleased()) {
-            async($this->release(...));
+        if ($this->release) {
+            async($this->release);
+            $this->release = null;
         }
     }
 }
