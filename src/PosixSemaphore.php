@@ -25,7 +25,6 @@ final class PosixSemaphore implements Semaphore
      * @param int $maxLocks The maximum number of locks that can be acquired from the semaphore.
      * @param int $permissions Permissions to access the semaphore. Use file permission format specified as 0xxx.
      *
-     * @return PosixSemaphore
      * @throws SyncException If the semaphore could not be created due to an internal error.
      */
     public static function create(int $maxLocks, int $permissions = 0600): self
@@ -42,8 +41,6 @@ final class PosixSemaphore implements Semaphore
 
     /**
      * @param int $key Use {@see getKey()} on the creating process and send this key to another process.
-     *
-     * @return PosixSemaphore
      */
     public static function use(int $key): self
     {
