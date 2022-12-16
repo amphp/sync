@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 use Amp\Sync\LocalMutex;
 use function Amp\async;
@@ -21,7 +21,7 @@ $task = function (string $identifier) use ($mutex) {
             print "[$identifier][$i] Acquired lock" . \PHP_EOL;
 
             // do anything exclusively
-            delay(\random_int(0, 1000) / 1000);
+            delay(random_int(0, 1000) / 1000);
         } finally {
             print "[$identifier][$i] Releasing lock" . \PHP_EOL;
 
