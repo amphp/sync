@@ -50,12 +50,6 @@ final class PosixSemaphore implements Semaphore
         return $semaphore;
     }
 
-    private static function makeKey(string $id): int
-    {
-        /** @var int */
-        return \abs(\unpack("l", \md5($id, true))[1]);
-    }
-
     /** @var int The semaphore key. */
     private int $key;
 
