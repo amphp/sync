@@ -1,6 +1,6 @@
 {
     "name": "amphp/sync",
-    "description": "Mutex, Semaphore, and other synchronization tools for Amp.",
+    "description": "Non-blocking synchronization primitives for PHP based on Amp and Revolt.",
     "keywords": [
         "asynchronous",
         "async",
