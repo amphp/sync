@@ -34,7 +34,8 @@
         "shmop_open",
         "shmop_read",
         "shmop_size",
-        "shmop_write"
+        "shmop_write",
+        "random_int"
     ],
     "php-core-extensions": [
         "Core",
