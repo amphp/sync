@@ -4,6 +4,8 @@ namespace Amp\Sync\Internal;
 
 use Amp\Cancellation;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Pipeline\ConcurrentIterator;
 use Amp\Pipeline\Queue;
 use Amp\Sync\Channel;
@@ -23,6 +25,9 @@ use Amp\Sync\ChannelException;
  */
 final class ConcurrentIteratorChannel implements Channel
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly DeferredFuture $onClose;
 
     /**
