@@ -24,6 +24,8 @@ final class PosixSemaphore implements Semaphore
 
     private static int $nextId = 0;
 
+    private readonly \Closure $errorHandler;
+
     /**
      * Creates a new semaphore with a given ID and number of locks.
      *
@@ -59,10 +61,9 @@ final class PosixSemaphore implements Semaphore
     private int $initializer = 0;
 
     /**
-     * @var \SysvMessageQueue A message queue of available locks.
-     * @psalm-suppress PropertyNotSetInConstructor
+     * @var \SysvMessageQueue|null A message queue of available locks.
      */
-    private \SysvMessageQueue $queue;
+    private ?\SysvMessageQueue $queue = null;
 
     /**
      * @throws \Error If the sysvmsg extension is not loaded.
@@ -72,14 +73,8 @@ final class PosixSemaphore implements Semaphore
         if (!\extension_loaded("sysvmsg")) {
             throw new \Error(__CLASS__ . " requires the sysvmsg extension.");
         }
-    }
 
-    /**
-     * Throws to prevent serialization.
-     */
-    public function __sleep(): array
-    {
-        throw new \Error('Cannot serialize ' . self::class);
+        $this->errorHandler = static fn () => true;
     }
 
     public function getKey(): int
@@ -121,12 +116,17 @@ final class PosixSemaphore implements Semaphore
     {
         do {
             // Attempt to acquire a lock from the semaphore.
+            \set_error_handler($this->errorHandler);
 
-            /** @psalm-suppress InvalidArgument */
-            if (@\msg_receive($this->queue, 0, $type, 1, $message, false, \MSG_IPC_NOWAIT, $errno)) {
-                // A free lock was found, so resolve with a lock object that can
-                // be used to release the lock.
-                return new Lock(fn () => $this->release());
+            try {
+                /** @psalm-suppress InvalidArgument */
+                if (\msg_receive($this->queue, 0, $type, 1, $message, false, \MSG_IPC_NOWAIT, $errno)) {
+                    // A free lock was found, so resolve with a lock object that can
+                    // be used to release the lock.
+                    return new Lock($this->release(...));
+                }
+            } finally {
+                \restore_error_handler();
             }
 
             // Check for unusual errors.
@@ -149,7 +149,7 @@ final class PosixSemaphore implements Semaphore
             return;
         }
 
-        if (!$this->queue instanceof \SysvMessageQueue) {
+        if (!$this->queue) {
             return;
         }
 
@@ -176,23 +176,20 @@ final class PosixSemaphore implements Semaphore
 
         // Send in non-blocking mode. If the call fails because the queue is full,
         // then the number of locks configured is too large.
+        \set_error_handler($this->errorHandler);
 
-        /** @psalm-suppress InvalidArgument */
-        if (!@\msg_send($this->queue, 1, "\0", false, false, $errno)) {
-            if ($errno === \MSG_EAGAIN) {
-                throw new SyncException('The semaphore size is larger than the system allows.');
+        try {
+            /** @psalm-suppress InvalidArgument */
+            if (!\msg_send($this->queue, 1, "\0", false, false, $errno)) {
+                if ($errno === \MSG_EAGAIN) {
+                    throw new SyncException('The semaphore size is larger than the system allows.');
+                }
+
+                throw new SyncException('Failed to release the lock.');
             }
-
-            throw new SyncException('Failed to release the lock.');
+        } finally {
+            \restore_error_handler();
         }
-    }
-
-    /**
-     * Clone method throws to prevent clone.
-     */
-    public function __clone()
-    {
-        throw new \Error("Cloning is not allowed!");
     }
 
     private function open(): void

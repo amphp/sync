@@ -20,13 +20,14 @@ namespace Amp\Sync;
 interface Parcel
 {
     /**
-     * Asynchronously invokes a callback while maintaining a lock on the parcel. The current value of the
-     * parcel is provided as the first argument to the callback function.
+     * Invokes a callback while maintaining a lock on the parcel. The current value of the parcel is provided as
+     * the first argument to the callback function. The return value of the callback is stored as the new value
+     * of the parcel.
      *
-     * @param \Closure(T):T $closure The closure to invoke when a lock is obtained on the parcel. The parcel value
-     * is given as the single argument to the closure.
+     * @param \Closure(T):T $closure The closure to invoke when a lock is obtained on the parcel. The parcel
+     * value is given as the single argument to the closure. The return value is stored as the new parcel value.
      *
-     * @return T Return value of $closure.
+     * @return T The value of the parcel after the closure was invoked.
      */
     public function synchronized(\Closure $closure): mixed;
 
