@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use function Amp\delay;
 
 /**
@@ -14,6 +16,9 @@ use function Amp\delay;
  */
 final class PosixSemaphore implements Semaphore
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private const LATENCY_TIMEOUT = 0.01;
     private const MAX_ID = 0x7fffffff;
 
@@ -50,9 +55,6 @@ final class PosixSemaphore implements Semaphore
         return $semaphore;
     }
 
-    /** @var int The semaphore key. */
-    private int $key;
-
     /** @var int PID of the process that created the semaphore. */
     private int $initializer = 0;
 
@@ -65,13 +67,11 @@ final class PosixSemaphore implements Semaphore
     /**
      * @throws \Error If the sysvmsg extension is not loaded.
      */
-    private function __construct(int $key)
+    private function __construct(private int $key)
     {
         if (!\extension_loaded("sysvmsg")) {
             throw new \Error(__CLASS__ . " requires the sysvmsg extension.");
         }
-
-        $this->key = $key;
     }
 
     /**

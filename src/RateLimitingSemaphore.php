@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Revolt\EventLoop;
 
 /**
@@ -11,6 +13,9 @@ use Revolt\EventLoop;
  */
 final class RateLimitingSemaphore implements Semaphore
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /** @var \SplQueue<string> List of event-loop delay callback IDs. */
     private readonly \SplQueue $timers;
 

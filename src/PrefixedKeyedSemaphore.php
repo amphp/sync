@@ -2,16 +2,18 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class PrefixedKeyedSemaphore implements KeyedSemaphore
 {
-    private readonly KeyedSemaphore $semaphore;
+    use ForbidCloning;
+    use ForbidSerialization;
 
-    private readonly string $prefix;
-
-    public function __construct(KeyedSemaphore $semaphore, string $prefix)
-    {
-        $this->semaphore = $semaphore;
-        $this->prefix = $prefix;
+    public function __construct(
+        private readonly KeyedSemaphore $semaphore,
+        private readonly string $prefix
+    ) {
     }
 
     public function acquire(string $key): Lock

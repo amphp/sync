@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Amp\Serialization\NativeSerializer;
 use Amp\Serialization\SerializationException;
 use Amp\Serialization\Serializer;
@@ -33,6 +35,9 @@ use Amp\Serialization\Serializer;
  */
 final class SharedMemoryParcel implements Parcel
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /** @var int The byte offset to the start of the object data in memory. */
     private const MEM_DATA_OFFSET = 7;
 

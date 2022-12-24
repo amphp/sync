@@ -2,23 +2,26 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class LocalKeyedSemaphore implements KeyedSemaphore
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /** @var LocalSemaphore[] */
     private array $semaphore = [];
 
     /** @var int[] */
     private array $locks = [];
 
-    /** @var positive-int */
-    private int $maxLocks;
-
     /**
      * @param positive-int $maxLocks
      */
-    public function __construct(int $maxLocks)
-    {
-        $this->maxLocks = $maxLocks;
+    public function __construct(
+        private readonly int $maxLocks,
+    ) {
     }
 
     public function acquire(string $key): Lock

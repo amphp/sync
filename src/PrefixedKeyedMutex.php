@@ -2,16 +2,18 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class PrefixedKeyedMutex implements KeyedMutex
 {
-    private readonly KeyedMutex $mutex;
+    use ForbidCloning;
+    use ForbidSerialization;
 
-    private readonly string $prefix;
-
-    public function __construct(KeyedMutex $mutex, string $prefix)
-    {
-        $this->mutex = $mutex;
-        $this->prefix = $prefix;
+    public function __construct(
+        private readonly KeyedMutex $mutex,
+        private readonly string $prefix
+    ) {
     }
 
     public function acquire(string $key): Lock

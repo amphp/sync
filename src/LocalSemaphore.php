@@ -2,11 +2,16 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 use Revolt\EventLoop;
 use Revolt\EventLoop\Suspension;
 
 final class LocalSemaphore implements Semaphore
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private int $locks = 0;
 
     /** @var \SplQueue<Suspension> */

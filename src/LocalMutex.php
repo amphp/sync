@@ -2,8 +2,14 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class LocalMutex implements Mutex
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private readonly LocalSemaphore $semaphore;
 
     public function __construct()

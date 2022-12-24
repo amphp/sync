@@ -2,18 +2,22 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 final class SemaphoreMutex implements Mutex
 {
-    private readonly Semaphore $semaphore;
+    use ForbidCloning;
+    use ForbidSerialization;
 
     private bool $locked = false;
 
     /**
      * @param Semaphore $semaphore A semaphore with a single lock.
      */
-    public function __construct(Semaphore $semaphore)
-    {
-        $this->semaphore = $semaphore;
+    public function __construct(
+        private readonly Semaphore $semaphore
+    ) {
     }
 
     /** {@inheritdoc} */

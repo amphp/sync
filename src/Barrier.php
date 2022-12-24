@@ -4,6 +4,8 @@ namespace Amp\Sync;
 
 use Amp\Cancellation;
 use Amp\DeferredFuture;
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
 
 /**
  * A barrier is a synchronization primitive.
@@ -26,6 +28,9 @@ use Amp\DeferredFuture;
  */
 final class Barrier
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     private int $count;
 
     private readonly DeferredFuture $completion;

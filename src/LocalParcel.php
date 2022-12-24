@@ -2,17 +2,23 @@
 
 namespace Amp\Sync;
 
+use Amp\ForbidCloning;
+use Amp\ForbidSerialization;
+
 /**
  * @template T
  * @template-implements Parcel<T>
  */
 final class LocalParcel implements Parcel
 {
+    use ForbidCloning;
+    use ForbidSerialization;
+
     /**
      * @param T $value
      */
     public function __construct(
-        private Mutex $mutex,
+        private readonly Mutex $mutex,
         private mixed $value,
     ) {
     }
