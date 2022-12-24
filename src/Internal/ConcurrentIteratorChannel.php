@@ -7,9 +7,11 @@ use Amp\DeferredFuture;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Pipeline\ConcurrentIterator;
+use Amp\Pipeline\DisposedException;
 use Amp\Pipeline\Queue;
 use Amp\Sync\Channel;
 use Amp\Sync\ChannelException;
+use Amp\Sync\ChannelIteratorAggregate;
 
 /**
  * Creates a Channel from a ConcurrentIterator and Queue. The ConcurrentIterator emits data to be received on the
@@ -23,8 +25,9 @@ use Amp\Sync\ChannelException;
  *
  * @internal
  */
-final class ConcurrentIteratorChannel implements Channel
+final class ConcurrentIteratorChannel implements Channel, \IteratorAggregate
 {
+    use ChannelIteratorAggregate;
     use ForbidCloning;
     use ForbidSerialization;
 
@@ -71,9 +74,13 @@ final class ConcurrentIteratorChannel implements Channel
 
     public function receive(?Cancellation $cancellation = null): mixed
     {
-        if (!$this->receive->continue($cancellation)) {
-            $this->close();
-            throw new ChannelException("The channel closed while waiting to receive the next value");
+        try {
+            if (!$this->receive->continue($cancellation)) {
+                $this->close();
+                return null;
+            }
+        } catch (DisposedException) {
+            return null;
         }
 
         return $this->receive->getValue();
