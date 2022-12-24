@@ -24,7 +24,7 @@ final class LocalSemaphore implements Semaphore
     {
         /** @psalm-suppress TypeDoesNotContainType */
         if ($maxLocks < 1) {
-            throw new \Error('The number of locks must be greater than 0, got ' . $maxLocks);
+            throw new \ValueError('The number of locks must be greater than 0, got ' . $maxLocks);
         }
 
         $this->waiting = new \SplQueue();

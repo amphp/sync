@@ -5,19 +5,19 @@ namespace Amp\Sync;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
-final class StaticKeyMutex implements Mutex
+final class StaticKeySemaphore implements Mutex
 {
     use ForbidCloning;
     use ForbidSerialization;
 
     public function __construct(
-        private readonly KeyedMutex $mutex,
+        private readonly KeyedSemaphore $semaphore,
         private readonly string $key,
     ) {
     }
 
     public function acquire(): Lock
     {
-        return $this->mutex->acquire($this->key);
+        return $this->semaphore->acquire($this->key);
     }
 }

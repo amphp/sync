@@ -22,6 +22,10 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
     public function __construct(
         private readonly int $maxLocks,
     ) {
+        /** @psalm-suppress TypeDoesNotContainType */
+        if ($maxLocks < 1) {
+            throw new \ValueError('The number of locks must be greater than 0, got ' . $maxLocks);
+        }
     }
 
     public function acquire(string $key): Lock
