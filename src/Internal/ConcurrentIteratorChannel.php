@@ -11,7 +11,6 @@ use Amp\Pipeline\DisposedException;
 use Amp\Pipeline\Queue;
 use Amp\Sync\Channel;
 use Amp\Sync\ChannelException;
-use Amp\Sync\ChannelIteratorAggregate;
 
 /**
  * Creates a Channel from a ConcurrentIterator and Queue. The ConcurrentIterator emits data to be received on the
@@ -27,7 +26,6 @@ use Amp\Sync\ChannelIteratorAggregate;
  */
 final class ConcurrentIteratorChannel implements Channel, \IteratorAggregate
 {
-    use ChannelIteratorAggregate;
     use ForbidCloning;
     use ForbidSerialization;
 
@@ -75,27 +73,33 @@ final class ConcurrentIteratorChannel implements Channel, \IteratorAggregate
     public function receive(?Cancellation $cancellation = null): mixed
     {
         try {
-            if (!$this->receive->continue($cancellation)) {
-                $this->close();
-                return null;
+            if ($this->receive->continue($cancellation)) {
+                return $this->receive->getValue();
             }
-        } catch (DisposedException) {
-            return null;
+        } catch (DisposedException $exception) {
+            // Throw exception below
         }
 
-        return $this->receive->getValue();
+        throw new ChannelException(
+            "The channel closed while waiting to receive the next value",
+            0,
+            $exception ?? null,
+        );
     }
 
     public function send(mixed $data): void
     {
-        if ($data === null) {
-            throw new ChannelException("Cannot send null on a channel");
-        }
-
         if ($this->send->isComplete()) {
             throw new ChannelException("Cannot send on a closed channel");
         }
 
         $this->send->push($data);
+    }
+
+    public function getIterator(): \Traversable
+    {
+        while ($this->receive->continue()) {
+            yield $this->receive->getValue();
+        }
     }
 }

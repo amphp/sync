@@ -31,7 +31,11 @@ class ChannelPairTest extends AsyncTestCase
     {
         [$left, $right] = createChannelPair();
         $left->close();
-        self::assertNull($left->receive());
+
+        $this->expectException(ChannelException::class);
+        $this->expectExceptionMessage('channel closed');
+
+        $left->receive();
     }
 
     public function testClosingSendingChannel(): void
@@ -39,6 +43,20 @@ class ChannelPairTest extends AsyncTestCase
         [$left, $right] = createChannelPair();
         $future = async($left->receive(...));
         async($right->close(...))->ignore();
+
+        $this->expectException(ChannelException::class);
+        $this->expectExceptionMessage('channel closed');
+
+        $future->await();
+    }
+
+    public function testSendingNull(): void
+    {
+        [$left, $right] = createChannelPair();
+
+        $future = async($left->receive(...));
+        $right->send(null);
+
         self::assertNull($future->await());
     }
 }
