@@ -98,8 +98,16 @@ final class ConcurrentIteratorChannel implements Channel, \IteratorAggregate
 
     public function getIterator(): \Traversable
     {
-        while ($this->receive->continue()) {
-            yield $this->receive->getValue();
+        try {
+            foreach ($this->receive as $value) {
+                yield $value;
+            }
+        } catch (DisposedException $exception) {
+            throw new ChannelException(
+                "The channel closed while waiting to receive the next value",
+                0,
+                $exception,
+            );
         }
     }
 }

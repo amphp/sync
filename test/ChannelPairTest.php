@@ -50,6 +50,20 @@ class ChannelPairTest extends AsyncTestCase
         $future->await();
     }
 
+    public function testClosingReceivingChannelWhileIterating(): void
+    {
+        [$left, $right] = createChannelPair();
+        $future = async(function () use ($left): void {
+            foreach ($left as $value);
+        });
+        async($left->close(...))->ignore();
+
+        $this->expectException(ChannelException::class);
+        $this->expectExceptionMessage('channel closed');
+
+        $future->await();
+    }
+
     public function testSendingNull(): void
     {
         [$left, $right] = createChannelPair();
