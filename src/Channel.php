@@ -9,10 +9,10 @@ use Amp\Serialization\SerializationException;
 /**
  * Interface for sending messages between execution contexts, such as two coroutines or two processes.
  *
- * @template TReceive
+ * @template-covariant TReceive
  * @template TSend
  *
- * @implements \Traversable<int, TReceive>
+ * @extends \Traversable<int, TReceive>
  */
 interface Channel extends Closable, \Traversable
 {
