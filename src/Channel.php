@@ -20,7 +20,7 @@ interface Channel extends Closable, \Traversable
      * @param Cancellation|null $cancellation Cancels waiting for the next value. Note the next value is not discarded
      * if the operation is cancelled, rather it will be returned from the next call to this method.
      *
-     * @return TReceive|null Data received or {@code null} if the channel has closed.
+     * @return TReceive
      *
      * @throws ChannelException If receiving from the channel fails.
      * @throws SerializationException If the underlying transport mechanism uses serialization and fails.
