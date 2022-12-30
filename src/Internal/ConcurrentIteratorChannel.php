@@ -17,9 +17,9 @@ use Amp\Sync\ChannelException;
  * The Queue will receive data that sent on the channel (data passed to {@see Channel::send()} will be passed to
  * {@see Queue::push()}).
  *
- * @template TReceive
+ * @template-covariant TReceive
  * @template TSend
- * @template-implements Channel<TReceive, TSend>
+ * @implements Channel<TReceive, TSend>
  *
  * @internal
  */
