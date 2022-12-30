@@ -8,6 +8,7 @@ use function Amp\delay;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+/** @var LocalParcel<int> $parcel */
 $parcel = new LocalParcel(new LocalMutex(), 42);
 
 $future1 = async(function () use ($parcel): void {
