@@ -54,6 +54,95 @@ Please refer to the [`Mutex`](#mutex) documentation for additional usage documen
 
 In many cases you can use [`amphp/pipeline`](https://github.com/amphp/pipeline) instead of directly using a `Semaphore`.
 
+### Parcel
+
+A Parcel is used to synchronize access to a value across multiple execution contexts, such as multiple coroutines or multiple processes. The example below demonstrates using a `LocalParcel` to share an integer between two coroutines.
+
+```php
+use Amp\Future;
+use Amp\Sync\LocalMutex;
+use Amp\Sync\LocalParcel;
+use function Amp\async;
+use function Amp\delay;
+
+$parcel = new LocalParcel(new LocalMutex(), 42);
+
+$future1 = async(function () use ($parcel): void {
+    echo "Coroutine 1 started\n";
+
+    $value = $parcel->synchronized(function (int $value): int {
+        delay(1); // Delay for 1s to simulate I/O.
+        return $value * 2;
+    });
+
+    echo "Value after access in coroutine 1: ", $value, "\n";
+});
+
+$future2 = async(function () use ($parcel): void {
+    echo "Coroutine 2 started\n";
+
+    $value = $parcel->synchronized(function (int $value): int {
+        delay(1); // Delay again in this coroutine.
+        return $value + 8;
+    });
+
+    echo "Value after access in coroutine 2: ", $value, "\n";
+});
+
+Future\await([$future1, $future2]);
+```
+
+### Channels
+
+Channels are used to send data between execution contexts, such as multiple coroutines or multiple processes. The example below shares two `Channel` between two coroutines. These channels are connected. Data sent on a channel is received on the paired channel and vice-versa.
+
+```php
+use Amp\Future;
+use function Amp\async;
+use function Amp\delay;
+
+[$left, $right] = createChannelPair();
+
+$future1 = async(function () use ($left): void {
+    echo "Coroutine 1 started\n";
+    delay(1); // Delay to simulate I/O.
+    $left->send(42);
+    $value = $left->receive();
+    echo "Received ", $value, " in coroutine 1\n";
+});
+
+$future2 = async(function () use ($right): void {
+    echo "Coroutine 2 started\n";
+    $value = $right->receive();
+    echo "Received ", $value, " in coroutine 2\n";
+    delay(1); // Delay to simulate I/O.
+    $right->send($value * 2);
+});
+
+Future\await([$future1, $future2]);
+```
+
+### Sharing data between processes
+
+To share data between processes in PHP, the data must be serializable and use external storage or an IPC (inter-process communication) channel.
+
+#### Parcels in external storage
+
+`SharedMemoryParcel` uses shared memory conjunction with `PosixSemaphore` wrapped in `SemaphoreMutex` (though another cross-context mutex implementation may be used, such as `RedisMutex` in [`amphp/redis`](https://github.com/amphp/redis)).
+
+> **Note**
+> `ext-shmop` and `ext-sysvmsg` are required for `SharedMemoryParcel` and `PosixSemaphore` respectively.
+
+[`amphp/redis`](https://github.com/amphp/redis) provides `RedisParcel` for storing shared data in Redis.
+
+#### Channels over pipes
+
+Channels between processes can be created by layering serialization (Native PHP serialization, JSON serialization, etc.) on a pipe between those processes.
+
+`StreamChannel` in [`amphp/byte-stream`](https://github.com/amphp/byte-stream) creates a channel from any `ReadableStream` and `WritableStream`. This allows a channel to be created from a variety of stream sources, such as sockets or process pipes.
+
+`ProcessContext` and task `Execution` objects in [`amphp/parallel`](https://github.com/amphp/parallel) provide a `Channel` two send data between processes and tasks.
+
 ### Concurrency Approaches
 
 Given you have a list of URLs you want to crawl, let's discuss a few possible approaches. For simplicity, we will assume a `fetch` function already exists, which takes a URL and returns the HTTP status code (which is everything we want to know for these examples).
@@ -116,7 +205,24 @@ var_dump($results);
 
 #### Approach 4: ConcurrentIterator
 
-TODO: Link to example of amphp/pipeline
+The [`amphp/pipeline`](https://github.com/amphp/pipeline) library provides concurrent iterators which can be used to process and consume data concurrently in multiple fibers.
+
+```php
+use Amp\Pipeline\Pipeline;
+use function Amp\delay;
+
+$urls = [...];
+
+$results = Pipeline::fromIterable($urls)
+    ->concurrent(10) // Process up to 10 URLs concurrently
+    ->unordered() // Results may arrive out of order
+    ->map(fetch(...)) // Map each URL to fetch(...)
+    ->toArray();
+
+var_dump($results);
+```
+
+See the documentation in [`amphp/pipeline`](https://github.com/amphp/pipeline) for more information on using Pipelines for concurrency.
 
 ## Versioning
 
