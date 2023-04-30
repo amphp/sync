@@ -141,7 +141,7 @@ Channels between processes can be created by layering serialization (Native PHP 
 
 `StreamChannel` in [`amphp/byte-stream`](https://github.com/amphp/byte-stream) creates a channel from any `ReadableStream` and `WritableStream`. This allows a channel to be created from a variety of stream sources, such as sockets or process pipes.
 
-`ProcessContext` and task `Execution` objects in [`amphp/parallel`](https://github.com/amphp/parallel) provide a `Channel` two send data between processes and tasks.
+`ProcessContext` and task `Execution` objects in [`amphp/parallel`](https://github.com/amphp/parallel) provide a `Channel` to send data between processes and tasks.
 
 ### Concurrency Approaches
 
