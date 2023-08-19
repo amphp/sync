@@ -377,8 +377,13 @@ final class SharedMemoryParcel implements Parcel
     {
         \assert($this->handle !== null);
 
-        /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
-        return \shmop_read($this->handle, $offset, $size);
+        try {
+            return \shmop_read($this->handle, $offset, $size);
+        } catch (\ValueError $error) {
+            throw new ParcelException(
+                'Failed to read from shared memory block: ' . ($error->getMessage() ?? 'unknown error')
+            );
+        }
     }
 
     /**
@@ -392,11 +397,11 @@ final class SharedMemoryParcel implements Parcel
     {
         \assert($this->handle !== null);
 
-        /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
-        if (!\shmop_write($this->handle, $data, 0)) {
-            $error = \error_get_last();
+        try {
+            \shmop_write($this->handle, $data, 0);
+        } catch (\ValueError $error) {
             throw new ParcelException(
-                'Failed to write to shared memory block: ' . ($error['message'] ?? 'unknown error')
+                'Failed to write to shared memory block: ' . ($error->getMessage() ?? 'unknown error')
             );
         }
     }
