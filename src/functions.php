@@ -4,6 +4,7 @@ namespace Amp\Sync;
 
 use Amp\Pipeline\Queue;
 use Amp\Sync\Internal\ConcurrentIteratorChannel;
+use Revolt\EventLoop\FiberLocal;
 
 /**
  * Invokes the given Closure while maintaining a lock from the provided mutex.
@@ -18,11 +19,22 @@ use Amp\Sync\Internal\ConcurrentIteratorChannel;
  */
 function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$args): mixed
 {
+    static $reentry;
+    $reentry ??= new FiberLocal(fn () => new \WeakMap());
+
+    /** @var \WeakMap<Semaphore, bool> $existingLocks */
+    $existingLocks = $reentry->get();
+    if ($existingLocks[$semaphore] ?? false) {
+        return $synchronized(...$args);
+    }
+
     $lock = $semaphore->acquire();
+    $existingLocks[$semaphore] = true;
 
     try {
         return $synchronized(...$args);
     } finally {
+        unset($existingLocks[$semaphore]);
         $lock->release();
     }
 }
