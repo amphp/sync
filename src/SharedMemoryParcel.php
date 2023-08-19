@@ -378,14 +378,7 @@ final class SharedMemoryParcel implements Parcel
         \assert($this->handle !== null);
 
         /** @psalm-suppress InvalidArgument Psalm needs to be updated for ext-shmop using objects. */
-        $data = \shmop_read($this->handle, $offset, $size);
-        if ($data === false) {
-            $error = \error_get_last();
-            throw new ParcelException(
-                'Failed to read from shared memory block: ' . ($error['message'] ?? 'unknown error')
-            );
-        }
-        return $data;
+        return \shmop_read($this->handle, $offset, $size);
     }
 
     /**
