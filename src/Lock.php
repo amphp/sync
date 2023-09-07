@@ -2,7 +2,10 @@
 
 namespace Amp\Sync;
 
+use SplObjectStorage;
 use function Amp\async;
+use function Amp\Future\awaitAll;
+use function register_shutdown_function;
 
 /**
  * A handle on an acquired lock from a synchronization object.
@@ -12,6 +15,10 @@ use function Amp\async;
  */
 final class Lock
 {
+    private static \Fiber $testFiber;
+
+    private static ?\SplObjectStorage $pendingOperations = null;
+
     /** @var null|\Closure():void The function to be called on release or null if the lock has been released. */
     private ?\Closure $release;
 
@@ -23,6 +30,21 @@ final class Lock
     public function __construct(\Closure $release)
     {
         $this->release = $release;
+    }
+
+    private static function setupPendingOperations(): SplObjectStorage
+    {
+        if (self::$pendingOperations === null) {
+            self::$pendingOperations = new SplObjectStorage();
+
+            register_shutdown_function(static function () {
+                while (self::$pendingOperations->count() > 0) {
+                    awaitAll(self::$pendingOperations);
+                }
+            });
+        }
+
+        return self::$pendingOperations;
     }
 
     /**
@@ -48,7 +70,15 @@ final class Lock
         $release = $this->release;
         $this->release = null;
 
-        $release();
+        if ($this->isForceClosed()) {
+            $future = async($release);
+
+            self::$pendingOperations = self::setupPendingOperations();
+            self::$pendingOperations->attach($future);
+            $future->finally(fn () => self::$pendingOperations->detach($future));
+        } else {
+            $release();
+        }
     }
 
     /**
@@ -59,6 +89,27 @@ final class Lock
         if ($this->release) {
             async($this->release);
             $this->release = null;
+        }
+    }
+
+    private function isForceClosed(): bool
+    {
+        self::$testFiber ??= new \Fiber(function () {
+            while (true) {
+                \Fiber::suspend();
+            }
+        });
+
+        try {
+            if (self::$testFiber->isStarted()) {
+                self::$testFiber->resume();
+            } else {
+                self::$testFiber->start();
+            }
+
+            return false;
+        } catch (\FiberError) {
+            return true;
         }
     }
 }

@@ -9,5 +9,8 @@
     <testsuite name="Amp Sync">
       <directory>test</directory>
     </testsuite>
+    <testsuite name="PHPT">
+      <directory suffix=".phpt">test</directory>
+    </testsuite>
   </testsuites>
 </phpunit>
