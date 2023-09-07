@@ -1,5 +1,5 @@
 --TEST--
-unlock in force closed finally
+unlock in not force closed finally
 --FILE--
 <?php
 
