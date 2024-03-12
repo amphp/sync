@@ -5,7 +5,6 @@ namespace Amp\Sync;
 use SplObjectStorage;
 use function Amp\async;
 use function Amp\Future\awaitAll;
-use function register_shutdown_function;
 
 /**
  * A handle on an acquired lock from a synchronization object.
@@ -15,7 +14,7 @@ use function register_shutdown_function;
  */
 final class Lock
 {
-    private static \Fiber $testFiber;
+    private static ?\Fiber $testFiber = null;
 
     private static ?\SplObjectStorage $pendingOperations = null;
 
@@ -34,17 +33,15 @@ final class Lock
 
     private static function setupPendingOperations(): SplObjectStorage
     {
-        if (self::$pendingOperations === null) {
-            self::$pendingOperations = new SplObjectStorage();
+        $pending = new SplObjectStorage();
 
-            register_shutdown_function(static function () {
-                while (self::$pendingOperations->count() > 0) {
-                    awaitAll(self::$pendingOperations);
-                }
-            });
-        }
+        \register_shutdown_function(static function () use ($pending): void {
+            while ($pending->count() > 0) {
+                awaitAll($pending);
+            }
+        });
 
-        return self::$pendingOperations;
+        return $pending;
     }
 
     /**
@@ -73,9 +70,9 @@ final class Lock
         if ($this->isForceClosed()) {
             $future = async($release);
 
-            self::$pendingOperations = self::setupPendingOperations();
-            self::$pendingOperations->attach($future);
-            $future->finally(fn () => self::$pendingOperations->detach($future));
+            $pending = self::$pendingOperations ??= self::setupPendingOperations();
+            $pending->attach($future);
+            $future->finally(fn () => $pending->detach($future));
         } else {
             $release();
         }
@@ -94,17 +91,17 @@ final class Lock
 
     private function isForceClosed(): bool
     {
-        self::$testFiber ??= new \Fiber(function () {
+        $fiber = self::$testFiber ??= new \Fiber(function () {
             while (true) {
                 \Fiber::suspend();
             }
         });
 
         try {
-            if (self::$testFiber->isStarted()) {
-                self::$testFiber->resume();
+            if ($fiber->isStarted()) {
+                $fiber->resume();
             } else {
-                self::$testFiber->start();
+                $fiber->start();
             }
 
             return false;
