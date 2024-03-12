@@ -14,23 +14,23 @@ $parcel = new LocalParcel(new LocalMutex(), 42);
 $future1 = async(function () use ($parcel): void {
     echo "Coroutine 1 started\n";
 
-    $value = $parcel->synchronized(function (int $value): int {
+    $result = $parcel->synchronized(function (int $value): int {
         delay(1); // Delay for 1s to simulate I/O.
         return $value * 2;
     });
 
-    echo "Value after access in coroutine 1: ", $value, "\n";
+    echo "Value after access in coroutine 1: ", $result, "\n";
 });
 
 $future2 = async(function () use ($parcel): void {
     echo "Coroutine 2 started\n";
 
-    $value = $parcel->synchronized(function (int $value): int {
+    $result = $parcel->synchronized(function (int $value): int {
         delay(1); // Delay again in this coroutine.
         return $value + 8;
     });
 
-    echo "Value after access in coroutine 2: ", $value, "\n";
+    echo "Value after access in coroutine 2: ", $result, "\n";
 });
 
 Future\await([$future1, $future2]);

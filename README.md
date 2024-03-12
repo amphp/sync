@@ -70,26 +70,26 @@ $parcel = new LocalParcel(new LocalMutex(), 42);
 $future1 = async(function () use ($parcel): void {
     echo "Coroutine 1 started\n";
 
-    $value = $parcel->synchronized(function (int $value): int {
+    $result = $parcel->synchronized(function (int $value): int {
         delay(1); // Delay for 1s to simulate I/O.
         return $value * 2;
     });
 
-    echo "Value after access in coroutine 1: ", $value, "\n";
+    echo "Value after access in coroutine 1: ", $result, "\n";
 });
 
 $future2 = async(function () use ($parcel): void {
     echo "Coroutine 2 started\n";
 
-    $value = $parcel->synchronized(function (int $value): int {
+    $result = $parcel->synchronized(function (int $value): int {
         delay(1); // Delay again in this coroutine.
         return $value + 8;
     });
 
-    echo "Value after access in coroutine 2: ", $value, "\n";
+    echo "Value after access in coroutine 2: ", $result, "\n";
 });
 
-Future\await([$future1, $future2]);
+Future\await([$future1, $future2]); // Wait until both coroutines complete.
 ```
 
 ### Channels
@@ -107,19 +107,19 @@ $future1 = async(function () use ($left): void {
     echo "Coroutine 1 started\n";
     delay(1); // Delay to simulate I/O.
     $left->send(42);
-    $value = $left->receive();
-    echo "Received ", $value, " in coroutine 1\n";
+    $received = $left->receive();
+    echo "Received ", $received, " in coroutine 1\n";
 });
 
 $future2 = async(function () use ($right): void {
     echo "Coroutine 2 started\n";
-    $value = $right->receive();
-    echo "Received ", $value, " in coroutine 2\n";
+    $received = $right->receive();
+    echo "Received ", $received, " in coroutine 2\n";
     delay(1); // Delay to simulate I/O.
-    $right->send($value * 2);
+    $right->send($received * 2);
 });
 
-Future\await([$future1, $future2]);
+Future\await([$future1, $future2]); // Wait until both coroutines complete.
 ```
 
 ### Sharing data between processes
@@ -137,11 +137,13 @@ To share data between processes in PHP, the data must be serializable and use ex
 
 #### Channels over pipes
 
-Channels between processes can be created by layering serialization (Native PHP serialization, JSON serialization, etc.) on a pipe between those processes.
+Channels between processes can be created by layering serialization (native PHP serialization, JSON serialization, etc.) on a pipe between those processes.
 
 `StreamChannel` in [`amphp/byte-stream`](https://github.com/amphp/byte-stream) creates a channel from any `ReadableStream` and `WritableStream`. This allows a channel to be created from a variety of stream sources, such as sockets or process pipes.
 
-`ProcessContext` and task `Execution` objects in [`amphp/parallel`](https://github.com/amphp/parallel) provide a `Channel` to send data between processes and tasks.
+`ProcessContext` in [`amphp/parallel`](https://github.com/amphp/parallel) implements `Channel` to send data between parent and child processes.
+
+Task `Execution` objects, also in [`amphp/parallel`](https://github.com/amphp/parallel) contain a `Channel` to send data between the task run and the process which submitted the task.
 
 ### Concurrency Approaches
 
@@ -230,7 +232,7 @@ See the documentation in [`amphp/pipeline`](https://github.com/amphp/pipeline) f
 
 ## Security
 
-If you discover any security related issues, please email [`me@kelunik.com`](mailto:me@kelunik.com) instead of using the issue tracker.
+If you discover any security related issues, please use the private security issue reporter instead of using the public issue tracker.
 
 ## License
 
