@@ -40,10 +40,44 @@ final class PosixSemaphore implements Semaphore
             throw new \Error('Number of locks must be greater than 0, got ' . $maxLocks);
         }
 
-        $semaphore = new self(0);
-        $semaphore->init($maxLocks, $permissions);
+        if (self::$nextId === 0) {
+            self::$nextId = \random_int(1, self::MAX_ID);
+        }
 
-        return $semaphore;
+        \set_error_handler(static function (int $errno, string $errstr): bool {
+            if (!\str_contains($errstr, 'No space left on device') && \str_contains($errstr, 'Failed for key')) {
+                return true;
+            }
+
+            throw new SyncException('Failed to create semaphore: ' . $errstr, $errno);
+        });
+
+        try {
+            do {
+                $id = self::getNextId();
+                while (\msg_queue_exists($id)) {
+                    $id = self::getNextId();
+                }
+
+                if ($queue = \msg_get_queue($id, $permissions)) {
+                    $semaphore = new self($queue, $id, \getmypid());
+
+                    // Fill the semaphore with locks.
+                    while (--$maxLocks >= 0) {
+                        $semaphore->release();
+                    }
+
+                    return $semaphore;
+                }
+            } while (true);
+        } finally {
+            \restore_error_handler();
+        }
+    }
+
+    private static function getNextId(): int
+    {
+        return self::$nextId = self::$nextId % self::MAX_ID + 1;
     }
 
     /**
@@ -51,25 +85,30 @@ final class PosixSemaphore implements Semaphore
      */
     public static function use(int $key): self
     {
-        $semaphore = new self($key);
-        $semaphore->open();
+        if (!\msg_queue_exists($key)) {
+            throw new SyncException('No semaphore with that ID found');
+        }
 
-        return $semaphore;
+        $queue = \msg_get_queue($key);
+
+        if (!$queue) {
+            throw new SyncException('Failed to open the semaphore.');
+        }
+
+        return new self($queue, $key, 0);
     }
 
-    /** @var int PID of the process that created the semaphore. */
-    private int $initializer = 0;
-
     /**
-     * @var \SysvMessageQueue|null A message queue of available locks.
-     */
-    private ?\SysvMessageQueue $queue = null;
-
-    /**
+     * @param int $initializer PID of the process that created the semaphore or 0 if the semaphore was only opened
+     *      in this process.
+     *
      * @throws \Error If the sysvmsg extension is not loaded.
      */
-    private function __construct(private int $key)
-    {
+    private function __construct(
+        private readonly \SysvMessageQueue $queue,
+        private readonly int $key,
+        private readonly int $initializer,
+    ) {
         if (!\extension_loaded("sysvmsg")) {
             throw new \Error(__CLASS__ . " requires the sysvmsg extension.");
         }
@@ -89,7 +128,6 @@ final class PosixSemaphore implements Semaphore
      */
     public function getPermissions(): int
     {
-        /** @psalm-suppress InvalidArgument */
         $stat = \msg_stat_queue($this->queue);
         return $stat['msg_perm.mode'];
     }
@@ -105,13 +143,11 @@ final class PosixSemaphore implements Semaphore
      */
     public function setPermissions(int $mode): void
     {
-        /** @psalm-suppress InvalidArgument */
         if (!\msg_set_queue($this->queue, ['msg_perm.mode' => $mode])) {
             throw new SyncException('Failed to change the semaphore permissions.');
         }
     }
 
-    /** @psalm-suppress InvalidReturnType */
     public function acquire(): Lock
     {
         do {
@@ -119,7 +155,6 @@ final class PosixSemaphore implements Semaphore
             \set_error_handler($this->errorHandler);
 
             try {
-                /** @psalm-suppress InvalidArgument */
                 if (\msg_receive($this->queue, 0, $type, 1, $message, false, \MSG_IPC_NOWAIT, $errno)) {
                     // A free lock was found, so resolve with a lock object that can
                     // be used to release the lock.
@@ -149,16 +184,10 @@ final class PosixSemaphore implements Semaphore
             return;
         }
 
-        if (!$this->queue) {
-            return;
-        }
-
-        /** @psalm-suppress InvalidArgument */
         if (!\msg_queue_exists($this->key)) {
             return;
         }
 
-        /** @psalm-suppress InvalidArgument */
         \msg_remove_queue($this->queue);
     }
 
@@ -167,19 +196,13 @@ final class PosixSemaphore implements Semaphore
      *
      * @throws SyncException If the operation failed.
      */
-    protected function release(): void
+    private function release(): void
     {
-        /** @psalm-suppress TypeDoesNotContainType */
-        if (!$this->queue) {
-            return; // Queue already destroyed.
-        }
-
         // Send in non-blocking mode. If the call fails because the queue is full,
         // then the number of locks configured is too large.
         \set_error_handler($this->errorHandler);
 
         try {
-            /** @psalm-suppress InvalidArgument */
             if (!\msg_send($this->queue, 1, "\0", false, false, $errno)) {
                 if ($errno === \MSG_EAGAIN) {
                     throw new SyncException('The semaphore size is larger than the system allows.');
@@ -189,76 +212,6 @@ final class PosixSemaphore implements Semaphore
             }
         } finally {
             \restore_error_handler();
-        }
-    }
-
-    private function open(): void
-    {
-        if (!\msg_queue_exists($this->key)) {
-            throw new SyncException('No semaphore with that ID found');
-        }
-
-        $queue = \msg_get_queue($this->key);
-
-        /** @psalm-suppress TypeDoesNotContainType */
-        if (!$queue) {
-            throw new SyncException('Failed to open the semaphore.');
-        }
-
-        /** @psalm-suppress InvalidPropertyAssignmentValue */
-        $this->queue = $queue;
-    }
-
-    /**
-     * @param int $maxLocks The maximum number of locks that can be acquired from the semaphore.
-     * @param int $permissions Permissions to access the semaphore.
-     *
-     * @throws SyncException If the semaphore could not be created due to an internal error.
-     */
-    private function init(int $maxLocks, int $permissions): void
-    {
-        if (self::$nextId === 0) {
-            self::$nextId = \random_int(1, self::MAX_ID);
-        }
-
-        \set_error_handler(static function (int $errno, string $errstr): bool {
-            if (!\str_contains($errstr, 'No space left on device') && \str_contains($errstr, 'Failed for key')) {
-                return true;
-            }
-
-            throw new SyncException('Failed to create semaphore: ' . $errstr, $errno);
-        });
-
-        try {
-            do {
-                $id = self::$nextId;
-
-                while (\msg_queue_exists($id)) {
-                    $id = self::$nextId = self::$nextId % self::MAX_ID + 1;
-                }
-
-                /** @psalm-suppress TypeDoesNotContainType */
-                $queue = \msg_get_queue($id, $permissions);
-
-                /** @psalm-suppress RedundantCondition */
-                if ($queue) {
-                    /** @psalm-suppress InvalidPropertyAssignmentValue */
-                    $this->queue = $queue;
-                    $this->initializer = \getmypid();
-                    break;
-                }
-
-                ++self::$nextId;
-            } while (true);
-        } finally {
-            \restore_error_handler();
-        }
-
-        $this->key = $id;
-
-        // Fill the semaphore with locks.
-        while (--$maxLocks >= 0) {
-            $this->release();
         }
     }
 }
