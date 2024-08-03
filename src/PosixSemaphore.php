@@ -222,7 +222,7 @@ final class PosixSemaphore implements Semaphore
         }
 
         \set_error_handler(static function (int $errno, string $errstr): bool {
-            if (\str_contains($errstr, 'Failed for key')) {
+            if (!\str_contains($errstr, 'No space left on device') && \str_contains($errstr, 'Failed for key')) {
                 return true;
             }
 
@@ -230,9 +230,9 @@ final class PosixSemaphore implements Semaphore
         });
 
         try {
-            $id = self::$nextId;
-
             do {
+                $id = self::$nextId;
+
                 while (\msg_queue_exists($id)) {
                     $id = self::$nextId = self::$nextId % self::MAX_ID + 1;
                 }
