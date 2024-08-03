@@ -50,10 +50,9 @@ final class PosixSemaphore implements Semaphore
 
         try {
             do {
-                $id = self::getNextId();
-                while (\msg_queue_exists($id)) {
+                do {
                     $id = self::getNextId();
-                }
+                } while (\msg_queue_exists($id));
 
                 if ($queue = \msg_get_queue($id, $permissions)) {
                     $semaphore = new self($queue, $id, \getmypid());
