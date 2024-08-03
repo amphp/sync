@@ -40,12 +40,13 @@ function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$ar
 }
 
 /**
+ * @param int $bufferSize Number of channel items to buffer in memory before back-pressure is applied.
  * @return array{Channel, Channel}
  */
-function createChannelPair(): array
+function createChannelPair(int $bufferSize = 0): array
 {
-    $west = new Queue();
-    $east = new Queue();
+    $west = new Queue($bufferSize);
+    $east = new Queue($bufferSize);
 
     return [
         new ConcurrentIteratorChannel($west->iterate(), $east),
