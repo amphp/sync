@@ -16,6 +16,7 @@ final class StaticKeyMutex implements Mutex
     ) {
     }
 
+    #[\Override]
     public function acquire(): Lock
     {
         return $this->mutex->acquire($this->key);

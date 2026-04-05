@@ -17,6 +17,7 @@ final class LocalKeyedMutex implements KeyedMutex
         $this->semaphore = new LocalKeyedSemaphore(1);
     }
 
+    #[\Override]
     public function acquire(string $key): Lock
     {
         return $this->semaphore->acquire($key);

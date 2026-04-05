@@ -17,6 +17,7 @@ final class LocalMutex implements Mutex
         $this->semaphore = new LocalSemaphore(1);
     }
 
+    #[\Override]
     public function acquire(): Lock
     {
         return $this->semaphore->acquire();

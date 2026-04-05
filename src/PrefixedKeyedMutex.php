@@ -16,6 +16,7 @@ final class PrefixedKeyedMutex implements KeyedMutex
     ) {
     }
 
+    #[\Override]
     public function acquire(string $key): Lock
     {
         return $this->mutex->acquire($this->prefix . $key);

@@ -28,6 +28,7 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
         }
     }
 
+    #[\Override]
     public function acquire(string $key): Lock
     {
         if (!isset($this->semaphore[$key])) {

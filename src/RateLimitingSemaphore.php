@@ -36,6 +36,7 @@ final class RateLimitingSemaphore implements Semaphore
         $this->timers = new \SplQueue();
     }
 
+    #[\Override]
     public function acquire(): Lock
     {
         ++$this->waitingCount;

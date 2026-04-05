@@ -18,5 +18,6 @@ interface KeyedMutex extends KeyedSemaphore
      * @return Lock Returns a lock object with an ID of 0. May fail with a SyncException if an
      *     error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
+    #[\Override]
     public function acquire(string $key): Lock;
 }

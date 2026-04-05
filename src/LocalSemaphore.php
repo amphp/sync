@@ -30,6 +30,7 @@ final class LocalSemaphore implements Semaphore
         $this->waiting = new \SplQueue();
     }
 
+    #[\Override]
     public function acquire(): Lock
     {
         if ($this->locks < $this->maxLocks) {

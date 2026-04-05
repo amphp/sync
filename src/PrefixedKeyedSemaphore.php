@@ -16,6 +16,7 @@ final class PrefixedKeyedSemaphore implements KeyedSemaphore
     ) {
     }
 
+    #[\Override]
     public function acquire(string $key): Lock
     {
         return $this->semaphore->acquire($this->prefix . $key);

@@ -20,7 +20,7 @@ final class SemaphoreMutex implements Mutex
     ) {
     }
 
-    /** {@inheritdoc} */
+    #[\Override]
     public function acquire(): Lock
     {
         $lock = $this->semaphore->acquire();

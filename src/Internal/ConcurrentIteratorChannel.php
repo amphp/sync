@@ -46,11 +46,13 @@ final class ConcurrentIteratorChannel implements Channel
         $this->close();
     }
 
+    #[\Override]
     public function isClosed(): bool
     {
         return $this->send->isComplete();
     }
 
+    #[\Override]
     public function close(): void
     {
         if (!$this->send->isComplete()) {
@@ -64,11 +66,13 @@ final class ConcurrentIteratorChannel implements Channel
         }
     }
 
+    #[\Override]
     public function onClose(\Closure $onClose): void
     {
         $this->onClose->getFuture()->finally($onClose);
     }
 
+    #[\Override]
     public function receive(?Cancellation $cancellation = null): mixed
     {
         if (!$this->receive->continue($cancellation)) {
@@ -79,6 +83,7 @@ final class ConcurrentIteratorChannel implements Channel
         return $this->receive->getValue();
     }
 
+    #[\Override]
     public function send(mixed $data): void
     {
         if ($data === null) {

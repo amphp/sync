@@ -16,6 +16,7 @@ final class StaticKeySemaphore implements Mutex
     ) {
     }
 
+    #[\Override]
     public function acquire(): Lock
     {
         return $this->semaphore->acquire($this->key);

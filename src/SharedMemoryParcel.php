@@ -121,6 +121,7 @@ final class SharedMemoryParcel implements Parcel
         return $this->key;
     }
 
+    #[\Override]
     public function unwrap(): mixed
     {
         $lock = $this->mutex->acquire();
@@ -132,6 +133,7 @@ final class SharedMemoryParcel implements Parcel
         }
     }
 
+    #[\Override]
     public function synchronized(\Closure $closure): mixed
     {
         $lock = $this->mutex->acquire();

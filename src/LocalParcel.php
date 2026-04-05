@@ -23,6 +23,7 @@ final class LocalParcel implements Parcel
     ) {
     }
 
+    #[\Override]
     public function synchronized(\Closure $closure): mixed
     {
         $lock = $this->mutex->acquire();
@@ -36,6 +37,7 @@ final class LocalParcel implements Parcel
         return $this->value;
     }
 
+    #[\Override]
     public function unwrap(): mixed
     {
         return $this->value;

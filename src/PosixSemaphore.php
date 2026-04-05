@@ -147,6 +147,7 @@ final class PosixSemaphore implements Semaphore
         }
     }
 
+    #[\Override]
     public function acquire(): Lock
     {
         do {
