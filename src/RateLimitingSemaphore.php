@@ -30,7 +30,7 @@ final class RateLimitingSemaphore implements Semaphore
         private readonly float $lockPeriod,
     ) {
         if ($lockPeriod <= 0) {
-            throw new \ValueError('The lock period must be greater than 0, got ' . $lockPeriod);
+            throw new \ValueError('The lock period must be greater than 0, got ' . (string) $lockPeriod);
         }
 
         $this->timers = new \SplQueue();

@@ -1,17 +1,12 @@
 <?php declare(strict_types=1);
 
 use Amp\Future;
-use Amp\Sync\Channel;
 use function Amp\async;
 use function Amp\delay;
 use function Amp\Sync\createChannelPair;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-/**
- * @var Channel<int, int> $left
- * @var Channel<int, int> $right
- */
 [$left, $right] = createChannelPair();
 
 $future1 = async(function () use ($left): void {
