@@ -1,5 +1,10 @@
 --TEST--
 unlock in force closed finally
+--SKIPIF--
+<?php
+if (\PHP_VERSION_ID >= 80400) {
+    echo 'skip behavior differs from unlock-finally.phpt only before PHP 8.4';
+}
 --FILE--
 <?php
 
