@@ -2,6 +2,9 @@
 
 namespace Amp\Sync;
 
+/**
+ * @psalm-suppress ClassMustBeFinal
+ */
 class ParcelException extends \Exception
 {
 }

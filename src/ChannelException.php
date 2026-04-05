@@ -2,6 +2,9 @@
 
 namespace Amp\Sync;
 
+/**
+ * @psalm-suppress ClassMustBeFinal
+ */
 class ChannelException extends \Exception
 {
 }

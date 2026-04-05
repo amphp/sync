@@ -176,7 +176,12 @@ final class SharedMemoryParcel implements Parcel
      */
     private function init(mixed $value, int $size = 8192, int $permissions = 0600): void
     {
-        $this->initializer = \getmypid();
+        $pid = \getmypid();
+        if ($pid === false) {
+            throw new ParcelException('Failed to get the current process ID');
+        }
+
+        $this->initializer = $pid;
 
         $lock = $this->mutex->acquire();
 
@@ -301,6 +306,9 @@ final class SharedMemoryParcel implements Parcel
         while (true) {
             $data = $this->readSegment(0, self::MEM_DATA_OFFSET);
             $header = \unpack('Cstate/Lsize/Spermissions', $data);
+            if ($header === false) {
+                throw new ParcelException('Failed to read shared memory block header');
+            }
 
             // If the state is STATE_MOVED, the memory is stale and has been moved
             // to a new location. Move handle and try to read again.
@@ -400,7 +408,12 @@ final class SharedMemoryParcel implements Parcel
         \assert($this->handle !== null);
 
         try {
-            \shmop_write($this->handle, $data, 0);
+            if (!\shmop_write($this->handle, $data, 0)) {
+                $error = \error_get_last();
+                throw new ParcelException(
+                    'Failed to write to shared memory block: ' . ($error['message'] ?? 'unknown error')
+                );
+            }
         } catch (\ValueError $error) {
             throw new ParcelException(
                 'Failed to write to shared memory block: ' . ($error->getMessage() ?? 'unknown error')
@@ -421,7 +434,7 @@ final class SharedMemoryParcel implements Parcel
         if (!\shmop_delete($this->handle)) {
             $error = \error_get_last();
             throw new ParcelException(
-                'Failed to discard shared memory block' . ($error['message'] ?? 'unknown error')
+                'Failed to discard shared memory block: ' . ($error['message'] ?? 'unknown error')
             );
         }
     }
