@@ -16,8 +16,8 @@ final class RateLimitingSemaphore implements Semaphore
     use ForbidCloning;
     use ForbidSerialization;
 
-    /** @var \SplQueue<string> List of event-loop delay callback IDs. */
-    private readonly \SplQueue $timers;
+    /** @var array<string, string> Array of event-loop delay callback IDs. */
+    private array $timers = [];
 
     private int $waitingCount = 0;
 
@@ -32,23 +32,25 @@ final class RateLimitingSemaphore implements Semaphore
         if ($lockPeriod <= 0) {
             throw new \ValueError('The lock period must be greater than 0, got ' . (string) $lockPeriod);
         }
-
-        $this->timers = new \SplQueue();
     }
 
     #[\Override]
     public function acquire(): Lock
     {
-        ++$this->waitingCount;
-
-        if (!$this->timers->isEmpty()) {
-            EventLoop::reference($this->timers->bottom());
+        if ($this->waitingCount++ === 0) {
+            foreach ($this->timers as $callbackId) {
+                EventLoop::reference($callbackId);
+            }
         }
 
-        $lock = $this->semaphore->acquire();
-
-        if (!--$this->waitingCount && !$this->timers->isEmpty()) {
-            EventLoop::unreference($this->timers->bottom());
+        try {
+            $lock = $this->semaphore->acquire();
+        } finally {
+            if (--$this->waitingCount === 0) {
+                foreach ($this->timers as $callbackId) {
+                    EventLoop::unreference($callbackId);
+                }
+            }
         }
 
         return new Lock(fn () => $this->release($lock));
@@ -56,24 +58,18 @@ final class RateLimitingSemaphore implements Semaphore
 
     private function release(Lock $lock): void
     {
-        $timer = EventLoop::delay(
+        $callbackId = EventLoop::delay(
             $this->lockPeriod,
-            function () use ($lock): void {
-                \assert(!$this->timers->isEmpty());
-
-                $this->timers->shift();
-                if ($this->waitingCount && !$this->timers->isEmpty()) {
-                    EventLoop::reference($this->timers->bottom());
-                }
-
+            function (string $callbackId) use ($lock): void {
+                unset($this->timers[$callbackId]);
                 $lock->release();
             },
         );
 
-        if (!$this->waitingCount || !$this->timers->isEmpty()) {
-            EventLoop::unreference($timer);
+        if ($this->waitingCount === 0) {
+            EventLoop::unreference($callbackId);
         }
 
-        $this->timers->push($timer);
+        $this->timers[$callbackId] = $callbackId;
     }
 }

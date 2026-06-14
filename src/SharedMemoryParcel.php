@@ -124,7 +124,11 @@ final class SharedMemoryParcel implements Parcel
     #[\Override]
     public function unwrap(): mixed
     {
-        $lock = $this->mutex->acquire();
+        try {
+            $lock = $this->mutex->acquire();
+        } catch (SyncException $exception) {
+            throw new ParcelException("Failed to acquire lock", previous: $exception);
+        }
 
         try {
             return $this->getValue();

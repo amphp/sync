@@ -28,13 +28,18 @@ interface Parcel
      *
      * @param \Closure(T):R $closure The closure to invoke when a lock is obtained on the parcel. The parcel
      * value is given as the single argument to the closure. The return value is stored as the new parcel value.
+     * Any exceptions thrown by the closure are re-thrown from this method call.
      *
      * @return R The value of the parcel after the closure was invoked.
+     *
+     * @throws ParcelException
      */
     public function synchronized(\Closure $closure): mixed;
 
     /**
      * @return T The value inside the parcel.
+     *
+     * @throws ParcelException
      */
     public function unwrap(): mixed;
 }

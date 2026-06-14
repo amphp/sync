@@ -38,7 +38,15 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
 
         $this->locks[$key]++;
 
-        $lock = $this->semaphore[$key]->acquire();
+        try {
+            $lock = $this->semaphore[$key]->acquire();
+        } catch (\Throwable $exception) {
+            if (--$this->locks[$key] === 0) {
+                unset($this->semaphore[$key], $this->locks[$key]);
+            }
+
+            throw $exception;
+        }
 
         return new Lock(function () use ($lock, $key): void {
             if (--$this->locks[$key] === 0) {
