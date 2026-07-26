@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -17,8 +18,8 @@ final class StaticKeyMutex implements Mutex
     }
 
     #[\Override]
-    public function acquire(): Lock
+    public function acquire(?Cancellation $cancellation = null): Lock
     {
-        return $this->mutex->acquire($this->key);
+        return $this->mutex->acquire($this->key, $cancellation);
     }
 }

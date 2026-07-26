@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
+
 /**
  * A counting semaphore based on keys.
  *
@@ -14,10 +16,12 @@ interface KeyedSemaphore
      * Acquires a lock on the semaphore.
      *
      * @param string $key Lock key
+     * @param Cancellation|null $cancellation Optional cancellation. Implementations are not required to
+     *  support cancellation and may ignore this parameter.
      *
      * @return Lock Returns an integer keyed lock object once a lock is obtained. Identifiers returned by the
-     *    locks should be 0-indexed. Releasing an identifier MUST make that same identifier available. May fail with
-     *    a SyncException if an error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
+     *  locks should be 0-indexed. Releasing an identifier MUST make that same identifier available. May fail with
+     *  a SyncException if an error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
-    public function acquire(string $key): Lock;
+    public function acquire(string $key, ?Cancellation $cancellation = null): Lock;
 }

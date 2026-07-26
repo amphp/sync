@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -18,8 +19,8 @@ final class LocalKeyedMutex implements KeyedMutex
     }
 
     #[\Override]
-    public function acquire(string $key): Lock
+    public function acquire(string $key, ?Cancellation $cancellation = null): Lock
     {
-        return $this->semaphore->acquire($key);
+        return $this->semaphore->acquire($key, $cancellation);
     }
 }

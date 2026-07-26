@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -18,8 +19,8 @@ final class LocalMutex implements Mutex
     }
 
     #[\Override]
-    public function acquire(): Lock
+    public function acquire(?Cancellation $cancellation = null): Lock
     {
-        return $this->semaphore->acquire();
+        return $this->semaphore->acquire($cancellation);
     }
 }

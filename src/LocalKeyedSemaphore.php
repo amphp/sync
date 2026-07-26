@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -29,7 +30,7 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
     }
 
     #[\Override]
-    public function acquire(string $key): Lock
+    public function acquire(string $key, ?Cancellation $cancellation = null): Lock
     {
         if (!isset($this->semaphore[$key])) {
             $this->semaphore[$key] = new LocalSemaphore($this->maxLocks);
@@ -39,7 +40,7 @@ final class LocalKeyedSemaphore implements KeyedSemaphore
         $this->locks[$key]++;
 
         try {
-            $lock = $this->semaphore[$key]->acquire();
+            $lock = $this->semaphore[$key]->acquire($cancellation);
         } catch (\Throwable $exception) {
             if (--$this->locks[$key] === 0) {
                 unset($this->semaphore[$key], $this->locks[$key]);

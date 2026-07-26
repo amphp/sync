@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
+
 /**
  * A synchronization primitive that can be used for mutual exclusion across contexts based on keys.
  *
@@ -14,10 +16,12 @@ interface KeyedMutex extends KeyedSemaphore
      * Acquires a lock on the mutex.
      *
      * @param string $key Lock key
+     * @param Cancellation|null $cancellation Optional cancellation. Implementations are not required to
+     * support cancellation and may ignore this parameter.
      *
      * @return Lock Returns a lock object with an ID of 0. May fail with a SyncException if an
-     *     error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
+     *  error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      */
     #[\Override]
-    public function acquire(string $key): Lock;
+    public function acquire(string $key, ?Cancellation $cancellation = null): Lock;
 }

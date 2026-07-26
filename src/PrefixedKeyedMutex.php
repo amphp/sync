@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -12,13 +13,13 @@ final class PrefixedKeyedMutex implements KeyedMutex
 
     public function __construct(
         private readonly KeyedMutex $mutex,
-        private readonly string $prefix
+        private readonly string $prefix,
     ) {
     }
 
     #[\Override]
-    public function acquire(string $key): Lock
+    public function acquire(string $key, ?Cancellation $cancellation = null): Lock
     {
-        return $this->mutex->acquire($this->prefix . $key);
+        return $this->mutex->acquire($this->prefix . $key, $cancellation);
     }
 }

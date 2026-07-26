@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use function Amp\delay;
@@ -153,7 +154,7 @@ final class PosixSemaphore implements Semaphore
     }
 
     #[\Override]
-    public function acquire(): Lock
+    public function acquire(?Cancellation $cancellation = null): Lock
     {
         do {
             // Attempt to acquire a lock from the semaphore.
@@ -174,7 +175,7 @@ final class PosixSemaphore implements Semaphore
                 throw new SyncException(\sprintf('Failed to acquire a lock; errno: %d', $errno));
             }
 
-            delay(self::LATENCY_TIMEOUT);
+            delay(self::LATENCY_TIMEOUT, cancellation: $cancellation);
         } while (true);
     }
 

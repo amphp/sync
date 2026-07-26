@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Revolt\EventLoop;
@@ -35,7 +36,7 @@ final class RateLimitingSemaphore implements Semaphore
     }
 
     #[\Override]
-    public function acquire(): Lock
+    public function acquire(?Cancellation $cancellation = null): Lock
     {
         if ($this->waitingCount++ === 0) {
             foreach ($this->timers as $callbackId) {
@@ -44,7 +45,7 @@ final class RateLimitingSemaphore implements Semaphore
         }
 
         try {
-            $lock = $this->semaphore->acquire();
+            $lock = $this->semaphore->acquire($cancellation);
         } finally {
             if (--$this->waitingCount === 0) {
                 foreach ($this->timers as $callbackId) {

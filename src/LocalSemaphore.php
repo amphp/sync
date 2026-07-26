@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
+use Amp\CancelledException;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Revolt\EventLoop;
@@ -14,8 +16,8 @@ final class LocalSemaphore implements Semaphore
 
     private int $locks = 0;
 
-    /** @var \SplQueue<Suspension> */
-    private readonly \SplQueue $waiting;
+    /** @var array<int, Suspension> */
+    private array $waiting = [];
 
     /**
      * @param positive-int $maxLocks
@@ -26,27 +28,40 @@ final class LocalSemaphore implements Semaphore
         if ($maxLocks < 1) {
             throw new \ValueError('The number of locks must be greater than 0, got ' . $maxLocks);
         }
-
-        $this->waiting = new \SplQueue();
     }
 
     #[\Override]
-    public function acquire(): Lock
+    public function acquire(?Cancellation $cancellation = null): Lock
     {
         if ($this->locks < $this->maxLocks) {
             ++$this->locks;
             return $this->createLock();
         }
 
-        $this->waiting->enqueue($suspension = EventLoop::getSuspension());
+        $suspension = EventLoop::getSuspension();
+        $key = \spl_object_id($suspension);
+        $this->waiting[$key] = $suspension;
 
-        return $suspension->suspend();
+        $id = $cancellation?->subscribe(function (CancelledException $exception) use ($key, $suspension): void {
+            unset($this->waiting[$key]);
+            $suspension->throw($exception);
+        });
+
+        try {
+            return $suspension->suspend();
+        } finally {
+            /** @psalm-suppress PossiblyNullArgument $id will not be null if $cancellation is not null. */
+            $cancellation?->unsubscribe($id);
+        }
     }
 
     private function release(): void
     {
-        if (!$this->waiting->isEmpty()) {
-            $suspension = $this->waiting->dequeue();
+        $key = \array_key_first($this->waiting);
+
+        if ($key !== null) {
+            $suspension = $this->waiting[$key];
+            unset($this->waiting[$key]);
             $suspension->resume($this->createLock());
 
             return;

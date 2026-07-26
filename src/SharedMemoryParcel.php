@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 use Amp\Serialization\NativeSerializer;
@@ -107,7 +108,7 @@ final class SharedMemoryParcel implements Parcel
     private function __construct(
         private int $key,
         private readonly Mutex $mutex,
-        ?Serializer $serializer = null
+        ?Serializer $serializer = null,
     ) {
         if (!\extension_loaded("shmop")) {
             throw new \Error(__CLASS__ . " requires the shmop extension");
@@ -138,12 +139,12 @@ final class SharedMemoryParcel implements Parcel
     }
 
     #[\Override]
-    public function synchronized(\Closure $closure): mixed
+    public function synchronized(\Closure $closure, ?Cancellation $cancellation = null): mixed
     {
-        $lock = $this->mutex->acquire();
+        $lock = $this->mutex->acquire($cancellation);
 
         try {
-            $result = $closure($this->getValue());
+            $result = $closure($this->getValue(), $cancellation);
             $this->wrap($result);
         } finally {
             $lock->release();

@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -16,14 +17,14 @@ final class SemaphoreMutex implements Mutex
      * @param Semaphore $semaphore A semaphore with a single lock.
      */
     public function __construct(
-        private readonly Semaphore $semaphore
+        private readonly Semaphore $semaphore,
     ) {
     }
 
     #[\Override]
-    public function acquire(): Lock
+    public function acquire(?Cancellation $cancellation = null): Lock
     {
-        $lock = $this->semaphore->acquire();
+        $lock = $this->semaphore->acquire($cancellation);
 
         if ($this->locked) {
             throw new \Error("Cannot use a semaphore with more than a single lock");

@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\ForbidCloning;
 use Amp\ForbidSerialization;
 
@@ -24,16 +25,16 @@ final class LocalParcel implements Parcel
     }
 
     #[\Override]
-    public function synchronized(\Closure $closure): mixed
+    public function synchronized(\Closure $closure, ?Cancellation $cancellation = null): mixed
     {
         try {
-            $lock = $this->mutex->acquire();
+            $lock = $this->mutex->acquire($cancellation);
         } catch (SyncException $exception) {
             throw new ParcelException("Failed to acquire lock", previous: $exception);
         }
 
         try {
-            $this->value = $closure($this->value);
+            $this->value = $closure($this->value, $cancellation);
         } finally {
             $lock->release();
         }

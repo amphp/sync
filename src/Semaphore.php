@@ -2,6 +2,8 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
+
 /**
  * A counting semaphore.
  *
@@ -13,10 +15,13 @@ interface Semaphore
     /**
      * Acquires a lock on the semaphore. Semaphores may have one or more locks.
      *
+     * @param Cancellation|null $cancellation Optional cancellation. Implementations are not required to
+     *  support cancellation and may ignore this parameter.
+     *
      * @return Lock Returns with a lock object once a lock is obtained. May fail with a SyncException if an
-     *     error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
+     *  error occurs when attempting to obtain the lock (e.g. a shared memory segment closed).
      *
      * @throws SyncException If an error occurs when attempting to obtain the lock.
      */
-    public function acquire(): Lock;
+    public function acquire(?Cancellation $cancellation = null): Lock;
 }
