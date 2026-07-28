@@ -2,13 +2,21 @@
 
 namespace Amp\Sync;
 
-use Amp\PHPUnit\AsyncTestCase;
+use Amp\Cancellation;
 use Revolt\EventLoop;
 use function Amp\delay;
 
-abstract class AbstractKeyedMutexTest extends AsyncTestCase
+abstract class AbstractKeyedMutexTest extends AbstractLockTest
 {
-    abstract public function createMutex(): KeyedMutex;
+    private ?KeyedMutex $mutex = null;
+
+    abstract protected function createMutex(): KeyedMutex;
+
+    #[\Override]
+    protected function acquire(?Cancellation $cancellation = null): Lock
+    {
+        return ($this->mutex ??= $this->createMutex())->acquire('test', $cancellation);
+    }
 
     public function testAcquire(): void
     {

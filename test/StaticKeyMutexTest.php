@@ -4,7 +4,8 @@ namespace Amp\Sync;
 
 class StaticKeyMutexTest extends AbstractMutexTest
 {
-    public function createMutex(): Mutex
+    #[\Override]
+    protected function createMutex(): Mutex
     {
         return new StaticKeyMutex(new LocalKeyedMutex(), 'key');
     }

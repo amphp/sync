@@ -5,8 +5,14 @@ namespace Amp\Sync;
 use Amp\PHPUnit\AsyncTestCase;
 use Amp\Pipeline\Pipeline;
 
-class RateLimitingSemaphoreTest extends AsyncTestCase
+class RateLimitingSemaphoreTest extends AbstractSemaphoreTest
 {
+    #[\Override]
+    protected function createSemaphore(int $locks): Semaphore
+    {
+        return new RateLimitingSemaphore(new LocalSemaphore($locks), 0.1);
+    }
+
     public function providePeriods(): iterable
     {
         yield 'one-lock-no-delay' => [0.1, 0, 3, 1];

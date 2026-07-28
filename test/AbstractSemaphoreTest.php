@@ -2,19 +2,25 @@
 
 namespace Amp\Sync;
 
-use Amp\PHPUnit\AsyncTestCase;
+use Amp\Cancellation;
 use Revolt\EventLoop;
 use function Amp\async;
 use function Amp\delay;
 
-abstract class AbstractSemaphoreTest extends AsyncTestCase
+abstract class AbstractSemaphoreTest extends AbstractLockTest
 {
     protected ?Semaphore $semaphore;
 
     /**
      * @param int $locks Number of locks in the semaphore.
      */
-    abstract public function createSemaphore(int $locks): Semaphore;
+    abstract protected function createSemaphore(int $locks): Semaphore;
+
+    #[\Override]
+    protected function acquire(?Cancellation $cancellation = null): Lock
+    {
+        return ($this->semaphore ??= $this->createSemaphore(1))->acquire($cancellation);
+    }
 
     public function tearDown(): void
     {

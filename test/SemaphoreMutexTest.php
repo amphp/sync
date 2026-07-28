@@ -6,7 +6,8 @@ class SemaphoreMutexTest extends AbstractMutexTest
 {
     const ID = __CLASS__;
 
-    public function createMutex(): Mutex
+    #[\Override]
+    protected function createMutex(): Mutex
     {
         return new SemaphoreMutex(new LocalSemaphore(1));
     }

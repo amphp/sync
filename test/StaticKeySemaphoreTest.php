@@ -4,7 +4,8 @@ namespace Amp\Sync;
 
 class StaticKeySemaphoreTest extends AbstractSemaphoreTest
 {
-    public function createSemaphore(int $locks): Semaphore
+    #[\Override]
+    protected function createSemaphore(int $locks): Semaphore
     {
         return new StaticKeySemaphore(new LocalKeyedSemaphore($locks), 'key');
     }

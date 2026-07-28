@@ -4,8 +4,9 @@ namespace Amp\Sync;
 
 class PrefixedKeyedMutexTest extends AbstractKeyedMutexTest
 {
-    public function createMutex(): KeyedMutex
+    #[\Override]
+    protected function createMutex(): KeyedMutex
     {
-        return new PrefixedKeyedMutex(new LocalKeyedMutex, 'prefix.');
+        return new PrefixedKeyedMutex(new LocalKeyedMutex(), 'prefix.');
     }
 }

@@ -2,6 +2,11 @@
 
 namespace Amp\Sync;
 
+use Amp\CancelledException;
+use Amp\TimeoutCancellation;
+use function Amp\async;
+use function Amp\delay;
+
 /**
  * @requires extension shmop
  * @requires extension sysvmsg
@@ -12,7 +17,8 @@ class SharedMemoryParcelTest extends AbstractParcelTest
 
     private ?SharedMemoryParcel $parcel;
 
-    public function tearDown(): void
+    #[\Override]
+    protected function tearDown(): void
     {
         $this->parcel = null;
     }
@@ -55,6 +61,28 @@ class SharedMemoryParcelTest extends AbstractParcelTest
         SharedMemoryParcel::create($mutex, 42, 1 << 30);
     }
 
+    public function testUnwrapCancellation(): void
+    {
+        $parcel = $this->createParcel(0);
+
+        $future = async(fn () => $parcel->synchronized(function (): int {
+            delay(0.3);
+            return 1;
+        }));
+
+        delay(0.1); // Acquire the lock from the call above before continuing to the unwrap() call.
+
+        try {
+            $parcel->unwrap(new TimeoutCancellation(0.1));
+            self::fail('The pending unwrap() call should have been cancelled');
+        } catch (CancelledException) {
+            // Expected.
+        } finally {
+            self::assertSame(1, $future->await());
+        }
+    }
+
+    #[\Override]
     protected function createParcel(mixed $value): Parcel
     {
         $mutex = new SemaphoreMutex(PosixSemaphore::create(1));

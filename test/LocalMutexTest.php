@@ -4,8 +4,9 @@ namespace Amp\Sync;
 
 class LocalMutexTest extends AbstractMutexTest
 {
-    public function createMutex(): Mutex
+    #[\Override]
+    protected function createMutex(): Mutex
     {
-        return new LocalMutex;
+        return new LocalMutex();
     }
 }
