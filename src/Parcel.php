@@ -24,7 +24,7 @@ interface Parcel
     /**
      * Invokes a callback while maintaining a lock on the parcel. The current value of the parcel is provided as
      * the first argument to the callback function. The return value of the callback is stored as the new value
-     * of the parcel.
+     * of the parcel. Any exceptions thrown by the closure are re-thrown from this method call.
      *
      * @template R of T
      *
@@ -32,8 +32,7 @@ interface Parcel
      *  The parcel value is given as the first argument to the closure. The second argument is the optional
      *  cancellation provided to this method. The return value of the closure is stored as the new parcel value.
      * @param Cancellation|null $cancellation Optional cancellation. Implementations are not required to
-     *  support cancellation and may ignore this parameter. Any exceptions thrown by the closure are re-thrown
-     *  from this method call.
+     *  support cancellation and may ignore this parameter.
      *
      * @return R The value of the parcel after the closure was invoked.
      *
@@ -42,9 +41,12 @@ interface Parcel
     public function synchronized(\Closure $closure, ?Cancellation $cancellation = null): mixed;
 
     /**
+     * @param Cancellation|null $cancellation Optional cancellation. Implementations are not required to
+     *  support cancellation and may ignore this parameter.
+     *
      * @return T The value inside the parcel.
      *
      * @throws ParcelException
      */
-    public function unwrap(): mixed;
+    public function unwrap(?Cancellation $cancellation = null): mixed;
 }

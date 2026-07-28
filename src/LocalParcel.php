@@ -43,7 +43,7 @@ final class LocalParcel implements Parcel
     }
 
     #[\Override]
-    public function unwrap(): mixed
+    public function unwrap(?Cancellation $cancellation = null): mixed
     {
         return $this->value;
     }
