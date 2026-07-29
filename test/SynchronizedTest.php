@@ -2,7 +2,10 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
+use Amp\CancelledException;
 use Amp\PHPUnit\AsyncTestCase;
+use Amp\TimeoutCancellation;
 use function Amp\async;
 use function Amp\delay;
 use function Amp\Future\await;
@@ -13,7 +16,7 @@ final class SynchronizedTest extends AsyncTestCase
     {
         $this->setMinimumRuntime(0.3);
 
-        $mutex = new LocalMutex;
+        $mutex = new LocalMutex();
         $callback = function (int $value): int {
             delay(0.1);
 
@@ -22,7 +25,7 @@ final class SynchronizedTest extends AsyncTestCase
 
         $futures = [];
         foreach ([0, 1, 2] as $value) {
-            $futures[] = async(fn () => synchronized($mutex, $callback, $value));
+            $futures[] = async(fn () => synchronized($mutex, fn () => $callback($value)));
         }
 
         self::assertEquals([0, 1, 2], await($futures));
@@ -30,7 +33,7 @@ final class SynchronizedTest extends AsyncTestCase
 
     public function testSynchronizedReentry(): void
     {
-        $mutex = new LocalMutex;
+        $mutex = new LocalMutex();
         $count = 0;
 
         synchronized($mutex, function () use ($mutex, &$count) {
@@ -46,7 +49,7 @@ final class SynchronizedTest extends AsyncTestCase
 
     public function testSynchronizedReentryAsync(): void
     {
-        $mutex = new LocalMutex;
+        $mutex = new LocalMutex();
         $count = 0;
 
         synchronized($mutex, function () use ($mutex, &$count) {
@@ -69,8 +72,8 @@ final class SynchronizedTest extends AsyncTestCase
 
     public function testSynchronizedReentryDifferentLocks(): void
     {
-        $mutexA = new LocalMutex;
-        $mutexB = new LocalMutex;
+        $mutexA = new LocalMutex();
+        $mutexB = new LocalMutex();
 
         $lock = $mutexB->acquire();
 
@@ -99,5 +102,60 @@ final class SynchronizedTest extends AsyncTestCase
         $op->await();
 
         self::expectOutputString('Before before Unlock X after After ');
+    }
+
+    public function testSynchronizedPassesCancellationToClosure(): void
+    {
+        $mutex = new LocalMutex();
+        $cancellation = new TimeoutCancellation(1);
+
+        $received = synchronized($mutex, function (?Cancellation $outer) use ($mutex, $cancellation): array {
+            $inner = synchronized($mutex, fn (?Cancellation $c) => $c, $cancellation);
+            return [$outer, $inner];
+        }, $cancellation);
+
+        self::assertSame([$cancellation, $cancellation], $received);
+    }
+
+    public function testSynchronizedCancellation(): void
+    {
+        $mutex = new LocalMutex();
+
+        $future = async(fn () => synchronized($mutex, function (): int {
+            delay(0.3);
+            return 1;
+        }));
+
+        delay(0.1); // Wait for the closure above to acquire the lock.
+
+        try {
+            $this->expectException(CancelledException::class);
+            synchronized($mutex, fn () => 2, new TimeoutCancellation(0.1));
+        } finally {
+            self::assertSame(1, $future->await());
+        }
+    }
+
+    public function testSynchronizedAfterCancellation(): void
+    {
+        $mutex = new LocalMutex();
+
+        $future = async(fn () => synchronized($mutex, function (): int {
+            delay(0.3);
+            return 1;
+        }));
+
+        delay(0.1); // Wait for the closure above to acquire the lock.
+
+        try {
+            synchronized($mutex, fn () => 2, new TimeoutCancellation(0.1));
+            self::fail('The blocked synchronized() call should have been cancelled');
+        } catch (CancelledException) {
+            // Expected.
+        }
+
+        self::assertSame(1, $future->await());
+
+        self::assertSame(3, synchronized($mutex, fn () => 3));
     }
 }

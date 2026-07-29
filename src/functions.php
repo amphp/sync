@@ -2,6 +2,7 @@
 
 namespace Amp\Sync;
 
+use Amp\Cancellation;
 use Amp\Pipeline\Queue;
 use Amp\Sync\Internal\ConcurrentIteratorChannel;
 use Revolt\EventLoop\FiberLocal;
@@ -13,11 +14,11 @@ use Revolt\EventLoop\FiberLocal;
  *
  * @template T
  *
- * @param \Closure(mixed...):T $synchronized
+ * @param \Closure(?Cancellation $cancellation):T $synchronized
  *
  * @return T The return value of the Closure.
  */
-function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$args): mixed
+function synchronized(Semaphore $semaphore, \Closure $synchronized, ?Cancellation $cancellation = null): mixed
 {
     static $reentry;
     $reentry ??= new FiberLocal(fn () => new \WeakMap());
@@ -25,14 +26,14 @@ function synchronized(Semaphore $semaphore, \Closure $synchronized, mixed ...$ar
     /** @var \WeakMap<Semaphore, bool> $existingLocks */
     $existingLocks = $reentry->get();
     if ($existingLocks[$semaphore] ?? false) {
-        return $synchronized(...$args);
+        return $synchronized($cancellation);
     }
 
-    $lock = $semaphore->acquire();
+    $lock = $semaphore->acquire($cancellation);
     $existingLocks[$semaphore] = true;
 
     try {
-        return $synchronized(...$args);
+        return $synchronized($cancellation);
     } finally {
         unset($existingLocks[$semaphore]);
         $lock->release();
